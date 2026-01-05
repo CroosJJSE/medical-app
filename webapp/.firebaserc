@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "mediapp-3d0db"
+  },
+  "targets": {
+    "mediapp-3d0db": {
+      "hosting": {
+        "medical-srilanka": [
+          "medical-srilanka"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

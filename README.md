@@ -723,3 +723,106 @@ The system is designed to be user-friendly for all roles, with mobile optimizati
 *Document Version: 1.0*  
 *Last Updated: [Current Date]*
 
+**ErrorMessage.tsx**: Simple error message component. Props: message, className?. Export component.
+
+---
+
+### Layout Components
+
+**Header.tsx**: Header component. Props: user, onSignOut. Display user info, notifications, sign out. Export component.
+
+**Sidebar.tsx**: Sidebar navigation. Props: role (UserRole), currentPath, onNavigate. Role-based menu items. Export component.
+
+**Layout.tsx**: Main layout wrapper. Props: children, role. Combines Header, Sidebar, main content. Export component.
+
+---
+
+### Forms
+
+**PatientRegistrationForm.tsx**: Multi-step patient registration form. Steps: Personal Info, Contact, Emergency Contact, Medical Info, Insurance/Pharmacy, Guardian. Use Patient model. Submit calls patientService.createPatient. Simple UI, functional backend.
+
+**DoctorRegistrationForm.tsx**: Doctor registration form. Sections: Professional Info, Contact, Practice Info, Availability. Use Doctor model. Submit calls doctorService.createDoctor. Simple UI.
+
+**AppointmentForm.tsx**: Appointment booking form. Fields: doctor selection, date picker, time slots, type, reason. Use Appointment model. Submit calls appointmentService.createAppointment. Check availability.
+
+**EncounterForm.tsx**: Clinical encounter form (SOAP). Sections: Subjective, Objective, Assessment, Plan. Use Encounter model. Save draft, finalize. Submit calls encounterService.createEncounter or saveDraft.
+
+---
+
+### Pages - Auth
+
+**Login.tsx**: Login page. Google Sign-In button. Use authService.signInWithGoogle. Redirect based on role after login. Simple UI.
+
+**PatientRegister.tsx**: Patient registration page. Use PatientRegistrationForm. Handle submission, show success/pending message.
+
+**DoctorRegister.tsx**: Doctor registration page. Use DoctorRegistrationForm. Handle submission, show success/pending message.
+
+---
+
+### Pages - Patient
+
+**Dashboard.tsx**: Patient dashboard. Display: upcoming appointments, quick actions (schedule, upload test, view records), recent activity, health summary. Use hooks for data. Simple cards layout.
+
+**Profile.tsx**: Patient profile page. Display patient info, edit mode. Use usePatient hook. Update via patientService.
+
+**Appointments.tsx**: Patient appointments list. Display appointments, filter by status. Use useAppointment or appointmentService. Link to schedule.
+
+**ScheduleAppointment.tsx**: Schedule appointment page. Use AppointmentForm. Show doctor availability calendar. Submit creates appointment.
+
+**TestResults.tsx**: Test results list. Display uploaded test results. Upload button. Use testResultService. Link to upload page.
+
+**Timeline.tsx**: Patient timeline view. Display timeline events. Use timelineService.getTimeline. Simple timeline visualization.
+
+---
+
+### Pages - Doctor
+
+**Dashboard.tsx**: Doctor dashboard. Display: today's schedule, quick stats, charts (patients/month, visits, income, diseases), follow-ups needed, recent patients. Use hooks/services for data.
+
+**Patients.tsx**: Patients list. Display assigned patients, search, filter. Use patientService.getPatientsByDoctor. Link to patient profiles.
+
+**PatientProfile.tsx**: Patient profile view. Tabs: Timeline, Summary, Profile. Display patient data, encounters, test results. Use usePatient, encounterService, testResultService. Link to new encounter.
+
+**Appointments.tsx**: Doctor appointments calendar/list. Display appointments, filter by date. Use appointmentService.getAppointmentsByDoctor. Link to patient profile, start encounter.
+
+**NewEncounter.tsx**: New encounter page. Use EncounterForm. Pre-fill from appointment if linked. Save draft, finalize. Use encounterService.
+
+**TestResultsReview.tsx**: Test results review page. Display PDF viewer, extracted data table. Edit/confirm extracted data. Use testResultService.confirmExtractedData.
+
+---
+
+### Pages - Admin
+
+**Dashboard.tsx**: Admin dashboard. Display: system overview cards, pending approvals, system stats, recent activity. Use userService, patientService, doctorService.
+
+**Approvals.tsx**: User approvals list. Display pending users, approve/reject actions. Use userService.approveUser, userService.rejectUser.
+
+**AllPatients.tsx**: All patients list. Display all patients, search, filter, assign doctor. Use patientService. Admin actions.
+
+**AllDoctors.tsx**: All doctors list. Display all doctors, search, filter. Use doctorService. Admin actions.
+
+---
+
+### App Setup
+
+**router.tsx**: React Router setup. Routes: /login, /register/patient, /register/doctor, /patient/*, /doctor/*, /admin/*. Protected routes by role. Use AuthContext.
+
+**App.tsx**: Main app component. Wrap with AuthProvider. Use router. Error boundary. Export component.
+
+**main.tsx**: Entry point. Render App, initialize Firebase. Import firebase.ts.
+
+---
+
+### Config Files
+
+**package.json**: Dependencies: react, react-dom, react-router-dom, firebase, typescript, vite, @types/react, @types/react-dom. Scripts: dev, build, preview.
+
+**tsconfig.json**: TypeScript config. Target ES2020, module ESNext, JSX react-jsx, strict mode, module resolution node.
+
+**vite.config.ts**: Vite config. React plugin, path aliases (@/ for src/).
+
+**firestore.rules**: Security rules. Role-based access. Users can read own data. Doctors can read assigned patients. Admins full access. See technical doc for details.
+
+**firestore.indexes.json**: Firestore indexes. Indexes for: appointments (doctorId + dateTime), encounters (patientId + encounterDate), testResults (patientId + uploadDate).
+
+**.env.example**: Environment variables template. VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, VITE_FIRE
