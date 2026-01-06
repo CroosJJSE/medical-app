@@ -10,8 +10,19 @@ import {
   } from '@/enums';
   
   export interface Patient {
-    patientId: string;
-    userId: string;                 // Linked User
+    // User identification
+    userID: string;                  // PAT001, PAT002, etc.
+    AuthID: string;                  // Firebase Auth UID
+    email: string;
+    role: 'patient';                 // Always 'patient' for Patient model
+    displayName: string;
+    photoURL?: string;
+    status: 'pending' | 'active' | 'suspended';
+    isApproved: boolean;
+    approvedBy?: string;             // Admin userID who approved
+    approvedAt?: Date;
+    
+    // Patient-specific fields
     assignedDoctorId?: string;
   
     personalInfo: {
@@ -75,9 +86,6 @@ import {
       phone: string;
     };
   
-    isActive: boolean;
-  
-    createdBy: string;              // Admin or system userId
     createdAt: Date;
     updatedAt: Date;
   }

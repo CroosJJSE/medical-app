@@ -1,56 +1,33 @@
 // src/services/doctorService.ts
 
 import type { Doctor } from '@/models/Doctor';
-import { ID_PREFIXES } from '@/enums';
-import { create, getById, update, getAll } from '@/repositories/doctorRepository';
-import { generateId } from '@/utils/idGenerator';
+import { create, getById, update, getAllDoctors } from '@/repositories/userRepository';
+import { UserRole } from '@/enums';
 
 /**
- * Create a new doctor
- * @param userId - Linked User ID
- * @param doctorData - Doctor details
- * @returns Created Doctor
- */
-export const createDoctor = async (
-  userId: string,
-  doctorData: Omit<Doctor, 'doctorId' | 'userId' | 'createdAt' | 'updatedAt'>
-): Promise<Doctor> => {
-  const doctorId = generateId(ID_PREFIXES.DOCTOR);
-  const newDoctor: Doctor = {
-    ...doctorData,
-    doctorId,
-    userId,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await create(userId, doctorId, newDoctor);
-  return newDoctor;
-};
-
-/**
- * Get doctor by doctorId
- * @param doctorId - ID of the doctor
+ * Get doctor by userID
+ * @param userID - Doctor userID (DOC001, etc.)
  * @returns Doctor or null
  */
-export const getDoctor = async (doctorId: string): Promise<Doctor | null> => {
-  // TODO: Need userId - using empty string for now
-  const doctor = await getById(doctorId, '');
-  return doctor;
+export const getDoctor = async (userID: string): Promise<Doctor | null> => {
+  const user = await getById(userID);
+  if (!user || user.role !== UserRole.DOCTOR) return null;
+  return user as unknown as Doctor;
 };
 
 /**
  * Update doctor details
- * @param doctorId - ID of the doctor
+ * @param userID - Doctor userID (DOC001, etc.)
  * @param updates - Partial doctor fields to update
  */
 export const updateDoctor = async (
-  doctorId: string,
+  userID: string,
   updates: Partial<Doctor>
 ): Promise<void> => {
-  // TODO: Need userId - using empty string for now
-  await update(doctorId, '', { ...updates, updatedAt: new Date() });
+  await update(userID, {
+    ...updates,
+    updatedAt: new Date(),
+  } as any);
 };
 
 /**
@@ -58,25 +35,27 @@ export const updateDoctor = async (
  * @returns Array of doctors
  */
 export const getDoctors = async (): Promise<Doctor[]> => {
-  const doctors = await getAll();
-  return doctors;
+  const users = await getAllDoctors();
+  return users.filter(u => u.role === UserRole.DOCTOR) as unknown as Doctor[];
 };
 
 /**
  * Update doctor's availability
- * @param doctorId - ID of the doctor
+ * @param userID - Doctor userID (DOC001, etc.)
  * @param availability - New availability object
  */
 export const updateAvailability = async (
-  doctorId: string,
+  userID: string,
   availability: Doctor['availability']
 ): Promise<void> => {
-  await doctorRepository.update(doctorId, { availability, updatedAt: new Date() });
+  await update(userID, {
+    availability,
+    updatedAt: new Date(),
+  } as any);
 };
 
 // Default export for convenience
 const doctorService = {
-  createDoctor,
   getDoctor,
   updateDoctor,
   getDoctors,

@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuthContext } from '@/context/AuthContext';
-import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
-import Input from '@/components/common/Input';
+import { auth } from '@/services/firebase';
 import Loading from '@/components/common/Loading';
+import ProgressIndicator from '@/components/common/ProgressIndicator';
+import StepHeader from '@/components/common/StepHeader';
+import FormField from '@/components/common/FormField';
+import GenderSelector from '@/components/common/GenderSelector';
 import patientService from '@/services/patientService';
-import { Gender, BloodType, MaritalStatus } from '@/enums';
+import { Gender, BloodType, MaritalStatus, AllergySeverity } from '@/enums';
 import type { Patient } from '@/models/Patient';
 
 const PatientRegistrationFlow: React.FC = () => {
@@ -17,22 +19,43 @@ const PatientRegistrationFlow: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const [patientExists, setPatientExists] = useState(false);
+
+  // Handle redirect after submission
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 1500); // Give user time to see success message
+      return () => clearTimeout(timer);
+    }
+  }, [submitted, navigate]);
 
   // Check if patient already exists
   useEffect(() => {
     const checkExistingPatient = async () => {
-      if (!user) return;
-      
-      try {
-        const exists = await patientService.patientExists(user.userId);
-        setPatientExists(exists);
-      } catch (err) {
-        console.error('Error checking patient existence:', err);
-      } finally {
+      // If user is null but signed in with Firebase Auth, they need to register
+      if (!auth.currentUser) {
         setChecking(false);
+        return;
       }
+      
+      // If user exists in Firestore, check if they're already a patient
+      if (user) {
+        try {
+          const exists = user.userID !== undefined && user.userID.startsWith('PAT');
+          setPatientExists(exists);
+        } catch (err) {
+          console.error('Error checking patient existence:', err);
+        }
+      } else {
+        // User is signed in with Google but not registered - allow registration
+        setPatientExists(false);
+      }
+      
+      setChecking(false);
     };
 
     checkExistingPatient();
@@ -42,25 +65,21 @@ const PatientRegistrationFlow: React.FC = () => {
   const [personalInfo, setPersonalInfo] = useState({
     firstName: '',
     lastName: '',
-    middleName: '',
     dateOfBirth: '',
     gender: '',
+    primaryPhone: '',
     bloodType: '',
     maritalStatus: '',
     occupation: '',
-    nationality: '',
   });
 
   // Contact Information State
   const [contactInfo, setContactInfo] = useState({
-    primaryPhone: '',
     secondaryPhone: '',
     email: user?.email || '',
     address: {
       street: '',
       city: '',
-      state: '',
-      zipCode: '',
       country: '',
     },
   });
@@ -83,8 +102,25 @@ const PatientRegistrationFlow: React.FC = () => {
     otherRelevantHistory: '',
   });
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  // Allow access if user is signed in with Google (even if not yet registered in Firestore)
+  // Only redirect to login if they're not signed in at all
+  useEffect(() => {
+    if (!auth.currentUser && !checking) {
+      navigate('/login', { replace: true });
+    }
+  }, [checking, navigate]);
+
+  // If not signed in with Firebase Auth, show loading while checking
+  if (!auth.currentUser) {
+    if (checking) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <Loading size={48} message="Loading..." />
+        </div>
+      );
+    }
+    // Will redirect via useEffect above
+    return null;
   }
 
   if (checking) {
@@ -98,19 +134,24 @@ const PatientRegistrationFlow: React.FC = () => {
   // If patient already exists, show pending approval message
   if (patientExists) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <Card className="w-full max-w-lg p-6 shadow-lg text-center">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f7f8] p-4">
+        <div className="w-full max-w-lg rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-6 text-center">
+          <h2 className="text-2xl font-bold mb-4 text-[#111418]">
             Registration Complete
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-gray-600 mb-4">
             Your registration has been submitted successfully.
           </p>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 mb-6">
             Your account is pending admin approval. Please wait for approval before accessing the system.
           </p>
-          <Button onClick={() => navigate('/login')}>Back to Login</Button>
-        </Card>
+          <button
+            onClick={() => navigate('/login')}
+            className="flex h-14 w-full items-center justify-center rounded-xl bg-[#3c83f6] px-6 text-base font-bold text-white shadow-sm hover:bg-[#3c83f6]/90 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2"
+          >
+            Back to Login
+          </button>
+        </div>
       </div>
     );
   }
@@ -122,10 +163,16 @@ const PatientRegistrationFlow: React.FC = () => {
   const handleContactInfoChange = (field: string, value: string) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
-      setContactInfo((prev) => ({
-        ...prev,
-        [parent]: { ...prev[parent as keyof typeof prev], [child]: value },
-      }));
+      setContactInfo((prev) => {
+        const parentValue = prev[parent as keyof typeof prev];
+        if (typeof parentValue === 'object' && parentValue !== null) {
+          return {
+            ...prev,
+            [parent]: { ...(parentValue as Record<string, string>), [child]: value },
+          };
+        }
+        return prev;
+      });
     } else {
       setContactInfo((prev) => ({ ...prev, [field]: value }));
     }
@@ -156,7 +203,7 @@ const PatientRegistrationFlow: React.FC = () => {
       setError('Gender is required');
       return false;
     }
-    if (!contactInfo.primaryPhone.trim()) {
+    if (!personalInfo.primaryPhone.trim()) {
       setError('Primary phone is required');
       return false;
     }
@@ -177,48 +224,79 @@ const PatientRegistrationFlow: React.FC = () => {
     setError(null);
   };
 
+  // Helper function to remove undefined values from object
+  const removeUndefined = (obj: any): any => {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(removeUndefined);
+    }
+    if (typeof obj === 'object') {
+      const cleaned: any = {};
+      for (const key in obj) {
+        if (obj[key] !== undefined) {
+          cleaned[key] = removeUndefined(obj[key]);
+        }
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+
   const handleSubmit = async () => {
+    // Prevent duplicate submissions
+    if (loading || submitted) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Convert form data to Patient model
-      const patientData: Omit<Patient, 'patientId' | 'userId' | 'createdAt' | 'updatedAt'> = {
+      // Convert form data to Patient model (excluding user metadata fields)
+      const patientDataRaw: Omit<Patient, 'userID' | 'AuthID' | 'email' | 'role' | 'displayName' | 'photoURL' | 'status' | 'isApproved' | 'createdAt' | 'updatedAt'> = {
         personalInfo: {
           firstName: personalInfo.firstName.trim(),
           lastName: personalInfo.lastName.trim(),
-          middleName: personalInfo.middleName.trim() || undefined,
-          dateOfBirth: new Date(personalInfo.dateOfBirth),
+          dateOfBirth: (() => {
+            if (!personalInfo.dateOfBirth) {
+              throw new Error('Date of birth is required');
+            }
+            const date = new Date(personalInfo.dateOfBirth);
+            if (isNaN(date.getTime())) {
+              throw new Error('Invalid date of birth');
+            }
+            return date;
+          })(),
           gender: personalInfo.gender as Gender,
-          bloodType: personalInfo.bloodType ? (personalInfo.bloodType as BloodType) : undefined,
-          maritalStatus: personalInfo.maritalStatus
-            ? (personalInfo.maritalStatus as MaritalStatus)
-            : undefined,
-          occupation: personalInfo.occupation.trim() || undefined,
-          nationality: personalInfo.nationality.trim() || undefined,
+          ...(personalInfo.bloodType && { bloodType: personalInfo.bloodType as BloodType }),
+          ...(personalInfo.maritalStatus && { maritalStatus: personalInfo.maritalStatus as MaritalStatus }),
+          ...(personalInfo.occupation.trim() && { occupation: personalInfo.occupation.trim() }),
         },
         contactInfo: {
-          primaryPhone: contactInfo.primaryPhone.trim(),
-          secondaryPhone: contactInfo.secondaryPhone.trim() || undefined,
-          email: contactInfo.email.trim() || undefined,
-          address: contactInfo.address.street.trim()
-            ? {
-                street: contactInfo.address.street.trim(),
-                city: contactInfo.address.city.trim(),
-                state: contactInfo.address.state.trim(),
-                zipCode: contactInfo.address.zipCode.trim(),
-                country: contactInfo.address.country.trim(),
-              }
-            : undefined,
+          primaryPhone: personalInfo.primaryPhone.trim(),
+          ...(contactInfo.secondaryPhone.trim() && { secondaryPhone: contactInfo.secondaryPhone.trim() }),
+          ...(contactInfo.email.trim() && { email: contactInfo.email.trim() }),
+          ...(contactInfo.address.street.trim() && {
+            address: [
+              contactInfo.address.street.trim(),
+              contactInfo.address.city.trim(),
+              contactInfo.address.country.trim(),
+            ]
+              .filter(Boolean)
+              .join(', '),
+          }),
         },
-        emergencyContact:
-          emergencyContact.name.trim() || emergencyContact.phone.trim()
-            ? {
+        ...(emergencyContact.name.trim() || emergencyContact.phone.trim()
+          ? {
+              emergencyContact: {
                 name: emergencyContact.name.trim(),
                 relationship: emergencyContact.relationship.trim(),
                 phone: emergencyContact.phone.trim(),
-              }
-            : undefined,
+              },
+            }
+          : {}),
         medicalInfo: {
           allergies: medicalInfo.allergies.trim()
             ? medicalInfo.allergies
@@ -227,7 +305,7 @@ const PatientRegistrationFlow: React.FC = () => {
                 .filter(Boolean)
                 .map((name) => ({
                   name,
-                  severity: 'mild' as const,
+                  severity: AllergySeverity.MILD,
                 }))
             : [],
           currentMedications: medicalInfo.currentMedications.trim()
@@ -256,324 +334,380 @@ const PatientRegistrationFlow: React.FC = () => {
             : [],
           socialHistory: {},
         },
-        isActive: true,
-        createdBy: user.userId,
       };
 
-      await patientService.createPatient(user.userId, patientData);
+      // Remove all undefined values before saving to Firestore
+      const patientData = removeUndefined(patientDataRaw);
+
+      // Get Firebase Auth UID and user info
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) {
+        setError('You must be signed in to register. Please sign in again.');
+        setLoading(false);
+        return;
+      }
+
+      // Create patient - this will generate userID and create document
+      await patientService.createPatient(
+        firebaseUser.uid,
+        patientData,
+        {
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+        }
+      );
       
-      // Show success message and redirect
-      alert('Registration submitted successfully! Your account is pending admin approval.');
-      navigate('/login');
+      // Mark as submitted to prevent duplicate submissions
+      setSubmitted(true);
+      // Redirect will be handled by useEffect
     } catch (err: any) {
+      console.error('Registration error:', err);
       setError(err.message || 'Failed to submit registration. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
 
-  const steps = [
-    // Step 0: Personal Information
-    <div key="personal" className="space-y-4">
-      <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
-      <Input
-        label="First Name"
-        value={personalInfo.firstName}
-        onChange={(value) => handlePersonalInfoChange('firstName', value)}
-        required
-      />
-      <Input
-        label="Last Name"
-        value={personalInfo.lastName}
-        onChange={(value) => handlePersonalInfoChange('lastName', value)}
-        required
-      />
-      <Input
-        label="Middle Name (Optional)"
-        value={personalInfo.middleName}
-        onChange={(value) => handlePersonalInfoChange('middleName', value)}
-      />
-      <Input
-        label="Date of Birth"
-        type="date"
-        value={personalInfo.dateOfBirth}
-        onChange={(value) => handlePersonalInfoChange('dateOfBirth', value)}
-        required
-      />
-      <Input
-        label="Gender"
-        type="select"
-        value={personalInfo.gender}
-        onChange={(value) => handlePersonalInfoChange('gender', value)}
-        options={Object.values(Gender)}
-        required
-      />
-      <Input
-        label="Blood Type (Optional)"
-        type="select"
-        value={personalInfo.bloodType}
-        onChange={(value) => handlePersonalInfoChange('bloodType', value)}
-        options={Object.values(BloodType)}
-      />
-      <Input
-        label="Marital Status (Optional)"
-        type="select"
-        value={personalInfo.maritalStatus}
-        onChange={(value) => handlePersonalInfoChange('maritalStatus', value)}
-        options={Object.values(MaritalStatus)}
-      />
-      <Input
-        label="Occupation (Optional)"
-        value={personalInfo.occupation}
-        onChange={(value) => handlePersonalInfoChange('occupation', value)}
-      />
-      <Input
-        label="Nationality (Optional)"
-        value={personalInfo.nationality}
-        onChange={(value) => handlePersonalInfoChange('nationality', value)}
-      />
-    </div>,
-
-    // Step 1: Contact Information
-    <div key="contact" className="space-y-4">
-      <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-      <Input
-        label="Primary Phone"
-        value={contactInfo.primaryPhone}
-        onChange={(value) => handleContactInfoChange('primaryPhone', value)}
-        required
-      />
-      <Input
-        label="Secondary Phone (Optional)"
-        value={contactInfo.secondaryPhone}
-        onChange={(value) => handleContactInfoChange('secondaryPhone', value)}
-      />
-      <Input
-        label="Email"
-        type="email"
-        value={contactInfo.email}
-        onChange={(value) => handleContactInfoChange('email', value)}
-      />
-      <Input
-        label="Street Address (Optional)"
-        value={contactInfo.address.street}
-        onChange={(value) => handleContactInfoChange('address.street', value)}
-      />
-      <Input
-        label="City (Optional)"
-        value={contactInfo.address.city}
-        onChange={(value) => handleContactInfoChange('address.city', value)}
-      />
-      <Input
-        label="State (Optional)"
-        value={contactInfo.address.state}
-        onChange={(value) => handleContactInfoChange('address.state', value)}
-      />
-      <Input
-        label="Zip Code (Optional)"
-        value={contactInfo.address.zipCode}
-        onChange={(value) => handleContactInfoChange('address.zipCode', value)}
-      />
-      <Input
-        label="Country (Optional)"
-        value={contactInfo.address.country}
-        onChange={(value) => handleContactInfoChange('address.country', value)}
-      />
-      <h3 className="text-lg font-semibold mt-6 mb-2">Emergency Contact (Optional)</h3>
-      <Input
-        label="Name"
-        value={emergencyContact.name}
-        onChange={(value) => handleEmergencyContactChange('name', value)}
-      />
-      <Input
-        label="Relationship"
-        value={emergencyContact.relationship}
-        onChange={(value) => handleEmergencyContactChange('relationship', value)}
-      />
-      <Input
-        label="Phone"
-        value={emergencyContact.phone}
-        onChange={(value) => handleEmergencyContactChange('phone', value)}
-      />
-    </div>,
-
-    // Step 2: Medical Information (All Optional)
-    <div key="medical" className="space-y-6">
-      <h2 className="text-xl font-semibold mb-4">Medical Information</h2>
-      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-        All fields below are optional. Please provide any relevant medical information.
-      </p>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block mb-2 font-medium">
-            Past Medical History
-            <span className="text-xs text-gray-500 block font-normal mt-1">
-              List any past or current medical conditions (e.g., Diabetes, Hypertension, Asthma).
-              Separate multiple conditions with commas.
-            </span>
-          </label>
-          <textarea
-            value={medicalInfo.pastMedicalHistory}
-            onChange={(e) => handleMedicalInfoChange('pastMedicalHistory', e.target.value)}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring border-gray-300 min-h-[100px]"
-            placeholder="e.g., Diabetes Type 2, Hypertension"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Past Surgical History
-            <span className="text-xs text-gray-500 block font-normal mt-1">
-              List any past surgeries or procedures you have undergone. Include the date if known.
-              Separate multiple entries with commas.
-            </span>
-          </label>
-          <textarea
-            value={medicalInfo.pastSurgicalHistory}
-            onChange={(e) => handleMedicalInfoChange('pastSurgicalHistory', e.target.value)}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring border-gray-300 min-h-[100px]"
-            placeholder="e.g., Appendectomy (2010), Knee Surgery (2015)"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Allergies
-            <span className="text-xs text-gray-500 block font-normal mt-1">
-              List any known allergies (medications, food, environmental, etc.). Include the
-              severity if known. Separate multiple allergies with commas.
-            </span>
-          </label>
-          <textarea
-            value={medicalInfo.allergies}
-            onChange={(e) => handleMedicalInfoChange('allergies', e.target.value)}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring border-gray-300 min-h-[100px]"
-            placeholder="e.g., Penicillin (severe), Peanuts (moderate)"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Family History
-            <span className="text-xs text-gray-500 block font-normal mt-1">
-              List any medical conditions that run in your family (e.g., Heart disease, Diabetes,
-              Cancer). Include the relation if known. Separate multiple entries with commas.
-            </span>
-          </label>
-          <textarea
-            value={medicalInfo.familyHistory}
-            onChange={(e) => handleMedicalInfoChange('familyHistory', e.target.value)}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring border-gray-300 min-h-[100px]"
-            placeholder="e.g., Heart disease (Father), Diabetes (Mother)"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Current Medications
-            <span className="text-xs text-gray-500 block font-normal mt-1">
-              List all medications you are currently taking, including dosage if known. Separate
-              multiple medications with commas.
-            </span>
-          </label>
-          <textarea
-            value={medicalInfo.currentMedications}
-            onChange={(e) => handleMedicalInfoChange('currentMedications', e.target.value)}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring border-gray-300 min-h-[100px]"
-            placeholder="e.g., Metformin 500mg twice daily, Lisinopril 10mg once daily"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Any Other Relevant History
-            <span className="text-xs text-gray-500 block font-normal mt-1">
-              Include any other relevant medical information, lifestyle factors, or health concerns
-              that may be important for your care.
-            </span>
-          </label>
-          <textarea
-            value={medicalInfo.otherRelevantHistory}
-            onChange={(e) => handleMedicalInfoChange('otherRelevantHistory', e.target.value)}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring border-gray-300 min-h-[100px]"
-            placeholder="e.g., Smoking history, exercise habits, dietary restrictions"
-          />
-        </div>
-      </div>
-    </div>,
+  // Step titles
+  const stepTitles = [
+    'Step 1: Personal Information',
+    'Step 2: Contact Information',
+    'Step 3: Medical Information',
   ];
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-2xl p-6 shadow-lg">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            Patient Registration
-          </h1>
-          <div className="flex items-center space-x-2 mb-4">
-            {[0, 1, 2].map((index) => (
-              <React.Fragment key={index}>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step === index
-                      ? 'bg-blue-600 text-white'
-                      : step > index
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-300 text-gray-600'
-                  }`}
-                >
-                  {index + 1}
-                </div>
-                {index < 2 && (
-                  <div
-                    className={`flex-1 h-1 ${
-                      step > index ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
-                  />
-                )}
-              </React.Fragment>
-            ))}
+  // Step content renderers
+  const renderStepContent = () => {
+    if (step === 0) {
+      // Step 1: Personal Information
+      return (
+        <div className="flex flex-1 flex-col px-4 pt-5 pb-8">
+          <div className="flex w-full flex-1 flex-col rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-6">
+            <h2 className="text-[#111418] text-[28px] font-bold leading-tight text-left pb-5">
+              Let's start with the basics
+            </h2>
+            <div className="flex flex-col gap-4">
+              <FormField
+                label="First Name"
+                value={personalInfo.firstName}
+                onChange={(value) => handlePersonalInfoChange('firstName', value)}
+                placeholder="Enter your first name"
+                required
+              />
+              <FormField
+                label="Last Name"
+                value={personalInfo.lastName}
+                onChange={(value) => handlePersonalInfoChange('lastName', value)}
+                placeholder="Enter your last name"
+                required
+              />
+              <FormField
+                label="Date of Birth"
+                type="date"
+                value={personalInfo.dateOfBirth}
+                onChange={(value) => handlePersonalInfoChange('dateOfBirth', value)}
+                placeholder="MM/DD/YYYY"
+                required
+                icon={<span className="material-symbols-outlined text-2xl">calendar_today</span>}
+              />
+              <GenderSelector
+                value={personalInfo.gender}
+                onChange={(value) => handlePersonalInfoChange('gender', value)}
+                required
+              />
+              <FormField
+                label="Phone Number"
+                type="tel"
+                value={personalInfo.primaryPhone}
+                onChange={(value) => handlePersonalInfoChange('primaryPhone', value)}
+                placeholder="(555) 123-4567"
+                required
+              />
+            </div>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Step {step + 1} of {steps.length}
-          </p>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 rounded">
-            {error}
-          </div>
-        )}
-
-        <div className="mb-6">{steps[step]}</div>
-
-        <div className="flex justify-between">
-          <Button
-            onClick={handlePrevious}
-            disabled={step === 0 || loading}
-            variant="secondary"
-          >
-            Previous
-          </Button>
-          {step < steps.length - 1 ? (
-            <Button onClick={handleNext} disabled={loading}>
+          <div className="flex-grow"></div>
+          <div className="pt-8">
+            <button
+              onClick={handleNext}
+              disabled={loading || submitted}
+              className="flex h-14 w-full items-center justify-center rounded-xl bg-[#3c83f6] px-6 text-base font-bold text-white shadow-sm hover:bg-[#3c83f6]/90 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Next
-            </Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={loading}>
+            </button>
+          </div>
+        </div>
+      );
+    } else if (step === 1) {
+      // Step 2: Contact Information
+      return (
+        <div className="flex flex-1 flex-col px-4 pt-5 pb-8">
+          <div className="flex w-full flex-1 flex-col rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-6">
+            <h2 className="text-[#111418] text-[28px] font-bold leading-tight text-left pb-5">
+              Contact details
+            </h2>
+            <div className="flex flex-col gap-4">
+              <FormField
+                label="Secondary Phone (Optional)"
+                type="tel"
+                value={contactInfo.secondaryPhone}
+                onChange={(value) => handleContactInfoChange('secondaryPhone', value)}
+                placeholder="(555) 123-4567"
+              />
+              <FormField
+                label="Email (Optional)"
+                type="email"
+                value={contactInfo.email}
+                onChange={(value) => handleContactInfoChange('email', value)}
+                placeholder="your.email@example.com"
+              />
+              <div className="pt-2">
+                <h3 className="text-[#111418] text-lg font-semibold mb-4">Address (Optional)</h3>
+                <div className="flex flex-col gap-4">
+                  <FormField
+                    label="Street Address"
+                    value={contactInfo.address.street}
+                    onChange={(value) => handleContactInfoChange('address.street', value)}
+                    placeholder="123 Main Street"
+                  />
+                  <FormField
+                    label="City"
+                    value={contactInfo.address.city}
+                    onChange={(value) => handleContactInfoChange('address.city', value)}
+                    placeholder="City"
+                  />
+                  <FormField
+                    label="Country"
+                    value={contactInfo.address.country}
+                    onChange={(value) => handleContactInfoChange('address.country', value)}
+                    placeholder="Country"
+                  />
+                </div>
+              </div>
+              <div className="pt-2">
+                <h3 className="text-[#111418] text-lg font-semibold mb-4">Emergency Contact (Optional)</h3>
+                <div className="flex flex-col gap-4">
+                  <FormField
+                    label="Name"
+                    value={emergencyContact.name}
+                    onChange={(value) => handleEmergencyContactChange('name', value)}
+                    placeholder="Emergency contact name"
+                  />
+                  <FormField
+                    label="Relationship"
+                    value={emergencyContact.relationship}
+                    onChange={(value) => handleEmergencyContactChange('relationship', value)}
+                    placeholder="e.g., Spouse, Parent, Friend"
+                  />
+                  <FormField
+                    label="Phone"
+                    type="tel"
+                    value={emergencyContact.phone}
+                    onChange={(value) => handleEmergencyContactChange('phone', value)}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex-grow"></div>
+          <div className="pt-8 flex gap-3">
+            <button
+              onClick={handlePrevious}
+              disabled={loading || submitted}
+              className="flex h-14 flex-1 items-center justify-center rounded-xl border-2 border-[#dbdfe6] bg-white px-6 text-base font-bold text-[#111418] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={loading || submitted}
+              className="flex h-14 flex-1 items-center justify-center rounded-xl bg-[#3c83f6] px-6 text-base font-bold text-white shadow-sm hover:bg-[#3c83f6]/90 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      );
+    } else {
+      // Step 3: Medical Information
+      return (
+        <div className="flex flex-1 flex-col px-4 pt-5 pb-8">
+          <div className="flex w-full flex-1 flex-col rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-6">
+            <h2 className="text-[#111418] text-[28px] font-bold leading-tight text-left pb-2">
+              Medical history
+            </h2>
+            <p className="text-gray-600 text-sm mb-5">
+              All fields below are optional. Please provide any relevant medical information.
+            </p>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="flex flex-col">
+                  <p className="text-[#111418] text-base font-medium leading-normal pb-2">
+                    Past Medical History
+                    <span className="text-xs text-gray-500 block font-normal mt-1">
+                      List any past or current medical conditions (e.g., Diabetes, Hypertension, Asthma). Separate multiple conditions with commas.
+                    </span>
+                  </p>
+                  <textarea
+                    value={medicalInfo.pastMedicalHistory}
+                    onChange={(e) => handleMedicalInfoChange('pastMedicalHistory', e.target.value)}
+                    className="w-full rounded-lg border border-[#dbdfe6] bg-white focus:outline-0 focus:ring-2 focus:ring-[#3c83f6]/50 focus:border-[#3c83f6] p-[15px] text-base font-normal leading-normal min-h-[100px] placeholder:text-[#60708a]"
+                    placeholder="e.g., Diabetes Type 2, Hypertension"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="flex flex-col">
+                  <p className="text-[#111418] text-base font-medium leading-normal pb-2">
+                    Past Surgical History
+                    <span className="text-xs text-gray-500 block font-normal mt-1">
+                      List any past surgeries or procedures. Include the date if known. Separate multiple entries with commas.
+                    </span>
+                  </p>
+                  <textarea
+                    value={medicalInfo.pastSurgicalHistory}
+                    onChange={(e) => handleMedicalInfoChange('pastSurgicalHistory', e.target.value)}
+                    className="w-full rounded-lg border border-[#dbdfe6] bg-white focus:outline-0 focus:ring-2 focus:ring-[#3c83f6]/50 focus:border-[#3c83f6] p-[15px] text-base font-normal leading-normal min-h-[100px] placeholder:text-[#60708a]"
+                    placeholder="e.g., Appendectomy (2010), Knee Surgery (2015)"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="flex flex-col">
+                  <p className="text-[#111418] text-base font-medium leading-normal pb-2">
+                    Allergies
+                    <span className="text-xs text-gray-500 block font-normal mt-1">
+                      List any known allergies (medications, food, environmental, etc.). Include severity if known. Separate multiple allergies with commas.
+                    </span>
+                  </p>
+                  <textarea
+                    value={medicalInfo.allergies}
+                    onChange={(e) => handleMedicalInfoChange('allergies', e.target.value)}
+                    className="w-full rounded-lg border border-[#dbdfe6] bg-white focus:outline-0 focus:ring-2 focus:ring-[#3c83f6]/50 focus:border-[#3c83f6] p-[15px] text-base font-normal leading-normal min-h-[100px] placeholder:text-[#60708a]"
+                    placeholder="e.g., Penicillin (severe), Peanuts (moderate)"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="flex flex-col">
+                  <p className="text-[#111418] text-base font-medium leading-normal pb-2">
+                    Family History
+                    <span className="text-xs text-gray-500 block font-normal mt-1">
+                      List any medical conditions that run in your family. Include the relation if known. Separate multiple entries with commas.
+                    </span>
+                  </p>
+                  <textarea
+                    value={medicalInfo.familyHistory}
+                    onChange={(e) => handleMedicalInfoChange('familyHistory', e.target.value)}
+                    className="w-full rounded-lg border border-[#dbdfe6] bg-white focus:outline-0 focus:ring-2 focus:ring-[#3c83f6]/50 focus:border-[#3c83f6] p-[15px] text-base font-normal leading-normal min-h-[100px] placeholder:text-[#60708a]"
+                    placeholder="e.g., Heart disease (Father), Diabetes (Mother)"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="flex flex-col">
+                  <p className="text-[#111418] text-base font-medium leading-normal pb-2">
+                    Current Medications
+                    <span className="text-xs text-gray-500 block font-normal mt-1">
+                      List all medications you are currently taking, including dosage if known. Separate multiple medications with commas.
+                    </span>
+                  </p>
+                  <textarea
+                    value={medicalInfo.currentMedications}
+                    onChange={(e) => handleMedicalInfoChange('currentMedications', e.target.value)}
+                    className="w-full rounded-lg border border-[#dbdfe6] bg-white focus:outline-0 focus:ring-2 focus:ring-[#3c83f6]/50 focus:border-[#3c83f6] p-[15px] text-base font-normal leading-normal min-h-[100px] placeholder:text-[#60708a]"
+                    placeholder="e.g., Metformin 500mg twice daily, Lisinopril 10mg once daily"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="flex flex-col">
+                  <p className="text-[#111418] text-base font-medium leading-normal pb-2">
+                    Any Other Relevant History
+                    <span className="text-xs text-gray-500 block font-normal mt-1">
+                      Include any other relevant medical information, lifestyle factors, or health concerns that may be important for your care.
+                    </span>
+                  </p>
+                  <textarea
+                    value={medicalInfo.otherRelevantHistory}
+                    onChange={(e) => handleMedicalInfoChange('otherRelevantHistory', e.target.value)}
+                    className="w-full rounded-lg border border-[#dbdfe6] bg-white focus:outline-0 focus:ring-2 focus:ring-[#3c83f6]/50 focus:border-[#3c83f6] p-[15px] text-base font-normal leading-normal min-h-[100px] placeholder:text-[#60708a]"
+                    placeholder="e.g., Smoking history, exercise habits, dietary restrictions"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div className="flex-grow"></div>
+          <div className="pt-8 flex gap-3">
+            <button
+              onClick={handlePrevious}
+              disabled={loading || submitted}
+              className="flex h-14 flex-1 items-center justify-center rounded-xl border-2 border-[#dbdfe6] bg-white px-6 text-base font-bold text-[#111418] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading || submitted}
+              className="flex h-14 flex-1 items-center justify-center rounded-xl bg-[#3c83f6] px-6 text-base font-bold text-white shadow-sm hover:bg-[#3c83f6]/90 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {loading ? (
                 <span className="flex items-center">
-                  <Loading size={20} className="mr-2" />
-                  Submitting...
+                  <Loading size={20} />
+                  <span className="ml-2">Submitting...</span>
                 </span>
               ) : (
                 'Submit'
               )}
-            </Button>
-          )}
+            </button>
+          </div>
         </div>
-      </Card>
+      );
+    }
+  };
+
+  return (
+    <div className="relative flex min-h-screen w-full flex-col bg-[#f5f7f8] overflow-x-hidden">
+      {/* Top App Bar */}
+      <StepHeader
+        title={stepTitles[step]}
+        onBack={step > 0 ? handlePrevious : undefined}
+        showBack={step > 0}
+      />
+
+      {/* Progress Indicator */}
+      <ProgressIndicator currentStep={step + 1} totalSteps={3} />
+
+      {/* Error Message */}
+      {error && (
+        <div className="mx-4 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Success State */}
+      {submitted ? (
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+          <div className="flex w-full max-w-md flex-col items-center rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-8 text-center">
+            <div className="mb-4">
+              <div className="inline-block p-4 bg-green-100 rounded-full">
+                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold text-[#111418] mb-2">
+              Registration Submitted Successfully!
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Your account is pending admin approval. You will be redirected to the login page shortly.
+            </p>
+            <Loading size={32} message="Redirecting..." />
+          </div>
+        </div>
+      ) : (
+        renderStepContent()
+      )}
     </div>
   );
 };

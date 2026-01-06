@@ -10,8 +10,9 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import type { User } from '@/models/User';
-import { getById, create } from '@/repositories/userRepository';
-import { UserRole, UserStatus } from '@/enums';
+import { getById } from '@/repositories/userRepository';
+import { getUserIDFromAuthUID } from '@/utils/idGenerator';
+import { adminConfig } from '@/config/admin';
 
 // Configure Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
@@ -23,47 +24,50 @@ googleProvider.setCustomParameters({
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
-/**
- * Create or get user document in Firestore
- * This ensures the user exists in Firestore after authentication
- */
-const ensureUserDocument = async (firebaseUser: FirebaseUser): Promise<User> => {
-  // Check if user document exists in Firestore
-  let user = await getById(firebaseUser.uid);
-  
-  if (!user) {
-    // Create new user document with default values
-    // Note: Optional fields (approvedBy, approvedAt) are omitted since they're undefined
-    // The repository will handle filtering out any undefined values
-    const newUser: User = {
-      userId: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      displayName: firebaseUser.displayName || '',
-      photoURL: firebaseUser.photoURL || '',
-      role: UserRole.PATIENT, // Default role
-      status: UserStatus.PENDING, // Default status - needs admin approval
-      isApproved: false, // Default - needs admin approval
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    await create(firebaseUser.uid, newUser);
-    user = newUser;
+const getUserFromAuthUID = async (firebaseUser: FirebaseUser): Promise<User | null> => {
+  const authUID = firebaseUser.uid;
+  const email = firebaseUser.email || '';
+
+  // Special handling for admin - check if email or AuthID matches admin config first
+  // This avoids trying to read /users/admin if user is not admin
+  if (email === adminConfig.email || authUID === adminConfig.authID) {
+    try {
+      const adminUser = await getById('admin');
+      if (adminUser && (adminUser.AuthID === authUID || adminUser.AuthID === adminConfig.authID)) {
+        return adminUser;
+      }
+    } catch (error) {
+      // If we can't read admin document, continue to regular user flow
+      console.error('[AUTH] Error reading admin document:', error);
+    }
   }
+
+  // For regular users, check the mapping in /admin/common_info/users
+  const userID = await getUserIDFromAuthUID(authUID);
   
-  return user;
+  if (!userID) {
+    // User not found in mapping - they need to register
+    return null;
+  }
+
+  // Fetch user document from /users/{userID}
+  try {
+    const user = await getById(userID);
+    return user;
+  } catch (error) {
+    // If we can't read the user document, return null (they need to register)
+    console.error('[AUTH] Error reading user document:', error);
+    return null;
+  }
 };
 
 /**
  * Sign in using Google OAuth
  * Returns Firebase UserCredential
- * Also creates user document in Firestore if it doesn't exist
  */
 export const signInWithGoogle = async (): Promise<UserCredential> => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    // Ensure user document exists in Firestore
-    await ensureUserDocument(result.user);
     return result;
   } catch (error: any) {
     // Handle specific Firebase auth errors
@@ -76,7 +80,7 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
     }
     
     // Log and re-throw other errors
-    console.error('Google sign-in error:', error);
+    console.error('[AUTH] Google sign-in error:', error);
     throw error;
   }
 };
@@ -96,43 +100,27 @@ export const signOut = async (): Promise<void> => {
 /**
  * Get current authenticated user
  * Returns User object from Firestore or null
- * This fetches the actual user data from Firestore, not just Firebase Auth
+ * Returns null if user needs to register (not found in mapping)
  */
 export const getCurrentUser = async (): Promise<User | null> => {
   const firebaseUser: FirebaseUser | null = auth.currentUser;
-  if (!firebaseUser) return null;
+  if (!firebaseUser) {
+    return null;
+  }
 
   try {
-    // Try to get user from Firestore
-    let user = await getById(firebaseUser.uid);
-    
-    // If user doesn't exist in Firestore, create it
-    if (!user) {
-      user = await ensureUserDocument(firebaseUser);
-    }
-    
+    const user = await getUserFromAuthUID(firebaseUser);
     return user;
   } catch (error) {
-    console.error('Error getting current user:', error);
-    // Fallback to basic user data if Firestore read fails
-    return {
-      userId: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      displayName: firebaseUser.displayName || '',
-      photoURL: firebaseUser.photoURL || '',
-      role: UserRole.PATIENT,
-      status: UserStatus.PENDING,
-      isApproved: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    console.error('[AUTH] Error getting current user:', error);
+    return null;
   }
 };
 
 /**
  * Listen for authentication state changes
  * Callback receives User | null
- * Automatically creates user document in Firestore if it doesn't exist
+ * Returns null if user needs to register
  */
 export const onAuthStateChanged = (
   callback: (user: User | null) => void
@@ -140,11 +128,10 @@ export const onAuthStateChanged = (
   return firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       try {
-        // Ensure user document exists and get it
-        const user = await ensureUserDocument(firebaseUser);
+        const user = await getUserFromAuthUID(firebaseUser);
         callback(user);
       } catch (error) {
-        console.error('Error in onAuthStateChanged:', error);
+        console.error('[AUTH] Error in onAuthStateChanged:', error);
         callback(null);
       }
     } else {

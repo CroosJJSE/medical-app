@@ -3,8 +3,17 @@
 import { DayOfWeek, DEFAULTS } from '@/enums';
 
 export interface Doctor {
-  doctorId: string;
-  userId: string; // Linked User
+  // User identification
+  userID: string;                  // DOC001, DOC002, etc.
+  AuthID: string;                   // Firebase Auth UID
+  email: string;
+  role: 'doctor';                   // Always 'doctor' for Doctor model
+  displayName: string;
+  photoURL?: string;
+  status: 'pending' | 'active' | 'suspended';
+  isApproved: boolean;
+  approvedBy?: string;              // Admin userID who approved
+  approvedAt?: Date;
 
   professionalInfo: {
     firstName: string;

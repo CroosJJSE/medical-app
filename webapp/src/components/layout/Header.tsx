@@ -1,6 +1,7 @@
 // src/components/layout/Header.tsx
 import React from 'react';
 import Button from '../common/Button';
+import logo from '@/assets/logo.png';
 
 interface HeaderProps {
   user: { displayName: string; photoURL?: string } | null;
@@ -9,8 +10,13 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user, onSignOut }) => (
   <header className="flex items-center justify-between bg-blue-600 text-white p-4 shadow">
-    <div className="flex items-center space-x-2">
-      <h1 className="text-xl font-bold">Medical App</h1>
+    <div className="flex items-center space-x-3">
+      <img 
+        src={logo} 
+        alt="CareSync Logo" 
+        className="h-8 w-8 object-contain"
+      />
+      <h1 className="text-xl font-bold">CareSync</h1>
     </div>
     <div className="flex items-center space-x-4">
       {user && (

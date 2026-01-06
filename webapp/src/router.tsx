@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/enums';
+import { UserRole, UserStatus } from '@/enums';
 import Loading from '@/components/common/Loading';
 
 // Auth pages
@@ -50,19 +50,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     );
   }
 
+  // If user is null, they need to register (not found in /admin/common_info/users mapping)
+  // This means they haven't completed registration yet
   if (!user) {
+    // Check if they're signed in with Google (but not registered)
+    // Redirect to registration flow for patients
+    if (allowedRoles.includes(UserRole.PATIENT)) {
+      return <Navigate to="/register/patient/flow" replace />;
+    }
+    // For other roles, redirect to login
     return <Navigate to="/login" replace />;
   }
 
-  // For pending patients, check if they need to complete registration
-  if (!user.isApproved && user.role === UserRole.PATIENT) {
-    // Check if patient has completed registration (has patient record)
-    // This will be handled by a separate route that checks patient existence
-    // For now, redirect to registration flow
-    return <Navigate to="/register/patient/flow" replace />;
-  }
-
-  if (!user.isApproved) {
+  // If user exists but not approved, show pending approval message
+  if (!user.isApproved || user.status === UserStatus.PENDING) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

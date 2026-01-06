@@ -1,6 +1,7 @@
 // src/components/layout/Sidebar.tsx
 import React from 'react';
 import type { UserRole } from '@/enums';
+import logo from '@/assets/logo.png';
 
 interface SidebarProps {
   role: UserRole;
@@ -38,6 +39,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role, currentPath, onNavigate }) => {
 
   return (
     <aside className="w-64 bg-gray-100 h-screen p-4 shadow">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-300">
+        <img 
+          src={logo} 
+          alt="CareSync Logo" 
+          className="h-8 w-8 object-contain"
+        />
+        <h2 className="text-xl font-bold text-gray-900">CareSync</h2>
+      </div>
       <nav className="flex flex-col space-y-2">
         {items.map((item) => (
           <button

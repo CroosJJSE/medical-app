@@ -18,8 +18,8 @@ const AllPatients: React.FC = () => {
   useEffect(() => {
     const loadPatients = async () => {
       try {
-        // TODO: Implement getAllPatients in patientService
-        const data: Patient[] = []; // Placeholder
+        // Get all patients (empty string means all patients for admin)
+        const data = await patientService.getPatientsByDoctor('');
         setPatients(data);
         setFilteredPatients(data);
       } catch (error) {
@@ -43,8 +43,9 @@ const AllPatients: React.FC = () => {
       (patient) =>
         patient.personalInfo?.firstName?.toLowerCase().includes(query) ||
         patient.personalInfo?.lastName?.toLowerCase().includes(query) ||
-        patient.patientId.toLowerCase().includes(query) ||
-        patient.contactInfo?.email?.toLowerCase().includes(query)
+        patient.userID?.toLowerCase().includes(query) ||
+        patient.contactInfo?.email?.toLowerCase().includes(query) ||
+        patient.contactInfo?.primaryPhone?.toLowerCase().includes(query)
     );
     setFilteredPatients(filtered);
   }, [searchQuery, patients]);
@@ -70,9 +71,9 @@ const AllPatients: React.FC = () => {
         {/* Search */}
         <Card>
           <Input
-            placeholder="Search by name, ID, or email..."
+            placeholder="Search by name, ID, email, or phone..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(value) => setSearchQuery(value)}
           />
         </Card>
 
@@ -94,25 +95,40 @@ const AllPatients: React.FC = () => {
                 </thead>
                 <tbody>
                   {filteredPatients.map((patient) => (
-                    <tr key={patient.patientId} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="p-2">{patient.patientId}</td>
+                    <tr key={patient.userID} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="p-2">{patient.userID}</td>
                       <td className="p-2">
-                        {patient.personalInfo?.firstName} {patient.personalInfo?.lastName}
+                        <div className="flex items-center gap-2">
+                          {patient.photoURL && (
+                            <img
+                              src={patient.photoURL}
+                              alt={`${patient.personalInfo?.firstName} ${patient.personalInfo?.lastName}`}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          )}
+                          <span>
+                            {patient.personalInfo?.firstName} {patient.personalInfo?.lastName}
+                          </span>
+                        </div>
                       </td>
                       <td className="p-2">{patient.contactInfo?.email || 'N/A'}</td>
                       <td className="p-2">{patient.contactInfo?.primaryPhone || 'N/A'}</td>
                       <td className="p-2">{patient.assignedDoctorId || 'Unassigned'}</td>
                       <td className="p-2">
                         <span className={`px-2 py-1 rounded text-xs ${
-                          patient.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          patient.status === 'active' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : patient.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         }`}>
-                          {patient.isActive ? 'Active' : 'Inactive'}
+                          {patient.status || 'Inactive'}
                         </span>
                       </td>
                       <td className="p-2">
                         <Button
                           variant="secondary"
-                          onClick={() => navigate(`/admin/patient/${patient.patientId}`)}
+                          onClick={() => navigate(`/doctor/patient-profile/${patient.userID}`)}
                         >
                           View
                         </Button>

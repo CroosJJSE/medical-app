@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const fetchedUser = await getCurrentUser();
       setUser(fetchedUser);
     } catch (err) {
-      console.error('Sign in failed:', err);
+      console.error('[AUTH_CONTEXT] Sign in failed:', err);
       throw err;
     } finally {
       setLoading(false);

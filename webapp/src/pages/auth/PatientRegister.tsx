@@ -1,55 +1,50 @@
 // src/pages/auth/PatientRegister.tsx
-import React, { useState } from 'react';
-import PatientRegistrationForm from '@/components/forms/PatientRegistrationForm';
-import { useAuthContext } from '@/context/AuthContext';
-import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import logo from '@/assets/logo.png';
 
 const PatientRegister: React.FC = () => {
-  const { user } = useAuthContext();
-  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <Card className="w-full max-w-lg p-6 shadow-lg">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-            Patient Registration
-          </h1>
-          <p className="text-red-500 text-center">
-            Please sign in to register as a patient.
-          </p>
-        </Card>
-      </div>
-    );
-  }
+  const handleGetStarted = () => {
+    navigate('/register/patient/flow');
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-lg p-6 shadow-lg">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-          Patient Registration
-        </h1>
-
-        {success && (
-          <div className="text-green-600 text-center mb-4">
-            Registration successful! Your account is pending approval.
+    <div className="relative flex h-screen w-full flex-col bg-[#f5f7f8] overflow-hidden">
+      {/* Status Bar Placeholder */}
+      <div className="h-10"></div>
+      
+      <main className="flex flex-1 flex-col px-6">
+        <div className="flex-grow">
+          <div className="flex flex-col items-center justify-center pt-16 pb-8 text-center">
+            <div className="mb-6 flex flex-col items-center gap-3">
+              <img 
+                src={logo} 
+                alt="CareSync Logo" 
+                className="h-20 w-20 object-contain"
+              />
+            </div>
+            <h1 className="text-[#111827] tracking-tight text-[32px] font-bold leading-tight pb-3">
+              Join CareSync
+            </h1>
+            <p className="text-[#4B5563] text-base font-normal leading-normal max-w-sm">
+              Create your secure patient profile to book appointments, view your medical records, and manage your health all in one place.
+            </p>
           </div>
-        )}
-
-        {!success && (
-          <PatientRegistrationForm 
-            userId={user.userId} 
-            onSuccess={() => setSuccess(true)} 
-          />
-        )}
-
-        {success && (
-          <div className="flex justify-center mt-4">
-            <Button onClick={() => setSuccess(false)}>Register Another Patient</Button>
+        </div>
+        
+        <div className="flex-shrink-0 pb-8">
+          <div className="flex px-0 py-3">
+            <button
+              onClick={handleGetStarted}
+              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 flex-1 bg-[#3c83f6] text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#3c83f6]/90 focus:outline-none focus:ring-2 focus:ring-[#3c83f6] focus:ring-offset-2 transition-colors"
+            >
+              <span className="truncate">Get Started</span>
+            </button>
           </div>
-        )}
-      </Card>
+        </div>
+      </main>
     </div>
   );
 };

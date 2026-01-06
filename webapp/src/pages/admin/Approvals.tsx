@@ -7,42 +7,129 @@ import Loading from '@/components/common/Loading';
 import Input from '@/components/common/Input';
 import userService from '@/services/userService';
 import { useAuthContext } from '@/context/AuthContext';
+import { getPendingApprovals, removePendingPatient, removePendingDoctor } from '@/repositories/pendingApprovalRepository';
+import { getById } from '@/repositories/userRepository';
+import type { PendingUserInfo } from '@/repositories/pendingApprovalRepository';
 import type { User } from '@/models/User';
 import { UserStatus, UserRole } from '@/enums';
+
+// Helper function to convert Firestore timestamp to Date
+const convertToDate = (timestamp: any): Date | null => {
+  if (!timestamp) return null;
+  
+  // If it's already a Date object
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  
+  // If it's a Firestore Timestamp object with toDate method
+  if (typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  
+  // If it's a Firestore timestamp object with seconds property
+  if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+    return new Date(timestamp.seconds * 1000 + (timestamp.nanoseconds || 0) / 1000000);
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof timestamp === 'string') {
+    const date = new Date(timestamp);
+    return isNaN(date.getTime()) ? null : date;
+  }
+  
+  // If it's a number (milliseconds since epoch)
+  if (typeof timestamp === 'number') {
+    return new Date(timestamp);
+  }
+  
+  return null;
+};
+
+// Helper function to format date
+const formatDate = (date: Date | null): string => {
+  if (!date) return 'N/A';
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
+
+// Helper function to format date for list (short format)
+const formatDateShort = (date: Date | null): string => {
+  if (!date) return 'N/A';
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
 
 const Approvals: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthContext();
   const [searchParams] = useSearchParams();
-  const selectedUserId = searchParams.get('userId');
-  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+  const selectedUserID = searchParams.get('userID');
+  const [pendingPatients, setPendingPatients] = useState<PendingUserInfo[]>([]);
+  const [pendingDoctors, setPendingDoctors] = useState<PendingUserInfo[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedPendingUser, setSelectedPendingUser] = useState<PendingUserInfo | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [showRejectionInput, setShowRejectionInput] = useState(false);
 
   useEffect(() => {
-    const loadPendingUsers = async () => {
+    const loadPendingApprovals = async () => {
+      setLoading(true);
       try {
-        const users = await userService.getPendingUsers();
-        setPendingUsers(users);
+        const data = await getPendingApprovals();
         
-        if (selectedUserId) {
-          const user = users.find(u => u.userId === selectedUserId);
-          if (user) setSelectedUser(user);
+        // Ensure we have arrays
+        const patients = Array.isArray(data.patients) ? data.patients : [];
+        const doctors = Array.isArray(data.doctors) ? data.doctors : [];
+        
+        setPendingPatients(patients);
+        setPendingDoctors(doctors);
+        
+        if (selectedUserID) {
+          // Find in pending lists
+          const pendingUser = [...patients, ...doctors].find(u => u.userID === selectedUserID);
+          if (pendingUser) {
+            setSelectedPendingUser(pendingUser);
+            // Fetch full user details
+            const fullUser = await getById(selectedUserID);
+            if (fullUser) setSelectedUser(fullUser);
+          }
         }
-      } catch (error) {
-        console.error('Error loading pending users:', error);
-        alert('Error loading pending users. Please try again.');
+      } catch (error: any) {
+        console.error('Error loading pending approvals:', error);
+        alert(`Error loading pending approvals: ${error?.message || 'Unknown error'}. Please check the console for details.`);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPendingUsers();
-  }, [selectedUserId]);
+    loadPendingApprovals();
+  }, [selectedUserID]);
 
-  const handleApprove = async (userId: string) => {
+  const handleSelectUser = async (pendingUser: PendingUserInfo) => {
+    setSelectedPendingUser(pendingUser);
+    setShowRejectionInput(false);
+    setRejectionReason('');
+    // Fetch full user details from /users/{userID}
+    try {
+      const fullUser = await getById(pendingUser.userID);
+      setSelectedUser(fullUser);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      setSelectedUser(null);
+    }
+  };
+
+  const handleApprove = async (userID: string, role: 'patient' | 'doctor') => {
     if (!currentUser) {
       alert('You must be logged in to approve users.');
       return;
@@ -50,13 +137,25 @@ const Approvals: React.FC = () => {
     
     setProcessing(true);
     try {
-      await userService.approveUser(userId, currentUser.userId);
+      // Approve user - update status in /users/{userID}
+      await userService.approveUser(userID, currentUser.userID || currentUser.userId || 'admin');
+      
+      // Remove from pending approvals array
+      if (role === 'patient') {
+        await removePendingPatient(userID);
+      } else {
+        await removePendingDoctor(userID);
+      }
+      
       alert('User approved successfully!');
-      setPendingUsers(pendingUsers.filter(u => u.userId !== userId));
+      
+      // Reload pending approvals
+      const data = await getPendingApprovals();
+      setPendingPatients(data.patients || []);
+      setPendingDoctors(data.doctors || []);
+      
       setSelectedUser(null);
-      // Reload pending users
-      const users = await userService.getPendingUsers();
-      setPendingUsers(users);
+      setSelectedPendingUser(null);
     } catch (error) {
       console.error('Error approving user:', error);
       alert('Error approving user. Please try again.');
@@ -65,7 +164,7 @@ const Approvals: React.FC = () => {
     }
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async (userID: string, role: 'patient' | 'doctor') => {
     if (!rejectionReason.trim()) {
       alert('Please provide a reason for rejection');
       return;
@@ -73,11 +172,26 @@ const Approvals: React.FC = () => {
 
     setProcessing(true);
     try {
-      await userService.rejectUser(userId, rejectionReason);
+      await userService.rejectUser(userID, rejectionReason);
+      
+      // Remove from pending approvals array
+      if (role === 'patient') {
+        await removePendingPatient(userID);
+      } else {
+        await removePendingDoctor(userID);
+      }
+      
       alert('User rejected successfully!');
-      setPendingUsers(pendingUsers.filter(u => u.userId !== userId));
+      
+      // Reload pending approvals
+      const data = await getPendingApprovals();
+      setPendingPatients(data.patients || []);
+      setPendingDoctors(data.doctors || []);
+      
       setSelectedUser(null);
+      setSelectedPendingUser(null);
       setRejectionReason('');
+      setShowRejectionInput(false);
     } catch (error) {
       console.error('Error rejecting user:', error);
       alert('Error rejecting user. Please try again.');
@@ -85,6 +199,16 @@ const Approvals: React.FC = () => {
       setProcessing(false);
     }
   };
+
+  // Filter users based on search query
+  const allPendingUsers = [...pendingPatients, ...pendingDoctors];
+  const filteredUsers = searchQuery.trim()
+    ? allPendingUsers.filter(user =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.userID.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.phone.includes(searchQuery)
+      )
+    : allPendingUsers;
 
   if (loading) {
     return (
@@ -95,109 +219,258 @@ const Approvals: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-background-light dark:bg-gray-900 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">User Approvals</h1>
+        {/* Breadcrumbs */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => navigate('/admin/dashboard')}
+            className="text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            Dashboard
+          </button>
+          <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">/</span>
+          <span className="text-gray-900 dark:text-white text-sm font-medium">Approvals</span>
+        </div>
+
+        {/* Page Heading */}
+        <div className="flex flex-wrap justify-between gap-3 mb-8">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-gray-900 dark:text-white text-3xl font-bold tracking-tight">Admin Approvals</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-base font-normal">Review and manage pending user registrations.</p>
+          </div>
           <Button variant="secondary" onClick={() => navigate('/admin/dashboard')}>
             Back to Dashboard
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pending Users List */}
-          <Card title={`Pending Approvals (${pendingUsers.length})`}>
-            {pendingUsers.length > 0 ? (
-              <div className="space-y-2">
-                {pendingUsers.map((user) => (
-                  <div
-                    key={user.userId}
-                    className={`border rounded p-3 cursor-pointer ${
-                      selectedUser?.userId === user.userId
-                        ? 'bg-blue-50 dark:bg-blue-900 border-blue-500'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                    onClick={() => setSelectedUser(user)}
-                  >
-                    <p className="font-semibold">{user.displayName || user.email}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Role: {user.role} | {user.email}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                    </p>
+        {/* Two-column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: User List */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Requests</h2>
+              
+              {/* Search Bar */}
+              <div className="mb-4">
+                <div className="flex w-full items-stretch rounded-lg h-11 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-center pl-3.5 pr-2 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-l-lg">
+                    <span className="material-symbols-outlined text-xl text-gray-500 dark:text-gray-400">search</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-8">No pending approvals</p>
-            )}
-          </Card>
-
-          {/* User Details & Actions */}
-          {selectedUser && (
-            <Card title="User Details">
-              <div className="space-y-4">
-                <div>
-                  <p className="font-semibold">{selectedUser.displayName || 'N/A'}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Email: {selectedUser.email}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Role: {selectedUser.role}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Status: {selectedUser.status}
-                  </p>
-                  {selectedUser.createdAt && (
-                    <p className="text-xs text-gray-500">
-                      Registered: {new Date(selectedUser.createdAt).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-
-                {/* Approval Actions */}
-                <div className="border-t pt-4 space-y-4">
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleApprove(selectedUser.userId)}
-                      disabled={processing}
-                      className="flex-1"
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => {
-                        if (confirm('Are you sure you want to reject this user?')) {
-                          // Show rejection reason input
-                        }
-                      }}
-                      disabled={processing}
-                      className="flex-1"
-                    >
-                      Reject
-                    </Button>
-                  </div>
-
-                  {/* Rejection Reason */}
-                  <div>
-                    <Input
-                      label="Rejection Reason (if rejecting)"
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Enter reason for rejection..."
-                    />
-                    {rejectionReason && (
-                      <Button
-                        variant="danger"
-                        onClick={() => handleReject(selectedUser.userId)}
-                        disabled={processing}
-                        className="w-full mt-2"
-                      >
-                        Confirm Rejection
-                      </Button>
-                    )}
-                  </div>
+                  <input
+                    type="text"
+                    className="flex-1 px-3.5 py-2 text-sm font-normal text-gray-900 dark:text-white bg-white dark:bg-gray-900 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                    placeholder="Search by name or ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
               </div>
             </Card>
+
+            {/* User List */}
+            <div className="flex flex-col gap-2">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((pendingUser) => {
+                  const registeredDate = convertToDate(pendingUser.registeredAt);
+                  const isSelected = selectedPendingUser?.userID === pendingUser.userID;
+                  const userType = pendingUser.userID.startsWith('PAT') ? 'Patient' : 'Doctor';
+                  
+                  return (
+                    <div
+                      key={pendingUser.userID}
+                      className={`flex cursor-pointer items-center gap-4 rounded-xl p-4 transition-colors ${
+                        isSelected
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 shadow-sm'
+                          : 'bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800/60 border border-gray-200 dark:border-gray-800'
+                      }`}
+                      onClick={() => handleSelectUser(pendingUser)}
+                    >
+                      {pendingUser.photoURL ? (
+                        <img
+                          src={pendingUser.photoURL}
+                          alt={pendingUser.name}
+                          className="h-12 w-12 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                          <span className="text-gray-600 dark:text-gray-400 text-lg font-semibold">
+                            {pendingUser.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-base font-medium truncate ${
+                          isSelected 
+                            ? 'text-blue-600 dark:text-blue-400' 
+                            : 'text-gray-900 dark:text-white'
+                        }`}>
+                          {pendingUser.name}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          ID: {pendingUser.userID}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm text-gray-500 dark:text-gray-400">
+                        {formatDateShort(registeredDate)}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                <Card className="p-8">
+                  <p className="text-gray-500 dark:text-gray-400 text-center">No pending approvals</p>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: User Details */}
+          {selectedPendingUser ? (
+            <div className="lg:col-span-2 bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 h-fit">
+              <div className="p-8">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">User Details</h2>
+                
+                {/* Profile Header */}
+                <div className="flex items-center gap-6 mb-8">
+                  {selectedPendingUser.photoURL ? (
+                    <img
+                      src={selectedPendingUser.photoURL}
+                      alt={selectedPendingUser.name}
+                      className="h-24 w-24 rounded-full object-cover shrink-0 border-2 border-gray-200 dark:border-gray-700"
+                    />
+                  ) : (
+                    <div className="h-24 w-24 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center shrink-0 border-2 border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400 text-3xl font-semibold">
+                        {selectedPendingUser.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {selectedPendingUser.name}
+                    </p>
+                    <p className="text-base text-gray-600 dark:text-gray-400">
+                      {selectedPendingUser.userID.startsWith('PAT') ? 'Patient' : 'Doctor'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Information Sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">User ID</p>
+                    <p className="text-base font-medium text-gray-800 dark:text-gray-200">{selectedPendingUser.userID}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Registration Date</p>
+                    <p className="text-base font-medium text-gray-800 dark:text-gray-200">
+                      {formatDate(convertToDate(selectedPendingUser.registeredAt))}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Phone Number</p>
+                    <p className="text-base font-medium text-gray-800 dark:text-gray-200">{selectedPendingUser.phone}</p>
+                  </div>
+                      {selectedUser && (
+                    <>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Email Address</p>
+                        <p className="text-base font-medium text-gray-800 dark:text-gray-200">{selectedUser.email || 'N/A'}</p>
+                      </div>
+                      {(selectedUser as any).contactInfo?.address && (
+                        <div className="md:col-span-2 space-y-1">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
+                          <p className="text-base font-medium text-gray-800 dark:text-gray-200">{(selectedUser as any).contactInfo.address}</p>
+                        </div>
+                      )}
+                      {selectedPendingUser.userID.startsWith('DOC') && selectedUser && 'professionalInfo' in selectedUser && (
+                        <>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Specialization</p>
+                            <p className="text-base font-medium text-gray-800 dark:text-gray-200">
+                              {(selectedUser as any).professionalInfo?.specialization || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Medical License No.</p>
+                            <p className="text-base font-medium text-gray-800 dark:text-gray-200">
+                              {(selectedUser as any).professionalInfo?.licenseNumber || 'N/A'}
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Rejection Reason Input */}
+                {showRejectionInput && (
+                  <div className="mb-8">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Reason for Rejection
+                    </label>
+                    <textarea
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm"
+                      rows={3}
+                      placeholder="Provide a clear reason for rejecting this user..."
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons Footer */}
+              <div className="flex justify-end gap-4 border-t border-gray-200 dark:border-gray-800 p-6 bg-gray-50 dark:bg-gray-900 rounded-b-xl">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowRejectionInput(!showRejectionInput);
+                    if (showRejectionInput) {
+                      setRejectionReason('');
+                    }
+                  }}
+                  disabled={processing}
+                  className="px-5 py-2.5"
+                >
+                  {showRejectionInput ? 'Cancel' : 'Reject'}
+                </Button>
+                {showRejectionInput && rejectionReason.trim() && (
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to reject this user?')) {
+                        handleReject(
+                          selectedPendingUser.userID,
+                          selectedPendingUser.userID.startsWith('PAT') ? 'patient' : 'doctor'
+                        );
+                      }
+                    }}
+                    disabled={processing}
+                    className="px-5 py-2.5"
+                  >
+                    Confirm Rejection
+                  </Button>
+                )}
+                <Button
+                  onClick={() => {
+                    handleApprove(
+                      selectedPendingUser.userID,
+                      selectedPendingUser.userID.startsWith('PAT') ? 'patient' : 'doctor'
+                    );
+                  }}
+                  disabled={processing}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Approve
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="lg:col-span-2 bg-white dark:bg-gray-900/50 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
+              <p className="text-gray-500 dark:text-gray-400 text-center">Select a user to view details</p>
+            </div>
           )}
         </div>
       </div>
@@ -206,4 +479,3 @@ const Approvals: React.FC = () => {
 };
 
 export default Approvals;
-

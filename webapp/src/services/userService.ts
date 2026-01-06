@@ -10,44 +10,44 @@ import { create, getById, update, getPendingUsers as getPendingUsersRepo } from 
  * @returns Created User
  */
 export const createUser = async (userData: User): Promise<User> => {
-  await create(userData.userId, userData);
+  await create(userData.userID, userData);
   return userData;
 };
 
 /**
  * Get user by ID
- * @param userId - ID of the user
+ * @param userID - ID of the user (PAT001, DOC001, 'admin', etc.)
  * @returns User or null
  */
-export const getUserById = async (userId: string): Promise<User | null> => {
-  const user = await getById(userId);
+export const getUserById = async (userID: string): Promise<User | null> => {
+  const user = await getById(userID);
   return user;
 };
 
 /**
  * Update user fields
- * @param userId - ID of the user
+ * @param userID - ID of the user
  * @param updates - Partial fields to update
  */
 export const updateUser = async (
-  userId: string,
+  userID: string,
   updates: Partial<User>
 ): Promise<void> => {
-  await update(userId, updates);
+  await update(userID, updates);
 };
 
 /**
  * Approve a pending user
- * @param userId - ID of the user to approve
- * @param adminId - ID of the admin approving
+ * @param userID - ID of the user to approve (PAT001, DOC001, etc.)
+ * @param adminID - ID of the admin approving ('admin')
  */
 export const approveUser = async (
-  userId: string,
-  adminId: string
+  userID: string,
+  adminID: string
 ): Promise<void> => {
-  await update(userId, {
+  await update(userID, {
     isApproved: true,
-    approvedBy: adminId,
+    approvedBy: adminID,
     approvedAt: new Date(),
     status: UserStatus.ACTIVE,
     updatedAt: new Date(),
@@ -56,14 +56,14 @@ export const approveUser = async (
 
 /**
  * Reject a user
- * @param userId - ID of the user to reject
+ * @param userID - ID of the user to reject
  * @param reason - Optional reason for rejection
  */
 export const rejectUser = async (
-  userId: string,
+  userID: string,
   reason?: string
 ): Promise<void> => {
-  await update(userId, {
+  await update(userID, {
     isApproved: false,
     status: UserStatus.SUSPENDED,
     updatedAt: new Date(),

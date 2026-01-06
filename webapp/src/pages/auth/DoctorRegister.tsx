@@ -4,6 +4,7 @@ import DoctorRegistrationForm from '@/components/forms/DoctorRegistrationForm';
 import { useAuthContext } from '@/context/AuthContext';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import logo from '@/assets/logo.png';
 
 const DoctorRegister: React.FC = () => {
   const { user } = useAuthContext();
@@ -27,9 +28,16 @@ const DoctorRegister: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-lg p-6 shadow-lg">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-          Doctor Registration
-        </h1>
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <img 
+            src={logo} 
+            alt="CareSync Logo" 
+            className="h-16 w-16 object-contain"
+          />
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            Doctor Registration
+          </h1>
+        </div>
 
         {success && (
           <div className="text-green-600 text-center mb-4">

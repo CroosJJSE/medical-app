@@ -14,7 +14,33 @@ export class PatientRepository {
    */
   async create(userId: string, patientId: string, data: Patient): Promise<void> {
     const docRef = doc(firestore, COLLECTIONS.USERS, userId, COLLECTIONS.PATIENTS, patientId);
-    await setDoc(docRef, data);
+    // Remove undefined fields before saving to Firestore (Firestore doesn't allow undefined values)
+    const cleanData = this.removeUndefined(data);
+    await setDoc(docRef, cleanData);
+  }
+
+  /**
+   * Recursively remove undefined values from an object
+   * @param obj - Object to clean
+   * @returns Cleaned object without undefined values
+   */
+  private removeUndefined(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeUndefined(item));
+    }
+    if (typeof obj === 'object' && obj.constructor === Object) {
+      const cleaned: any = {};
+      for (const key in obj) {
+        if (obj[key] !== undefined) {
+          cleaned[key] = this.removeUndefined(obj[key]);
+        }
+      }
+      return cleaned;
+    }
+    return obj;
   }
 
   /**
