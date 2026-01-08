@@ -27,7 +27,8 @@ export class AppointmentRepository {
     const docRef = doc(this.collectionRef, appointmentId);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
-    return docSnap.data() as Appointment;
+    const data = docSnap.data() as any;
+    return this.convertTimestamps(data);
   }
 
   /**
@@ -48,7 +49,10 @@ export class AppointmentRepository {
   async findByPatient(patientId: string): Promise<Appointment[]> {
     const q = query(this.collectionRef, where('patientId', '==', patientId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as Appointment);
+    return snapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return this.convertTimestamps(data);
+    });
   }
 
   /**
@@ -71,7 +75,10 @@ export class AppointmentRepository {
     }
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as Appointment);
+    return snapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return this.convertTimestamps(data);
+    });
   }
 
   /**
@@ -87,7 +94,32 @@ export class AppointmentRepository {
       where('dateTime', '<=', Timestamp.fromDate(endDate))
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as Appointment);
+    return snapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return this.convertTimestamps(data);
+    });
+  }
+
+  /**
+   * Helper to convert Firestore Timestamp fields to JS Date
+   */
+  private convertTimestamps(data: any): Appointment {
+    const converted: any = { ...data };
+
+    if (converted.dateTime instanceof Timestamp) {
+      converted.dateTime = converted.dateTime.toDate();
+    }
+    if (converted.createdAt instanceof Timestamp) {
+      converted.createdAt = converted.createdAt.toDate();
+    }
+    if (converted.updatedAt instanceof Timestamp) {
+      converted.updatedAt = converted.updatedAt.toDate();
+    }
+    if (converted.cancelledAt instanceof Timestamp) {
+      converted.cancelledAt = converted.cancelledAt.toDate();
+    }
+
+    return converted as Appointment;
   }
 }
 

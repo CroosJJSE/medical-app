@@ -4,6 +4,7 @@ import type { Appointment } from '@/models/Appointment';
 import { ID_PREFIXES, AppointmentStatus, DEFAULTS } from '@/enums';
 import { create, getById, update, getByPatientId, getByDoctorId } from '@/repositories/appointmentRepository';
 import { generateId } from '@/utils/idGenerator';
+import { getDoctor } from './doctorService';
 
 /**
  * Create a new appointment
@@ -102,6 +103,38 @@ export const checkAvailability = async (
   dateTime: Date,
   duration: number
 ): Promise<boolean> => {
+  // Check if the day is blocked
+  const doctor = await getDoctor(doctorId);
+  if (doctor?.blockedDays && doctor.blockedDays.length > 0) {
+    const dateStr = dateTime.toISOString().split('T')[0]; // YYYY-MM-DD format
+    if (doctor.blockedDays.includes(dateStr)) {
+      return false; // Day is blocked
+    }
+  }
+
+  // Check if the time slot is busy
+  if (doctor?.busySlots && doctor.busySlots.length > 0) {
+    const dateStr = dateTime.toISOString().split('T')[0];
+    const timeStr = `${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}`;
+    
+    // Check if the start time slot is busy
+    if (doctor.busySlots.some(slot => slot.date === dateStr && slot.time === timeStr)) {
+      return false; // Slot is busy
+    }
+    
+    // Check if any of the duration slots are busy (for multi-slot appointments)
+    const slotDuration = 15; // 15-minute slots
+    const numSlots = Math.ceil(duration / slotDuration);
+    for (let i = 0; i < numSlots; i++) {
+      const checkTime = new Date(dateTime);
+      checkTime.setMinutes(checkTime.getMinutes() + (i * slotDuration));
+      const checkTimeStr = `${checkTime.getHours().toString().padStart(2, '0')}:${checkTime.getMinutes().toString().padStart(2, '0')}`;
+      if (doctor.busySlots.some(slot => slot.date === dateStr && slot.time === checkTimeStr)) {
+        return false; // One of the slots is busy
+      }
+    }
+  }
+
   const appointments = await getAppointmentsByDoctor(doctorId);
 
   const desiredStart = dateTime.getTime();

@@ -7,6 +7,8 @@ import patientService from '@/services/patientService';
 import doctorService from '@/services/doctorService';
 import { getPendingApprovals } from '@/repositories/pendingApprovalRepository';
 import type { PendingUserInfo } from '@/repositories/pendingApprovalRepository';
+import { UserRole } from '@/enums';
+import { convertToDate, formatDateShort } from '@/utils/formatters';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +30,9 @@ const Dashboard: React.FC = () => {
         setPendingUsers(allPending.slice(0, 5)); // Show first 5
 
         // Get counts
-        const patients = await patientService.getPatientsByDoctor(''); // Get all patients
+        const allPatients = await patientService.getPatientsByDoctor(''); // Get all patients
+        // Filter out admin users - only count actual patients
+        const patients = allPatients.filter(p => p.role === UserRole.PATIENT);
         const doctors = await doctorService.getDoctors();
         
         setStats({
@@ -55,15 +59,6 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const formatDate = (date: Date | string | undefined): string => {
-    if (!date) return 'N/A';
-    try {
-      const d = typeof date === 'string' ? new Date(date) : date;
-      return d.toISOString().split('T')[0];
-    } catch {
-      return 'N/A';
-    }
-  };
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col bg-[#f5f7f8] overflow-x-hidden">
@@ -150,7 +145,7 @@ const Dashboard: React.FC = () => {
                               #{user.userID}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {formatDate(user.registeredAt)}
+                              {user.registeredAt ? formatDateShort(convertToDate(user.registeredAt)) : 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <button

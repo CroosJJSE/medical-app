@@ -9,6 +9,7 @@ import Input from '@/components/common/Input';
 import * as testResultService from '@/services/testResultService';
 import type { TestResult, LabValue } from '@/models/TestResult';
 import { LabValueStatus } from '@/enums';
+import DoctorHeader from '@/components/layout/DoctorHeader';
 
 const TestResultsReview: React.FC = () => {
   const { user } = useAuth();
@@ -76,8 +77,10 @@ const TestResultsReview: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#f5f7f8] flex flex-col">
+      <DoctorHeader />
+      <div className="flex-1 p-4">
+        <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Review Test Results</h1>
           <Button variant="secondary" onClick={() => navigate('/doctor/dashboard')}>
@@ -208,6 +211,7 @@ const TestResultsReview: React.FC = () => {
               </div>
             </Card>
           )}
+        </div>
         </div>
       </div>
     </div>

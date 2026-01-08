@@ -10,6 +10,8 @@ import Login from '@/pages/auth/Login';
 import PatientRegister from '@/pages/auth/PatientRegister';
 import PatientRegistrationFlow from '@/pages/auth/PatientRegistrationFlow';
 import DoctorRegister from '@/pages/auth/DoctorRegister';
+import DoctorRegistrationFlow from '@/pages/auth/DoctorRegistrationFlow';
+import PendingApproval from '@/pages/auth/PendingApproval';
 
 // Patient pages
 import PatientDashboard from '@/pages/patient/Dashboard';
@@ -32,6 +34,7 @@ import AdminDashboard from '@/pages/admin/Dashboard';
 import Approvals from '@/pages/admin/Approvals';
 import AllPatients from '@/pages/admin/AllPatients';
 import AllDoctors from '@/pages/admin/AllDoctors';
+import AdminPatientProfile from '@/pages/admin/PatientProfile';
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -49,9 +52,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
       </div>
     );
   }
-
-  // If user is null, they need to register (not found in /admin/common_info/users mapping)
-  // This means they haven't completed registration yet
+  
   if (!user) {
     // Check if they're signed in with Google (but not registered)
     // Redirect to registration flow for patients
@@ -62,18 +63,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to="/login" replace />;
   }
 
-  // If user exists but not approved, show pending approval message
+  // If user exists but not approved, redirect to pending approval page
   if (!user.isApproved || user.status === UserStatus.PENDING) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Account Pending Approval</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Your account is pending admin approval. Please wait for approval.
-          </p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/pending-approval" replace />;
   }
 
   if (!allowedRoles.includes(user.role)) {
@@ -101,6 +93,8 @@ const AppRouter: React.FC = () => {
         <Route path="/register/patient" element={<PatientRegister />} />
         <Route path="/register/patient/flow" element={<PatientRegistrationFlow />} />
         <Route path="/register/doctor" element={<DoctorRegister />} />
+        <Route path="/register/doctor/flow" element={<DoctorRegistrationFlow />} />
+        <Route path="/pending-approval" element={<PendingApproval />} />
 
         {/* Patient Routes */}
         <Route
@@ -232,6 +226,14 @@ const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
               <AllDoctors />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/patient-profile/:patientId"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminPatientProfile />
             </ProtectedRoute>
           }
         />

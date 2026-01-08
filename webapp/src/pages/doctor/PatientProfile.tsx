@@ -66,8 +66,10 @@ const PatientProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#f5f7f8] flex flex-col">
+      <DoctorHeader />
+      <div className="flex-1 p-4">
+        <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
@@ -208,6 +210,7 @@ const PatientProfile: React.FC = () => {
             </Card>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

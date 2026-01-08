@@ -7,16 +7,31 @@ import { UserRole } from '@/enums';
 import { auth } from '@/services/firebase';
 import logo from '@/assets/logo.png';
 
+type RegistrationType = 'patient' | 'doctor';
+
 const Login: React.FC = () => {
   const { signIn, user, loading } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [registrationType, setRegistrationType] = useState<RegistrationType>('patient');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const navigate = useNavigate();
 
   // Redirect based on user state after sign-in
   useEffect(() => {
+    console.log('[LOGIN] useEffect triggered - loading:', loading, 'auth.currentUser:', !!auth.currentUser, 'user:', !!user);
     if (!loading && auth.currentUser) {
+      console.log('[LOGIN] User is signed in with Firebase');
       if (user) {
-        // User found - redirect based on role
+        console.log('[LOGIN] User found in Firestore:', user.userID, 'role:', user.role);
+        // Check if user is pending approval
+        if (!user.isApproved || user.status === 'pending') {
+          console.log('[LOGIN] User is pending approval, redirecting...');
+          navigate('/pending-approval', { replace: true });
+          return;
+        }
+        
+        // User found and approved - redirect based on role
+        console.log('[LOGIN] User is approved, redirecting to dashboard...');
         if (user.role === UserRole.ADMIN) {
           navigate('/admin/dashboard', { replace: true });
         } else if (user.role === UserRole.DOCTOR) {
@@ -26,18 +41,76 @@ const Login: React.FC = () => {
         }
       } else if (auth.currentUser) {
         // User is signed in with Google but not found in Firestore - needs registration
-        navigate('/register/patient/flow', { replace: true });
+        console.log('[LOGIN] User signed in with Google but not in Firestore, needs registration');
+        // Check stored registration type or default to patient
+        const storedType = sessionStorage.getItem('registrationType') as RegistrationType;
+        const type = storedType || 'patient';
+        console.log('[LOGIN] Registration type:', type);
+        if (type === 'doctor') {
+          console.log('[LOGIN] Redirecting to doctor registration...');
+          navigate('/register/doctor/flow', { replace: true });
+        } else {
+          console.log('[LOGIN] Redirecting to patient registration...');
+          navigate('/register/patient/flow', { replace: true });
+        }
       }
+    } else {
+      console.log('[LOGIN] Not redirecting - loading:', loading, 'has currentUser:', !!auth.currentUser);
     }
   }, [user, loading, navigate]);
 
+  const handleToggleChange = (type: RegistrationType) => {
+    if (type === 'doctor' && registrationType === 'patient') {
+      // Show confirmation modal when switching to doctor
+      setShowConfirmModal(true);
+    } else {
+      setRegistrationType(type);
+      sessionStorage.setItem('registrationType', type);
+    }
+  };
+
+  const handleConfirmDoctor = () => {
+    setRegistrationType('doctor');
+    sessionStorage.setItem('registrationType', 'doctor');
+    setShowConfirmModal(false);
+  };
+
+  const handleCancelDoctor = () => {
+    setRegistrationType('patient');
+    sessionStorage.setItem('registrationType', 'patient');
+    setShowConfirmModal(false);
+  };
+
   const handleLogin = async () => {
+    console.log('[LOGIN] Button clicked, registrationType:', registrationType);
+    console.log('[LOGIN] showConfirmModal:', showConfirmModal);
+    
+    // Ensure modal is closed before attempting sign-in
+    if (showConfirmModal) {
+      console.log('[LOGIN] Modal is open, closing it first...');
+      setShowConfirmModal(false);
+      // Wait a bit for modal to close
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
     setError(null);
+    // Store registration type before sign in
+    sessionStorage.setItem('registrationType', registrationType);
+    console.log('[LOGIN] Stored registrationType in sessionStorage:', registrationType);
+    
     try {
+      console.log('[LOGIN] Calling signIn()...');
+      console.log('[LOGIN] Window focus:', document.hasFocus());
+      console.log('[LOGIN] Window location:', window.location.href);
+      
       await signIn();
+      console.log('[LOGIN] signIn() completed successfully');
       // Don't redirect here - let useEffect handle it after user state updates
     } catch (err: any) {
       console.error('[LOGIN] Sign-in error:', err);
+      console.error('[LOGIN] Error code:', err?.code);
+      console.error('[LOGIN] Error message:', err?.message);
+      console.error('[LOGIN] Error stack:', err?.stack);
       setError(err.message || 'Login failed. Try again.');
     }
   };
@@ -46,7 +119,7 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#f5f7f8] p-4">
       <div className="flex w-full max-w-md flex-col items-center text-center">
         {/* Logo and App Name */}
-        <div className="flex flex-col items-center gap-4 pb-12 pt-5">
+        <div className="flex flex-col items-center gap-4 pb-8 pt-5">
           <img 
             src={logo} 
             alt="CareSync Logo" 
@@ -55,6 +128,36 @@ const Login: React.FC = () => {
           <h2 className="text-[#111418] text-[28px] font-bold leading-tight">
             CareSync
           </h2>
+        </div>
+
+        {/* Glassy Toggle */}
+        <div className="w-full max-w-xs mb-8">
+          <div className="relative bg-white/80 backdrop-blur-md rounded-full p-1.5 shadow-lg border border-white/20">
+            <div className="flex relative">
+              <button
+                type="button"
+                onClick={() => handleToggleChange('patient')}
+                className={`flex-1 py-2.5 px-4 rounded-full text-sm font-bold transition-all duration-300 ${
+                  registrationType === 'patient'
+                    ? 'bg-[#3c83f6] text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Patient
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleChange('doctor')}
+                className={`flex-1 py-2.5 px-4 rounded-full text-sm font-bold transition-all duration-300 ${
+                  registrationType === 'doctor'
+                    ? 'bg-[#3c83f6] text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Doctor
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Welcome Text */}
@@ -108,6 +211,34 @@ const Login: React.FC = () => {
           .
         </p>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-[#111418] mb-3">
+              Register as Doctor?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to register as a doctor? You'll need to provide professional information and credentials.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelDoctor}
+                className="flex-1 py-3 px-4 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+              >
+                No, As a patient
+              </button>
+              <button
+                onClick={handleConfirmDoctor}
+                className="flex-1 py-3 px-4 rounded-lg bg-[#3c83f6] text-white font-bold hover:bg-[#3c83f6]/90 transition-colors"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

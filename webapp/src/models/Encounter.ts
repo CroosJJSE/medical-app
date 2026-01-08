@@ -28,6 +28,8 @@ import {
     };
   
     objective: {
+      physicalExamination?: string;  // Physical examination notes
+      
       vitalSigns?: {
         bloodPressure?: string;  // e.g. '120/80 mmHg'
         pulseRate?: number;      // PR

@@ -69,3 +69,54 @@ export function formatPhone(phone: string): string {
   if (digits.length <= 9) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
   return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
 }
+
+/**
+ * Convert various date/timestamp formats to Date object
+ * @param dateInput - Date, Firestore Timestamp, string, or number
+ * @returns Date object or null
+ */
+export function convertToDate(dateInput: Date | Timestamp | string | number | undefined): Date | null {
+  if (!dateInput) return null;
+
+  if (dateInput instanceof Date) {
+    return dateInput;
+  }
+  if (typeof dateInput === 'string') {
+    const parsedDate = new Date(dateInput);
+    return isNaN(parsedDate.getTime()) ? null : parsedDate;
+  }
+  if (typeof dateInput === 'number') {
+    return new Date(dateInput);
+  }
+  // Handle Firestore Timestamp objects (e.g., { seconds: 123, nanoseconds: 456, toDate: Function })
+  if (typeof dateInput === 'object' && dateInput !== null && 'toDate' in dateInput && typeof dateInput.toDate === 'function') {
+    return dateInput.toDate();
+  }
+  // Handle raw Firestore timestamp objects (e.g., { seconds: 123, nanoseconds: 456 })
+  if (typeof dateInput === 'object' && dateInput !== null && 'seconds' in dateInput && typeof dateInput.seconds === 'number') {
+    return new Date(dateInput.seconds * 1000);
+  }
+  return null;
+}
+
+/**
+ * Format date to a readable string (e.g., "January 6, 2026")
+ * @param dateInput - Date, Firestore Timestamp, string, or number
+ * @returns Formatted date string
+ */
+export function formatDateLong(dateInput: Date | Timestamp | string | number | undefined): string {
+  const date = convertToDate(dateInput);
+  if (!date) return 'N/A';
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/**
+ * Format date to a short readable string (e.g., "Jan 6, 2026")
+ * @param dateInput - Date, Firestore Timestamp, string, or number
+ * @returns Formatted date string
+ */
+export function formatDateShort(dateInput: Date | Timestamp | string | number | undefined): string {
+  const date = convertToDate(dateInput);
+  if (!date) return 'N/A';
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}

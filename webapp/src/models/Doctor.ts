@@ -52,6 +52,9 @@ export interface Doctor {
     timeZone: string;
   };
 
+  blockedDays?: string[]; // Array of date strings (YYYY-MM-DD) for blocked days
+  busySlots?: Array<{ date: string; time: string }>; // Array of busy time slots (date: YYYY-MM-DD, time: HH:mm)
+
   calendarIntegration?: {
     provider: 'google' | 'outlook' | 'apple';
     calendarId: string;

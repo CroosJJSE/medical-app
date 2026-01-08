@@ -213,7 +213,8 @@ export const ID_PREFIXES = {
   TEST_RESULT: 'TST',
   MEDICATION: 'MED',
   DISEASE: 'DIS',
-  TIMELINE: 'TLN'
+  TIMELINE: 'TLN',
+  AUDIT_LOG: 'AUD'
 } as const;
 
 // Default Values

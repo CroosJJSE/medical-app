@@ -9,3 +9,5 @@ export const adminConfig = {
   authID: import.meta.env.VITE_ADMIN_AUTH_ID || 'BTF8DuIZC0TYTf9iK6zGXASNQWC2',
 };
 
+
+

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import BackToDashboardButton from '@/components/common/BackToDashboardButton';
 import Loading from '@/components/common/Loading';
 import Input from '@/components/common/Input';
 import doctorService from '@/services/doctorService';
@@ -58,13 +59,11 @@ const AllDoctors: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-[#f5f7f8] p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">All Doctors</h1>
-          <Button variant="secondary" onClick={() => navigate('/admin/dashboard')}>
-            Back to Dashboard
-          </Button>
+          <h1 className="text-3xl font-bold text-gray-800">All Doctors</h1>
+          <BackToDashboardButton />
         </div>
 
         {/* Search */}
@@ -95,7 +94,7 @@ const AllDoctors: React.FC = () => {
                 </thead>
                 <tbody>
                   {filteredDoctors.map((doctor) => (
-                    <tr key={doctor.doctorId} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <tr key={doctor.doctorId} className="border-b hover:bg-gray-50">
                       <td className="p-2">{doctor.doctorId}</td>
                       <td className="p-2">
                         {doctor.professionalInfo?.title} {doctor.professionalInfo?.firstName}{' '}

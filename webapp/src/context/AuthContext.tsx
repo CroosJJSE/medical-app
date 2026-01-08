@@ -9,6 +9,7 @@ interface AuthContextProps {
   loading: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -39,15 +40,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signIn = async () => {
+    console.log('[AUTH_CONTEXT] signIn called');
     setLoading(true);
     try {
+      console.log('[AUTH_CONTEXT] Calling signInWithGoogle...');
       await signInWithGoogle();
+      console.log('[AUTH_CONTEXT] signInWithGoogle completed, fetching user...');
       const fetchedUser = await getCurrentUser();
+      console.log('[AUTH_CONTEXT] getCurrentUser result:', fetchedUser ? 'User found' : 'User not found (needs registration)');
       setUser(fetchedUser);
+      console.log('[AUTH_CONTEXT] User state updated');
     } catch (err) {
       console.error('[AUTH_CONTEXT] Sign in failed:', err);
+      console.error('[AUTH_CONTEXT] Error details:', err);
       throw err;
     } finally {
+      console.log('[AUTH_CONTEXT] Setting loading to false');
       setLoading(false);
     }
   };
@@ -65,8 +73,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    setLoading(true);
+    try {
+      const fetchedUser = await getCurrentUser();
+      setUser(fetchedUser);
+    } catch (err) {
+      console.error('[AUTH_CONTEXT] Refresh user failed:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

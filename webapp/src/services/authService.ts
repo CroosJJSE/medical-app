@@ -24,6 +24,9 @@ googleProvider.setCustomParameters({
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
+// Note: We don't pre-check for popup blocking as it can cause false positives
+// Firebase will properly detect and report popup blocking errors
+
 const getUserFromAuthUID = async (firebaseUser: FirebaseUser): Promise<User | null> => {
   const authUID = firebaseUser.uid;
   const email = firebaseUser.email || '';
@@ -66,17 +69,44 @@ const getUserFromAuthUID = async (firebaseUser: FirebaseUser): Promise<User | nu
  * Returns Firebase UserCredential
  */
 export const signInWithGoogle = async (): Promise<UserCredential> => {
+  console.log('[AUTH] signInWithGoogle called');
+  console.log('[AUTH] Current window location:', window.location.href);
+  
   try {
+    console.log('[AUTH] Calling signInWithPopup...');
     const result = await signInWithPopup(auth, googleProvider);
+    console.log('[AUTH] signInWithPopup success!');
+    console.log('[AUTH] Result user email:', result.user?.email);
+    console.log('[AUTH] Result user UID:', result.user?.uid);
     return result;
   } catch (error: any) {
+    console.error('[AUTH] signInWithPopup error occurred');
+    console.error('[AUTH] Error type:', typeof error);
+    console.error('[AUTH] Error code:', error?.code);
+    console.error('[AUTH] Error message:', error?.message);
+    console.error('[AUTH] Error name:', error?.name);
+    console.error('[AUTH] Error stack:', error?.stack);
+    console.error('[AUTH] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
     // Handle specific Firebase auth errors
     if (error?.code === 'auth/popup-closed-by-user') {
+      console.log('[AUTH] Popup was closed by user');
       throw new Error('Sign-in was cancelled. Please try again.');
     }
     
     if (error?.code === 'auth/popup-blocked') {
+      console.log('[AUTH] Popup was blocked by browser');
       throw new Error('Popup was blocked by browser. Please allow popups and try again.');
+    }
+    
+    if (error?.code === 'auth/cancelled-popup-request') {
+      console.log('[AUTH] Popup request was cancelled');
+      throw new Error('Another sign-in request is already in progress. Please wait.');
+    }
+    
+    if (error?.message?.includes('timeout')) {
+      console.log('[AUTH] Sign-in timed out');
+      throw error;
     }
     
     // Log and re-throw other errors

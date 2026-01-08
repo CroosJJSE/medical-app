@@ -5,6 +5,7 @@ import { create, getById, getByAuthUID, update as updateUser } from '@/repositor
 import { generateUserId } from '@/utils/idGenerator';
 import { addPendingPatient } from '@/repositories/pendingApprovalRepository';
 import { UserRole, UserStatus } from '@/enums';
+import { getDoctor, updateDoctor } from '@/services/doctorService';
 
 /**
  * Create a new patient
@@ -132,6 +133,56 @@ export const assignDoctor = async (patientUserID: string, doctorUserID: string):
 };
 
 /**
+ * Assign primary doctor to a patient (with doctor's patient list sync)
+ * @param patientUserID - Patient userID (PAT001, etc.)
+ * @param doctorUserID - Doctor userID (DOC001, etc.)
+ * @param assignedBy - Admin userID who is making the assignment
+ */
+export const assignPrimaryDoctor = async (
+  patientUserID: string,
+  doctorUserID: string,
+  assignedBy: string
+): Promise<void> => {
+  // Get current patient to check if there's an existing assigned doctor
+  const patient = await getPatient(patientUserID);
+  const previousDoctorId = patient?.assignedDoctorId;
+
+  // Update patient with new assigned doctor
+  await updateUser(patientUserID, {
+    assignedDoctorId: doctorUserID,
+    updatedAt: new Date(),
+  } as any);
+
+  // Update doctor's assignedPatients array
+  
+  // Remove patient from previous doctor's list if exists
+  if (previousDoctorId && previousDoctorId !== doctorUserID) {
+    const previousDoctor = await getDoctor(previousDoctorId);
+    if (previousDoctor) {
+      const updatedPatients = (previousDoctor.assignedPatients || []).filter(
+        (pid: string) => pid !== patientUserID
+      );
+      await updateDoctor(previousDoctorId, {
+        assignedPatients: updatedPatients,
+        updatedAt: new Date(),
+      });
+    }
+  }
+
+  // Add patient to new doctor's list
+  const newDoctor = await getDoctor(doctorUserID);
+  if (newDoctor) {
+    const currentPatients = newDoctor.assignedPatients || [];
+    if (!currentPatients.includes(patientUserID)) {
+      await updateDoctor(doctorUserID, {
+        assignedPatients: [...currentPatients, patientUserID],
+        updatedAt: new Date(),
+      });
+    }
+  }
+};
+
+/**
  * Check if a patient exists for an authUID
  * @param authUID - Firebase Auth UID
  * @returns true if patient exists, false otherwise
@@ -150,6 +201,7 @@ const patientService = {
   getPatientsByDoctor,
   getAllPatients,
   assignDoctor,
+  assignPrimaryDoctor,
   patientExists,
 };
 

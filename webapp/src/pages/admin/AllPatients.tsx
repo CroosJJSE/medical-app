@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import BackToDashboardButton from '@/components/common/BackToDashboardButton';
 import Loading from '@/components/common/Loading';
 import Input from '@/components/common/Input';
 import patientService from '@/services/patientService';
 import type { Patient } from '@/models/Patient';
+import { UserRole } from '@/enums';
 
 const AllPatients: React.FC = () => {
   const navigate = useNavigate();
@@ -20,8 +22,10 @@ const AllPatients: React.FC = () => {
       try {
         // Get all patients (empty string means all patients for admin)
         const data = await patientService.getPatientsByDoctor('');
-        setPatients(data);
-        setFilteredPatients(data);
+        // Filter out admin users - only show actual patients
+        const actualPatients = data.filter(p => p.role === UserRole.PATIENT);
+        setPatients(actualPatients);
+        setFilteredPatients(actualPatients);
       } catch (error) {
         console.error('Error loading patients:', error);
       } finally {
@@ -59,13 +63,11 @@ const AllPatients: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-[#f5f7f8] p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">All Patients</h1>
-          <Button variant="secondary" onClick={() => navigate('/admin/dashboard')}>
-            Back to Dashboard
-          </Button>
+          <h1 className="text-3xl font-bold text-gray-800">All Patients</h1>
+          <BackToDashboardButton />
         </div>
 
         {/* Search */}
@@ -95,7 +97,7 @@ const AllPatients: React.FC = () => {
                 </thead>
                 <tbody>
                   {filteredPatients.map((patient) => (
-                    <tr key={patient.userID} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <tr key={patient.userID} className="border-b hover:bg-gray-50">
                       <td className="p-2">{patient.userID}</td>
                       <td className="p-2">
                         <div className="flex items-center gap-2">
@@ -117,10 +119,10 @@ const AllPatients: React.FC = () => {
                       <td className="p-2">
                         <span className={`px-2 py-1 rounded text-xs ${
                           patient.status === 'active' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            ? 'bg-green-100 text-green-800'
                             : patient.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
                           {patient.status || 'Inactive'}
                         </span>
@@ -128,7 +130,7 @@ const AllPatients: React.FC = () => {
                       <td className="p-2">
                         <Button
                           variant="secondary"
-                          onClick={() => navigate(`/doctor/patient-profile/${patient.userID}`)}
+                          onClick={() => navigate(`/admin/patient-profile/${patient.userID}`)}
                         >
                           View
                         </Button>
