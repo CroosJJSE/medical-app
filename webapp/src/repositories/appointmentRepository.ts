@@ -101,6 +101,24 @@ export class AppointmentRepository {
   }
 
   /**
+   * Find pending and amended appointments by doctor
+   * @param doctorId - Doctor ID
+   * @returns Array of Appointments with PENDING or AMENDED status
+   */
+  async findPendingByDoctor(doctorId: string): Promise<Appointment[]> {
+    const q = query(
+      this.collectionRef,
+      where('doctorId', '==', doctorId),
+      where('status', 'in', ['pending', 'amended'])
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return this.convertTimestamps(data);
+    });
+  }
+
+  /**
    * Helper to convert Firestore Timestamp fields to JS Date
    */
   private convertTimestamps(data: any): Appointment {
@@ -108,6 +126,9 @@ export class AppointmentRepository {
 
     if (converted.dateTime instanceof Timestamp) {
       converted.dateTime = converted.dateTime.toDate();
+    }
+    if (converted.originalDateTime instanceof Timestamp) {
+      converted.originalDateTime = converted.originalDateTime.toDate();
     }
     if (converted.createdAt instanceof Timestamp) {
       converted.createdAt = converted.createdAt.toDate();
@@ -117,6 +138,29 @@ export class AppointmentRepository {
     }
     if (converted.cancelledAt instanceof Timestamp) {
       converted.cancelledAt = converted.cancelledAt.toDate();
+    }
+    if (converted.acceptedAt instanceof Timestamp) {
+      converted.acceptedAt = converted.acceptedAt.toDate();
+    }
+    if (converted.rejectedAt instanceof Timestamp) {
+      converted.rejectedAt = converted.rejectedAt.toDate();
+    }
+    if (converted.lastAmendedAt instanceof Timestamp) {
+      converted.lastAmendedAt = converted.lastAmendedAt.toDate();
+    }
+    if (converted.amendmentHistory && Array.isArray(converted.amendmentHistory)) {
+      converted.amendmentHistory = converted.amendmentHistory.map((amendment: any) => {
+        if (amendment.amendedAt instanceof Timestamp) {
+          amendment.amendedAt = amendment.amendedAt.toDate();
+        }
+        if (amendment.originalDateTime instanceof Timestamp) {
+          amendment.originalDateTime = amendment.originalDateTime.toDate();
+        }
+        if (amendment.newDateTime instanceof Timestamp) {
+          amendment.newDateTime = amendment.newDateTime.toDate();
+        }
+        return amendment;
+      });
     }
 
     return converted as Appointment;
@@ -145,6 +189,10 @@ export const getByPatientId = async (patientId: string): Promise<Appointment[]> 
 
 export const getByDoctorId = async (doctorId: string, startDate?: Date, endDate?: Date): Promise<Appointment[]> => {
   return await repo.findByDoctor(doctorId, startDate, endDate);
+};
+
+export const getPendingByDoctor = async (doctorId: string): Promise<Appointment[]> => {
+  return await repo.findPendingByDoctor(doctorId);
 };
 
 export default repo;

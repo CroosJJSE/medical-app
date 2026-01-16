@@ -70,7 +70,6 @@ const DoctorRegistrationFlow: React.FC = () => {
     specialization: '',
     qualifications: '',
     licenseNumber: '',
-    licenseExpiry: '',
     clinicName: '',
     clinicAddress: '',
     consultationFee: '',
@@ -176,10 +175,6 @@ const DoctorRegistrationFlow: React.FC = () => {
       setError('Qualifications are required');
       return false;
     }
-    if (!professionalInfo.licenseNumber.trim()) {
-      setError('License number is required');
-      return false;
-    }
     if (professionalInfo.workingDays.length === 0) {
       setError('At least one working day is required');
       return false;
@@ -276,8 +271,7 @@ const DoctorRegistrationFlow: React.FC = () => {
             .split(',')
             .map((q) => q.trim())
             .filter(Boolean),
-          licenseNumber: professionalInfo.licenseNumber.trim(),
-          ...(professionalInfo.licenseExpiry && { licenseExpiry: new Date(professionalInfo.licenseExpiry) }),
+          ...(professionalInfo.licenseNumber.trim() && { licenseNumber: professionalInfo.licenseNumber.trim() }),
         },
         contactInfo: {
           primaryPhone: personalInfo.primaryPhone.trim(),
@@ -565,26 +559,17 @@ const DoctorRegistrationFlow: React.FC = () => {
                       />
                       <p className="text-xs text-gray-500 mt-1">Enter qualifications separated by commas.</p>
                     </div>
-                    <div className="md:col-span-6">
-                      <label className="block text-sm font-medium text-[#111418] mb-2">
-                        License Number <span className="text-red-500">*</span>
+                    <div className="md:col-span-12">
+                      <label className="block text-sm font-medium text-[#111418] mb-2 flex justify-between">
+                        <span>License Number</span>
+                        <span className="text-xs font-normal text-slate-400">Optional</span>
                       </label>
                       <input
                         className="w-full rounded-lg border border-gray-300 bg-white text-[#111418] px-4 py-3 focus:border-[#3c83f6] focus:ring-[#3c83f6] focus:outline-none placeholder-gray-400"
                         placeholder="License #123456"
-                        required
                         type="text"
                         value={professionalInfo.licenseNumber}
                         onChange={(e) => handleProfessionalInfoChange('licenseNumber', e.target.value)}
-                      />
-                    </div>
-                    <div className="md:col-span-6">
-                      <label className="block text-sm font-medium text-[#111418] mb-2">License Expiry</label>
-                      <input
-                        className="w-full rounded-lg border border-gray-300 bg-white text-[#111418] px-4 py-3 focus:border-[#3c83f6] focus:ring-[#3c83f6] focus:outline-none placeholder-gray-400"
-                        type="date"
-                        value={professionalInfo.licenseExpiry}
-                        onChange={(e) => handleProfessionalInfoChange('licenseExpiry', e.target.value)}
                       />
                     </div>
                   </div>

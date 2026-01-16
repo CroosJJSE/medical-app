@@ -1,17 +1,19 @@
 // src/components/layout/DoctorHeader.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import doctorService from '@/services/doctorService';
 import type { Doctor } from '@/models/Doctor';
-import { useState, useEffect } from 'react';
 import logo from '@/assets/logo.png';
+import NotificationIcon from '@/components/common/NotificationIcon';
+import NotificationPanel from '@/components/common/NotificationPanel';
 
 const DoctorHeader: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
 
   useEffect(() => {
     const loadDoctor = async () => {
@@ -79,10 +81,19 @@ const DoctorHeader: React.FC = () => {
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-4">
-        <button className="flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[#f5f7f8] text-[#111418] hover:bg-gray-200 transition-colors">
-          <span className="material-symbols-outlined text-gray-600">notifications</span>
-        </button>
+      <div className="flex items-center gap-4 relative">
+        <div className="relative">
+          <NotificationIcon
+            userId={user?.userID || user?.userId}
+            onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+          />
+          <NotificationPanel
+            userId={user?.userID || user?.userId}
+            isOpen={notificationPanelOpen}
+            onClose={() => setNotificationPanelOpen(false)}
+            onNavigateToNotifications={() => navigate('/doctor/notifications')}
+          />
+        </div>
         <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-[#111418] leading-none">{doctorName}</p>

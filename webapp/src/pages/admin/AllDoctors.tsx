@@ -43,7 +43,7 @@ const AllDoctors: React.FC = () => {
       (doctor) =>
         doctor.professionalInfo?.firstName?.toLowerCase().includes(query) ||
         doctor.professionalInfo?.lastName?.toLowerCase().includes(query) ||
-        doctor.doctorId.toLowerCase().includes(query) ||
+        doctor.userID?.toLowerCase().includes(query) ||
         doctor.professionalInfo?.specialization?.toLowerCase().includes(query) ||
         doctor.contactInfo?.email?.toLowerCase().includes(query)
     );
@@ -71,7 +71,7 @@ const AllDoctors: React.FC = () => {
           <Input
             placeholder="Search by name, ID, specialization, or email..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(value) => setSearchQuery(value)}
           />
         </Card>
 
@@ -94,8 +94,8 @@ const AllDoctors: React.FC = () => {
                 </thead>
                 <tbody>
                   {filteredDoctors.map((doctor) => (
-                    <tr key={doctor.doctorId} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{doctor.doctorId}</td>
+                    <tr key={doctor.userID} className="border-b hover:bg-gray-50">
+                      <td className="p-2">{doctor.userID}</td>
                       <td className="p-2">
                         {doctor.professionalInfo?.title} {doctor.professionalInfo?.firstName}{' '}
                         {doctor.professionalInfo?.lastName}
@@ -114,7 +114,7 @@ const AllDoctors: React.FC = () => {
                       <td className="p-2">
                         <Button
                           variant="secondary"
-                          onClick={() => navigate(`/admin/doctor/${doctor.doctorId}`)}
+                          onClick={() => navigate(`/admin/doctor/${doctor.userID}`)}
                         >
                           View
                         </Button>

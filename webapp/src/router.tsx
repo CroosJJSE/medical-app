@@ -20,6 +20,7 @@ import PatientAppointments from '@/pages/patient/Appointments';
 import ScheduleAppointment from '@/pages/patient/ScheduleAppointment';
 import TestResults from '@/pages/patient/TestResults';
 import PatientTimeline from '@/pages/patient/Timeline';
+import PatientNotifications from '@/pages/patient/Notifications';
 
 // Doctor pages
 import DoctorDashboard from '@/pages/doctor/Dashboard';
@@ -28,6 +29,7 @@ import DoctorPatientProfile from '@/pages/doctor/PatientProfile';
 import DoctorAppointments from '@/pages/doctor/Appointments';
 import NewEncounter from '@/pages/doctor/NewEncounter';
 import TestResultsReview from '@/pages/doctor/TestResultsReview';
+import DoctorNotifications from '@/pages/doctor/Notifications';
 
 // Admin pages
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -145,6 +147,14 @@ const AppRouter: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/patient/notifications"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.PATIENT]}>
+              <PatientNotifications />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Doctor Routes */}
         <Route
@@ -192,6 +202,14 @@ const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={[UserRole.DOCTOR]}>
               <TestResultsReview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/notifications"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.DOCTOR]}>
+              <DoctorNotifications />
             </ProtectedRoute>
           }
         />

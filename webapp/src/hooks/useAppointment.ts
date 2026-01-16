@@ -11,7 +11,7 @@ interface UseAppointmentReturn {
   loading: boolean;
   error: Error | null;
   updateAppointment: (updates: Partial<Appointment>) => Promise<void>;
-  cancelAppointment: (reason: string) => Promise<void>;
+  cancelAppointment: (userId: string, reason: string) => Promise<void>;
 }
 
 /**
@@ -56,14 +56,14 @@ export function useAppointment(appointmentId: string): UseAppointmentReturn {
     }
   };
 
-  const cancelAppointment = async (reason: string) => {
+  const cancelAppointment = async (userId: string, reason: string) => {
     if (!appointmentId) throw new NotFoundError('Appointment ID is required');
 
     setLoading(true);
     try {
-      await appointmentService.cancelAppointment(appointmentId, reason);
+      await appointmentService.cancelAppointment(appointmentId, userId, reason);
       setAppointment((prev: Appointment | null) =>
-        prev ? { ...prev, status: AppointmentStatus.CANCELLED, cancellationReason: reason } : null
+        prev ? { ...prev, status: AppointmentStatus.CANCELLED, cancellationReason: reason, cancelledBy: userId } : null
       );
     } catch (err: any) {
       setError(err);

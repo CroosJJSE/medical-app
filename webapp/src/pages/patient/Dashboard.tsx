@@ -26,7 +26,12 @@ const Dashboard: React.FC = () => {
         // Get upcoming appointments
         const appointments = await appointmentService.getAppointmentsByPatient(userId);
         const upcoming = appointments
-          .filter(apt => apt.status === AppointmentStatus.SCHEDULED || apt.status === AppointmentStatus.CONFIRMED)
+          .filter(apt => 
+            apt.status === AppointmentStatus.PENDING ||
+            apt.status === AppointmentStatus.ACCEPTED ||
+            apt.status === AppointmentStatus.AMENDED ||
+            apt.status === AppointmentStatus.CONFIRMED
+          )
           .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
           .slice(0, 5);
         setUpcomingAppointments(upcoming);
@@ -253,7 +258,11 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
                   <p className="text-sm font-bold text-[#1f2937] truncate">
-                    Appointment {apt.status === AppointmentStatus.CONFIRMED ? 'Confirmed' : 'Scheduled'}
+                    Appointment {
+                      apt.status === AppointmentStatus.CONFIRMED ? 'Confirmed' : 
+                      apt.status === AppointmentStatus.ACCEPTED ? 'Accepted' :
+                      apt.status === AppointmentStatus.AMENDED ? 'Amended' : 'Pending'
+                    }
                   </p>
                   <p className="text-xs text-[#4b5563] truncate">
                     {formatDate(apt.dateTime)} at {formatTime(apt.dateTime)}

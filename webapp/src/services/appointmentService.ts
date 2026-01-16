@@ -7,22 +7,36 @@ import { generateId } from '@/utils/idGenerator';
 import { getDoctor } from './doctorService';
 
 /**
- * Create a new appointment
+ * Create a new appointment request (by patient)
  * @param appointmentData - Appointment details
  * @returns Created Appointment
  */
 export const createAppointment = async (
   appointmentData: Omit<Appointment, 'appointmentId' | 'createdAt' | 'updatedAt'>
 ): Promise<Appointment> => {
+  console.log('[APPOINTMENT_SERVICE] createAppointment called', {
+    patientId: appointmentData.patientId,
+    doctorId: appointmentData.doctorId,
+    dateTime: appointmentData.dateTime.toISOString(),
+  });
+
   const appointmentId = generateId(ID_PREFIXES.APPOINTMENT);
   const newAppointment: Appointment = {
     ...appointmentData,
     appointmentId,
+    status: AppointmentStatus.PENDING, // Always start as PENDING
+    originalDateTime: appointmentData.dateTime, // Store original date/time
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
+  console.log('[APPOINTMENT_SERVICE] Creating appointment with status PENDING', {
+    appointmentId,
+    status: newAppointment.status,
+  });
+
   await create(appointmentId, newAppointment);
+  console.log('[APPOINTMENT_SERVICE] Appointment created successfully');
   return newAppointment;
 };
 
@@ -45,24 +59,33 @@ export const updateAppointment = async (
   appointmentId: string,
   updates: Partial<Appointment>
 ): Promise<void> => {
+  console.log('[APPOINTMENT_SERVICE] updateAppointment called', { appointmentId, updates });
   await update(appointmentId, { ...updates, updatedAt: new Date() });
+  console.log('[APPOINTMENT_SERVICE] Appointment updated successfully');
 };
 
 /**
  * Cancel an appointment
  * @param appointmentId - ID of the appointment
+ * @param userId - ID of user cancelling (doctor or patient)
  * @param reason - Optional cancellation reason
  */
 export const cancelAppointment = async (
   appointmentId: string,
+  userId: string,
   reason?: string
 ): Promise<void> => {
+  console.log('[APPOINTMENT_SERVICE] cancelAppointment called', { appointmentId, userId, reason });
+  
   await update(appointmentId, {
     status: AppointmentStatus.CANCELLED,
     cancellationReason: reason,
+    cancelledBy: userId,
     cancelledAt: new Date(),
     updatedAt: new Date(),
   });
+  
+  console.log('[APPOINTMENT_SERVICE] Appointment cancelled successfully');
 };
 
 /**
@@ -154,6 +177,249 @@ export const checkAvailability = async (
   return true;
 };
 
+/**
+ * Accept an appointment (by doctor or patient)
+ * @param appointmentId - ID of the appointment
+ * @param userId - ID of user accepting (doctor or patient)
+ * @returns Updated appointment
+ */
+export const acceptAppointment = async (
+  appointmentId: string,
+  userId: string
+): Promise<Appointment> => {
+  console.log('[APPOINTMENT_SERVICE] acceptAppointment called', { appointmentId, userId });
+  
+  const appointment = await getAppointment(appointmentId);
+  if (!appointment) {
+    throw new Error('Appointment not found');
+  }
+
+  console.log('[APPOINTMENT_SERVICE] Current appointment status:', appointment.status);
+
+  const updates: Partial<Appointment> = {
+    acceptedBy: userId,
+    acceptedAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  // Determine new status based on current status
+  if (appointment.status === AppointmentStatus.PENDING) {
+    // If doctor accepts patient's request
+    if (userId === appointment.doctorId) {
+      updates.status = AppointmentStatus.ACCEPTED;
+      console.log('[APPOINTMENT_SERVICE] Doctor accepted, status -> ACCEPTED');
+    }
+  } else if (appointment.status === AppointmentStatus.ACCEPTED) {
+    // If patient accepts after doctor accepted
+    if (userId === appointment.patientId) {
+      updates.status = AppointmentStatus.CONFIRMED;
+      console.log('[APPOINTMENT_SERVICE] Patient accepted, status -> CONFIRMED');
+    }
+  } else if (appointment.status === AppointmentStatus.AMENDED) {
+    // If accepting an amendment
+    if (userId === appointment.patientId && appointment.lastAmendedBy === appointment.doctorId) {
+      // Patient accepting doctor's amendment
+      updates.status = AppointmentStatus.CONFIRMED;
+      console.log('[APPOINTMENT_SERVICE] Patient accepted doctor amendment, status -> CONFIRMED');
+    } else if (userId === appointment.doctorId && appointment.lastAmendedBy === appointment.patientId) {
+      // Doctor accepting patient's amendment
+      updates.status = AppointmentStatus.ACCEPTED;
+      console.log('[APPOINTMENT_SERVICE] Doctor accepted patient amendment, status -> ACCEPTED');
+    }
+  }
+
+  await update(appointmentId, updates);
+  console.log('[APPOINTMENT_SERVICE] Appointment accepted successfully');
+  
+  const updated = await getAppointment(appointmentId);
+  return updated!;
+};
+
+/**
+ * Reject an appointment (by doctor or patient)
+ * @param appointmentId - ID of the appointment
+ * @param userId - ID of user rejecting (doctor or patient)
+ * @param reason - Reason for rejection
+ */
+export const rejectAppointment = async (
+  appointmentId: string,
+  userId: string,
+  reason: string
+): Promise<void> => {
+  console.log('[APPOINTMENT_SERVICE] rejectAppointment called', { appointmentId, userId, reason });
+  
+  const appointment = await getAppointment(appointmentId);
+  if (!appointment) {
+    throw new Error('Appointment not found');
+  }
+
+  console.log('[APPOINTMENT_SERVICE] Current appointment status:', appointment.status);
+
+  await update(appointmentId, {
+    status: AppointmentStatus.CANCELLED,
+    rejectedBy: userId,
+    rejectedAt: new Date(),
+    rejectionReason: reason,
+    cancellationReason: reason,
+    cancelledBy: userId,
+    cancelledAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  console.log('[APPOINTMENT_SERVICE] Appointment rejected successfully');
+};
+
+/**
+ * Amend an appointment (by doctor or patient)
+ * @param appointmentId - ID of the appointment
+ * @param userId - ID of user amending (doctor or patient)
+ * @param newDateTime - New date and time
+ * @param reason - Reason for amendment
+ * @returns Updated appointment
+ */
+export const amendAppointment = async (
+  appointmentId: string,
+  userId: string,
+  newDateTime: Date,
+  reason: string
+): Promise<Appointment> => {
+  console.log('[APPOINTMENT_SERVICE] amendAppointment called', { 
+    appointmentId, 
+    userId, 
+    newDateTime: newDateTime.toISOString(), 
+    reason 
+  });
+  
+  const appointment = await getAppointment(appointmentId);
+  if (!appointment) {
+    throw new Error('Appointment not found');
+  }
+
+  console.log('[APPOINTMENT_SERVICE] Current appointment:', {
+    status: appointment.status,
+    currentDateTime: appointment.dateTime.toISOString(),
+    originalDateTime: appointment.originalDateTime?.toISOString(),
+  });
+
+  // Store original dateTime if this is the first amendment
+  const originalDateTime = appointment.originalDateTime || appointment.dateTime;
+
+  // Create amendment record
+  const amendment = {
+    amendedBy: userId,
+    amendedAt: new Date(),
+    originalDateTime: appointment.dateTime,
+    newDateTime: newDateTime,
+    reason: reason,
+  };
+
+  // Update appointment
+  const updates: Partial<Appointment> = {
+    status: AppointmentStatus.AMENDED,
+    originalDateTime: originalDateTime,
+    dateTime: newDateTime,
+    lastAmendedBy: userId,
+    lastAmendedAt: new Date(),
+    amendmentHistory: [...(appointment.amendmentHistory || []), amendment],
+    updatedAt: new Date(),
+  };
+
+  await update(appointmentId, updates);
+  console.log('[APPOINTMENT_SERVICE] Appointment amended successfully', {
+    newStatus: AppointmentStatus.AMENDED,
+    newDateTime: newDateTime.toISOString(),
+  });
+  
+  const updated = await getAppointment(appointmentId);
+  return updated!;
+};
+
+/**
+ * Get pending and amended appointments for a doctor
+ * @param doctorId - Doctor ID
+ * @returns Array of pending/amended appointments
+ */
+export const getPendingAppointmentsByDoctor = async (doctorId: string): Promise<Appointment[]> => {
+  console.log('[APPOINTMENT_SERVICE] getPendingAppointmentsByDoctor called', { doctorId });
+  const { getPendingByDoctor } = await import('@/repositories/appointmentRepository');
+  const appointments = await getPendingByDoctor(doctorId);
+  console.log('[APPOINTMENT_SERVICE] Found pending appointments:', appointments.length);
+  return appointments;
+};
+
+/**
+ * Get available time slots for a doctor on a specific date
+ * @param doctorId - Doctor ID
+ * @param date - Date to check
+ * @returns Array of available time slots (as Date objects)
+ */
+export const getAvailableTimeSlots = async (
+  doctorId: string,
+  date: Date
+): Promise<Date[]> => {
+  console.log('[APPOINTMENT_SERVICE] getAvailableTimeSlots called', { 
+    doctorId, 
+    date: date.toISOString() 
+  });
+  
+  const doctor = await getDoctor(doctorId);
+  if (!doctor) {
+    throw new Error('Doctor not found');
+  }
+
+  const workingHours = doctor.availability?.workingHours;
+  if (!workingHours) {
+    console.log('[APPOINTMENT_SERVICE] No working hours found for doctor');
+    return [];
+  }
+
+  const [startHour, startMinute] = workingHours.start.split(':').map(Number);
+  const [endHour, endMinute] = workingHours.end.split(':').map(Number);
+  
+  const startTime = new Date(date);
+  startTime.setHours(startHour, startMinute, 0, 0);
+  
+  const endTime = new Date(date);
+  endTime.setHours(endHour, endMinute, 0, 0);
+
+  // Get existing appointments for this date
+  const appointments = await getAppointmentsByDoctor(doctorId);
+  const dateStr = date.toISOString().split('T')[0];
+  const dayAppointments = appointments.filter(apt => {
+    const aptDateStr = apt.dateTime.toISOString().split('T')[0];
+    return aptDateStr === dateStr && 
+           apt.status !== AppointmentStatus.CANCELLED &&
+           apt.status !== AppointmentStatus.COMPLETED;
+  });
+
+  // Generate 15-minute slots
+  const slots: Date[] = [];
+  const slotDuration = 15; // minutes
+  const current = new Date(startTime);
+
+  while (current < endTime) {
+    // Check if this slot conflicts with existing appointments
+    const hasConflict = dayAppointments.some(apt => {
+      const aptStart = apt.dateTime.getTime();
+      const aptDuration = apt.duration || DEFAULTS.APPOINTMENT_DURATION;
+      const aptEnd = aptStart + aptDuration * 60 * 1000;
+      const slotStart = current.getTime();
+      const slotEnd = slotStart + slotDuration * 60 * 1000;
+      
+      return slotStart < aptEnd && slotEnd > aptStart;
+    });
+
+    if (!hasConflict) {
+      slots.push(new Date(current));
+    }
+
+    current.setMinutes(current.getMinutes() + slotDuration);
+  }
+
+  console.log('[APPOINTMENT_SERVICE] Available time slots:', slots.length);
+  return slots;
+};
+
 // Default export for convenience
 const appointmentService = {
   createAppointment,
@@ -163,6 +429,11 @@ const appointmentService = {
   getAppointmentsByPatient,
   getAppointmentsByDoctor,
   checkAvailability,
+  acceptAppointment,
+  rejectAppointment,
+  amendAppointment,
+  getPendingAppointmentsByDoctor,
+  getAvailableTimeSlots,
 };
 
 export default appointmentService;

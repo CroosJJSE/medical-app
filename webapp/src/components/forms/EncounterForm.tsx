@@ -70,7 +70,18 @@ const EncounterForm: React.FC<EncounterFormProps> = ({ patientId, doctorId, appo
       <Input label="History of Presenting Complaint" value={encounterData.subjective?.historyOfPresentingComplaint || ''} onChange={(value) => handleNestedChange('subjective', 'historyOfPresentingComplaint', value)} />
 
       <h3>Objective</h3>
-      <Input label="Vital Signs (JSON)" value={JSON.stringify(encounterData.objective?.vitalSigns || {})} onChange={(value) => handleNestedChange('objective', 'vitalSigns', JSON.parse(value))} />
+      <Input 
+        label="Vital Signs (JSON)" 
+        value={JSON.stringify(encounterData.objective?.vitalSigns || {})} 
+        onChange={(value) => {
+          try {
+            const parsed = JSON.parse(value);
+            handleNestedChange('objective', 'vitalSigns', parsed);
+          } catch (err) {
+            setError('Invalid JSON format for vital signs');
+          }
+        }} 
+      />
 
       <h3>Assessment</h3>
       <Input label="Problems" value={(encounterData.assessment?.problems || []).join(', ')} onChange={(value) => handleNestedChange('assessment', 'problems', value.split(',').map((s) => s.trim()))} />

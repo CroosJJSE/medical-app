@@ -44,25 +44,25 @@ const DoctorRegistrationForm: React.FC<DoctorFormProps> = ({ userId, onSuccess }
   return (
     <form className="space-y-4">
       <h2>Professional Info</h2>
-      <Input label="First Name" value={doctorData.professionalInfo?.firstName || ''} onChange={(e) => handleChange('professionalInfo', 'firstName', e.target.value)} required />
-      <Input label="Last Name" value={doctorData.professionalInfo?.lastName || ''} onChange={(e) => handleChange('professionalInfo', 'lastName', e.target.value)} required />
-      <Input label="Title" value={doctorData.professionalInfo?.title || ''} onChange={(e) => handleChange('professionalInfo', 'title', e.target.value)} />
-      <Input label="Specialization" value={doctorData.professionalInfo?.specialization || ''} onChange={(e) => handleChange('professionalInfo', 'specialization', e.target.value)} />
-      <Input label="Qualifications (comma separated)" value={doctorData.professionalInfo?.qualifications?.join(', ') || ''} onChange={(e) => handleChange('professionalInfo', 'qualifications', e.target.value.split(',').map((s) => s.trim()))} />
-      <Input label="License Number" value={doctorData.professionalInfo?.licenseNumber || ''} onChange={(e) => handleChange('professionalInfo', 'licenseNumber', e.target.value)} />
-      <Input label="License Expiry" type="date" value={doctorData.professionalInfo?.licenseExpiry || ''} onChange={(e) => handleChange('professionalInfo', 'licenseExpiry', e.target.value)} />
+      <Input label="First Name" value={doctorData.professionalInfo?.firstName || ''} onChange={(value) => handleChange('professionalInfo', 'firstName', value)} required />
+      <Input label="Last Name" value={doctorData.professionalInfo?.lastName || ''} onChange={(value) => handleChange('professionalInfo', 'lastName', value)} required />
+      <Input label="Title" value={doctorData.professionalInfo?.title || ''} onChange={(value) => handleChange('professionalInfo', 'title', value)} />
+      <Input label="Specialization" value={doctorData.professionalInfo?.specialization || ''} onChange={(value) => handleChange('professionalInfo', 'specialization', value)} />
+      <Input label="Qualifications (comma separated)" value={doctorData.professionalInfo?.qualifications?.join(', ') || ''} onChange={(value) => handleChange('professionalInfo', 'qualifications', value.split(',').map((s) => s.trim()))} />
+      <Input label="License Number" value={doctorData.professionalInfo?.licenseNumber || ''} onChange={(value) => handleChange('professionalInfo', 'licenseNumber', value)} />
 
       <h2>Practice Info</h2>
-      <Input label="Clinic Name" value={doctorData.practiceInfo?.clinicName || ''} onChange={(e) => handleChange('practiceInfo', 'clinicName', e.target.value)} />
-      <Input label="Clinic Address" value={doctorData.practiceInfo?.clinicAddress || ''} onChange={(e) => handleChange('practiceInfo', 'clinicAddress', e.target.value)} />
-      <Input label="Consultation Fee" type="number" value={doctorData.practiceInfo?.consultationFee || ''} onChange={(e) => handleChange('practiceInfo', 'consultationFee', e.target.value)} />
-      <Input label="Currency" value={doctorData.practiceInfo?.currency || 'USD'} onChange={(e) => handleChange('practiceInfo', 'currency', e.target.value)} />
+      <Input label="Clinic Name" value={doctorData.practiceInfo?.clinicName || ''} onChange={(value) => handleChange('practiceInfo', 'clinicName', value)} />
+      <Input label="Clinic Address" value={doctorData.practiceInfo?.clinicAddress || ''} onChange={(value) => handleChange('practiceInfo', 'clinicAddress', value)} />
+      <Input label="Consultation Fee" type="number" value={String(doctorData.practiceInfo?.consultationFee || '')} onChange={(value) => handleChange('practiceInfo', 'consultationFee', value ? Number(value) : undefined)} />
+      <Input label="Currency" value={doctorData.practiceInfo?.currency || 'USD'} onChange={(value) => handleChange('practiceInfo', 'currency', value)} />
 
       <h2>Availability</h2>
-      <Input label="Working Days (select multiple comma separated)" value={doctorData.availability?.workingDays?.join(', ') || ''} onChange={(e) => handleChange('availability', 'workingDays', e.target.value.split(',').map((s) => s.trim()))} />
-      <Input label="Working Hours" value={doctorData.availability?.workingHours || ''} onChange={(e) => handleChange('availability', 'workingHours', e.target.value)} />
-      <Input label="Time Slots (comma separated)" value={doctorData.availability?.timeSlots?.join(', ') || ''} onChange={(e) => handleChange('availability', 'timeSlots', e.target.value.split(',').map((s) => s.trim()))} />
-      <Input label="Time Zone" value={doctorData.availability?.timeZone || ''} onChange={(e) => handleChange('availability', 'timeZone', e.target.value)} />
+      <Input label="Working Days (select multiple comma separated)" value={doctorData.availability?.workingDays?.join(', ') || ''} onChange={(value) => handleChange('availability', 'workingDays', value.split(',').map((s) => s.trim()))} />
+      <Input label="Working Hours Start (HH:mm)" value={doctorData.availability?.workingHours?.start || ''} onChange={(value) => handleChange('availability', 'workingHours', { ...doctorData.availability?.workingHours, start: value } as any)} />
+      <Input label="Working Hours End (HH:mm)" value={doctorData.availability?.workingHours?.end || ''} onChange={(value) => handleChange('availability', 'workingHours', { ...doctorData.availability?.workingHours, end: value } as any)} />
+      <Input label="Time Slots (comma separated minutes)" value={doctorData.availability?.timeSlots?.join(', ') || ''} onChange={(value) => handleChange('availability', 'timeSlots', value.split(',').map((s) => s.trim()).map(s => Number(s)).filter(n => !isNaN(n)))} />
+      <Input label="Time Zone" value={doctorData.availability?.timeZone || ''} onChange={(value) => handleChange('availability', 'timeZone', value)} />
 
       {error && <p className="text-red-500">{error}</p>}
       <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Submitting...' : 'Submit'}</Button>

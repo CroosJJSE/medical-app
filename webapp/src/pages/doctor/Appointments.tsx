@@ -282,14 +282,26 @@ const Appointments: React.FC = () => {
     return Math.floor(diffMins / 15);
   };
 
-  // Get pending appointments (SCHEDULED status)
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+  const [showAmendModal, setShowAmendModal] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [amendReason, setAmendReason] = useState('');
+  const [amendDate, setAmendDate] = useState<Date | null>(null);
+  const [amendTimeSlots, setAmendTimeSlots] = useState<Date[]>([]);
+  const [amendSelectedTime, setAmendSelectedTime] = useState<Date | null>(null);
+
+  // Get pending appointments (PENDING or AMENDED status)
   // Only show appointments created by patients (not by the doctor)
   // Use allAppointments to include pending requests from any week
   const pendingAppointments = useMemo(() => {
     return allAppointments
       .filter((apt) => {
-        // Only show SCHEDULED appointments that were created by patients (not by the doctor)
-        return apt.status === AppointmentStatus.SCHEDULED && apt.createdBy !== user?.userID;
+        // Show PENDING or AMENDED appointments that were created by patients (not by the doctor)
+        return (
+          (apt.status === AppointmentStatus.PENDING || apt.status === AppointmentStatus.AMENDED) &&
+          apt.createdBy !== user?.userID
+        );
       })
       .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
   }, [allAppointments, user]);
@@ -311,10 +323,14 @@ const Appointments: React.FC = () => {
 
   const getStatusColor = (status: AppointmentStatus) => {
     switch (status) {
-      case AppointmentStatus.SCHEDULED:
-        return 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 dark:border-amber-500 text-amber-600 dark:text-amber-400';
-      case AppointmentStatus.CONFIRMED:
+      case AppointmentStatus.PENDING:
+        return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 dark:border-yellow-500 text-yellow-600 dark:text-yellow-400';
+      case AppointmentStatus.ACCEPTED:
         return 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-500 text-blue-600 dark:text-blue-400';
+      case AppointmentStatus.AMENDED:
+        return 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 dark:border-orange-500 text-orange-600 dark:text-orange-400';
+      case AppointmentStatus.CONFIRMED:
+        return 'bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-500 text-green-600 dark:text-green-400';
       case AppointmentStatus.COMPLETED:
         return 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400';
       case AppointmentStatus.CANCELLED:
@@ -323,6 +339,190 @@ const Appointments: React.FC = () => {
         return 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400';
     }
   };
+
+  const handleAcceptAppointment = async (appointmentId: string) => {
+    console.log('[DOCTOR_APPOINTMENTS] handleAcceptAppointment called', { appointmentId });
+    if (!user?.userID) return;
+    
+    setProcessingId(appointmentId);
+    try {
+      const appointment = await appointmentService.acceptAppointment(appointmentId, user.userID);
+      console.log('[DOCTOR_APPOINTMENTS] Appointment accepted', { 
+        appointmentId, 
+        newStatus: appointment.status 
+      });
+
+      // Log audit trail
+      const apt = allAppointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
+        await auditService.logAction(
+          AuditAction.APPOINTMENT_UPDATED,
+          AuditCategory.APPOINTMENTS,
+          'appointment',
+          user,
+          {
+            targetId: appointmentId,
+            targetDisplayName: `Appointment with ${apt.patient?.displayName || 'Patient'}`,
+            description: `Doctor accepted appointment`,
+            changes: [
+              { field: 'status', oldValue: apt.status, newValue: appointment.status }
+            ],
+            metadata: {
+              doctorId: user.userID,
+              patientId: apt.patientId,
+              dateTime: apt.dateTime.toISOString(),
+            },
+          }
+        ).catch(err => console.error('[DOCTOR_APPOINTMENTS] Error logging audit:', err));
+      }
+
+      await handleModalClose();
+    } catch (error: any) {
+      console.error('[DOCTOR_APPOINTMENTS] Error accepting appointment:', error);
+      alert(error.message || 'Failed to accept appointment. Please try again.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleRejectAppointment = async (appointmentId: string) => {
+    console.log('[DOCTOR_APPOINTMENTS] handleRejectAppointment called', { 
+      appointmentId, 
+      reason: rejectReason 
+    });
+    if (!user?.userID || !rejectReason.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+    
+    setProcessingId(appointmentId);
+    try {
+      await appointmentService.rejectAppointment(appointmentId, user.userID, rejectReason.trim());
+      console.log('[DOCTOR_APPOINTMENTS] Appointment rejected');
+
+      // Log audit trail
+      const apt = allAppointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
+        await auditService.logAction(
+          AuditAction.APPOINTMENT_CANCELLED,
+          AuditCategory.APPOINTMENTS,
+          'appointment',
+          user,
+          {
+            targetId: appointmentId,
+            targetDisplayName: `Appointment with ${apt.patient?.displayName || 'Patient'}`,
+            description: `Doctor rejected appointment`,
+            changes: [
+              { field: 'status', oldValue: apt.status, newValue: AppointmentStatus.CANCELLED }
+            ],
+            metadata: {
+              doctorId: user.userID,
+              patientId: apt.patientId,
+              dateTime: apt.dateTime.toISOString(),
+              rejectionReason: rejectReason,
+            },
+          }
+        ).catch(err => console.error('[DOCTOR_APPOINTMENTS] Error logging audit:', err));
+      }
+
+      setShowRejectModal(null);
+      setRejectReason('');
+      await handleModalClose();
+    } catch (error: any) {
+      console.error('[DOCTOR_APPOINTMENTS] Error rejecting appointment:', error);
+      alert(error.message || 'Failed to reject appointment. Please try again.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleAmendAppointment = async (appointmentId: string) => {
+    console.log('[DOCTOR_APPOINTMENTS] handleAmendAppointment called', { 
+      appointmentId, 
+      newDate: amendDate?.toISOString(),
+      newTime: amendSelectedTime?.toISOString(),
+      reason: amendReason 
+    });
+    if (!user?.userID || !amendSelectedTime || !amendReason.trim()) {
+      alert('Please select a new date/time and provide a reason');
+      return;
+    }
+    
+    setProcessingId(appointmentId);
+    try {
+      const appointment = await appointmentService.amendAppointment(
+        appointmentId,
+        user.userID,
+        amendSelectedTime,
+        amendReason.trim()
+      );
+      console.log('[DOCTOR_APPOINTMENTS] Appointment amended', { 
+        appointmentId, 
+        newStatus: appointment.status 
+      });
+
+      // Log audit trail
+      const apt = allAppointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
+        await auditService.logAction(
+          AuditAction.APPOINTMENT_UPDATED,
+          AuditCategory.APPOINTMENTS,
+          'appointment',
+          user,
+          {
+            targetId: appointmentId,
+            targetDisplayName: `Appointment with ${apt.patient?.displayName || 'Patient'}`,
+            description: `Doctor requested appointment amendment`,
+            changes: [
+              { field: 'status', oldValue: apt.status, newValue: appointment.status },
+              { field: 'dateTime', oldValue: apt.dateTime.toISOString(), newValue: amendSelectedTime.toISOString() }
+            ],
+            metadata: {
+              doctorId: user.userID,
+              patientId: apt.patientId,
+              originalDateTime: apt.dateTime.toISOString(),
+              newDateTime: amendSelectedTime.toISOString(),
+              amendmentReason: amendReason,
+            },
+          }
+        ).catch(err => console.error('[DOCTOR_APPOINTMENTS] Error logging audit:', err));
+      }
+
+      setShowAmendModal(null);
+      setAmendReason('');
+      setAmendDate(null);
+      setAmendSelectedTime(null);
+      setAmendTimeSlots([]);
+      await handleModalClose();
+    } catch (error: any) {
+      console.error('[DOCTOR_APPOINTMENTS] Error amending appointment:', error);
+      alert(error.message || 'Failed to amend appointment. Please try again.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Load time slots when amend date is selected
+  useEffect(() => {
+    const loadAmendTimeSlots = async () => {
+      if (!amendDate || !showAmendModal || !user?.userID) {
+        setAmendTimeSlots([]);
+        setAmendSelectedTime(null);
+        return;
+      }
+
+      try {
+        const slots = await appointmentService.getAvailableTimeSlots(user.userID, amendDate);
+        console.log('[DOCTOR_APPOINTMENTS] Loaded amend time slots', { count: slots.length });
+        setAmendTimeSlots(slots);
+      } catch (error) {
+        console.error('[DOCTOR_APPOINTMENTS] Error loading amend time slots:', error);
+        setAmendTimeSlots([]);
+      }
+    };
+
+    loadAmendTimeSlots();
+  }, [amendDate, showAmendModal, user]);
 
   const handleCellClick = (date: Date, time: string) => {
     const appointment = getAppointmentAt(date, time);
@@ -566,7 +766,9 @@ const Appointments: React.FC = () => {
                                 {appointment.patient?.displayName || `Patient ${appointment.patientId}`}
                               </span>
                               <span className="text-[10px] font-medium">
-                                {appointment.status === AppointmentStatus.SCHEDULED && 'Scheduled'}
+                                {appointment.status === AppointmentStatus.PENDING && 'Pending'}
+                                {appointment.status === AppointmentStatus.ACCEPTED && 'Accepted'}
+                                {appointment.status === AppointmentStatus.AMENDED && 'Amended'}
                                 {appointment.status === AppointmentStatus.CONFIRMED && 'Confirmed'}
                                 {appointment.status === AppointmentStatus.COMPLETED && 'Completed'}
                                 {appointment.status === AppointmentStatus.CANCELLED && 'Cancelled'}
@@ -597,8 +799,10 @@ const Appointments: React.FC = () => {
                                   </p>
                                 </div>
                                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                  appointment.status === AppointmentStatus.SCHEDULED ? 'bg-amber-100 text-amber-700' :
-                                  appointment.status === AppointmentStatus.CONFIRMED ? 'bg-blue-100 text-blue-700' :
+                                  appointment.status === AppointmentStatus.PENDING ? 'bg-yellow-100 text-yellow-700' :
+                                  appointment.status === AppointmentStatus.ACCEPTED ? 'bg-blue-100 text-blue-700' :
+                                  appointment.status === AppointmentStatus.AMENDED ? 'bg-orange-100 text-orange-700' :
+                                  appointment.status === AppointmentStatus.CONFIRMED ? 'bg-green-100 text-green-700' :
                                   appointment.status === AppointmentStatus.COMPLETED ? 'bg-slate-100 text-slate-700' :
                                   'bg-red-100 text-red-700'
                                 }`}>
@@ -621,7 +825,7 @@ const Appointments: React.FC = () => {
                                 )}
                               </div>
                               <div className="grid grid-cols-2 gap-2">
-                                {(appointment.status === AppointmentStatus.SCHEDULED || appointment.status === AppointmentStatus.CONFIRMED) && (
+                                {(appointment.status === AppointmentStatus.ACCEPTED || appointment.status === AppointmentStatus.CONFIRMED) && (
                                   <button
                                     onClick={() => navigate(`/doctor/new-encounter?appointmentId=${appointment.appointmentId}`)}
                                     className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded hover:bg-blue-600 transition-colors"
@@ -729,51 +933,47 @@ const Appointments: React.FC = () => {
                     </div>
                         <div className="flex gap-2 mt-auto">
                           <button
-                            onClick={async () => {
-                              if (!confirm(`Are you sure you want to reject this appointment request from ${apt.patient?.displayName || `Patient ${apt.patientId}`}?`)) {
-                                return;
-                              }
-                              
-                              try {
-                                await appointmentService.updateAppointment(apt.appointmentId, {
-                                  status: AppointmentStatus.CANCELLED,
-                                  cancellationReason: 'Rejected by doctor',
-                                  cancelledBy: user?.userID,
-                                  cancelledAt: new Date(),
-                                });
-
-                                // Log audit trail
-                                auditService.logAction(
-                                  AuditAction.APPOINTMENT_CANCELLED,
-                                  AuditCategory.APPOINTMENTS,
-                                  'appointment',
-                                  user,
-                                  {
-                                    targetId: apt.appointmentId,
-                                    targetDisplayName: `Appointment with ${apt.patient?.displayName || `Patient ${apt.patientId}`}`,
-                                    description: `Rejected appointment request from ${apt.patient?.displayName || `Patient ${apt.patientId}`}`,
-                                    changes: [
-                                      { field: 'status', oldValue: AppointmentStatus.SCHEDULED, newValue: AppointmentStatus.CANCELLED },
-                                    ],
-                                    metadata: {
-                                      patientId: apt.patientId,
-                                      patientName: apt.patient?.displayName || `Patient ${apt.patientId}`,
-                                      cancellationReason: 'Rejected by doctor',
-                                    },
-                                  }
-                                ).catch(err => console.error('Error logging audit:', err));
-
-                                // Reload all appointments
-                                await handleModalClose();
-                              } catch (error) {
-                                console.error('Error rejecting appointment:', error);
-                                alert('Failed to reject appointment. Please try again.');
-                              }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAcceptAppointment(apt.appointmentId);
                             }}
-                            className="flex-1 py-1.5 bg-red-600 text-white text-sm font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                            disabled={processingId === apt.appointmentId}
+                            className="flex-1 py-1.5 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            {processingId === apt.appointmentId ? (
+                              <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                Accept
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowRejectModal(apt.appointmentId);
+                            }}
+                            disabled={processingId === apt.appointmentId}
+                            className="flex-1 py-1.5 bg-red-600 text-white text-sm font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                           >
                             <span className="material-symbols-outlined text-[18px]">close</span>
                             Reject
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowAmendModal(apt.appointmentId);
+                              setAmendDate(apt.dateTime);
+                            }}
+                            disabled={processingId === apt.appointmentId}
+                            className="flex-1 py-1.5 bg-orange-600 text-white text-sm font-bold rounded hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                            Amend
                           </button>
                         </div>
                       </div>
@@ -801,6 +1001,126 @@ const Appointments: React.FC = () => {
           doctorId={user?.userID || ''}
           weekAppointments={appointments}
         />
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Reject Appointment</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for rejecting this appointment:
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter reason..."
+              className="w-full p-3 border border-gray-300 rounded-lg mb-4 min-h-[100px]"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(null);
+                  setRejectReason('');
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRejectAppointment(showRejectModal)}
+                disabled={!rejectReason.trim() || processingId === showRejectModal}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                {processingId === showRejectModal ? 'Rejecting...' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Amend Modal */}
+      {showAmendModal && (
+        <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full my-8">
+            <h3 className="text-lg font-bold mb-4">Amend Appointment</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select a new date and time, and provide a reason:
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-semibold mb-2">New Date</label>
+              <input
+                type="date"
+                value={amendDate ? amendDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  const newDate = e.target.value ? new Date(e.target.value) : null;
+                  setAmendDate(newDate);
+                  setAmendSelectedTime(null);
+                }}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {amendDate && amendTimeSlots.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-2">New Time</label>
+                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                  {amendTimeSlots.map((slot, index) => {
+                    const isSelected = amendSelectedTime?.getTime() === slot.getTime();
+                    const timeStr = `${slot.getHours().toString().padStart(2, '0')}:${slot.getMinutes().toString().padStart(2, '0')}`;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setAmendSelectedTime(slot)}
+                        className={`p-2 rounded-lg border-2 text-sm ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 text-primary font-bold'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-primary/50'
+                        }`}
+                      >
+                        {formatTime(timeStr)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="mb-4">
+              <label className="block text-sm font-semibold mb-2">Reason for Amendment</label>
+              <textarea
+                value={amendReason}
+                onChange={(e) => setAmendReason(e.target.value)}
+                placeholder="Enter reason..."
+                className="w-full p-3 border border-gray-300 rounded-lg min-h-[100px]"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAmendModal(null);
+                  setAmendReason('');
+                  setAmendDate(null);
+                  setAmendSelectedTime(null);
+                  setAmendTimeSlots([]);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleAmendAppointment(showAmendModal)}
+                disabled={!amendSelectedTime || !amendReason.trim() || processingId === showAmendModal}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-orange-600 text-white font-bold text-sm hover:bg-orange-700 disabled:opacity-50"
+              >
+                {processingId === showAmendModal ? 'Amending...' : 'Amend'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Block Day Modal */}

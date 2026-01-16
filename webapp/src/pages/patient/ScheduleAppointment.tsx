@@ -21,11 +21,16 @@ const ScheduleAppointment: React.FC = () => {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<Date[]>([]);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<Date | null>(null);
+  const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('[SCHEDULE_APPOINTMENT] Loading data', { userId: user?.userID });
+      
       if (!user?.userID) {
         setLoading(false);
         return;
@@ -34,6 +39,7 @@ const ScheduleAppointment: React.FC = () => {
       try {
         // Get patient data
         const patientData = await patientService.getPatient(user.userID);
+        console.log('[SCHEDULE_APPOINTMENT] Patient data loaded', { patientId: patientData?.userID });
         
         if (!patientData) {
           setError('Patient profile not found');
@@ -45,6 +51,7 @@ const ScheduleAppointment: React.FC = () => {
         // Get assigned doctor
         if (patientData.assignedDoctorId) {
           const doctorData = await doctorService.getDoctor(patientData.assignedDoctorId);
+          console.log('[SCHEDULE_APPOINTMENT] Doctor data loaded', { doctorId: doctorData?.userID });
           
           if (doctorData) {
             setDoctor(doctorData);
@@ -55,7 +62,7 @@ const ScheduleAppointment: React.FC = () => {
           setError('No doctor assigned. Please contact admin to assign a doctor.');
         }
       } catch (err: any) {
-        console.error('Error loading data:', err);
+        console.error('[SCHEDULE_APPOINTMENT] Error loading data:', err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);
@@ -65,38 +72,58 @@ const ScheduleAppointment: React.FC = () => {
     loadData();
   }, [user]);
 
-  const handleDateSelect = (date: Date) => {
-    setError(null);
-    
-    // Normalize date to start of day for consistent comparison
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
-    
-    const dateStr = normalizedDate.toDateString();
-    const isSelected = selectedDates.some(d => {
-      const normalizedD = new Date(d);
-      normalizedD.setHours(0, 0, 0, 0);
-      return normalizedD.toDateString() === dateStr;
-    });
-    
-    if (isSelected) {
-      // Deselect the date
-      setSelectedDates(selectedDates.filter(d => {
-        const normalizedD = new Date(d);
-        normalizedD.setHours(0, 0, 0, 0);
-        return normalizedD.toDateString() !== dateStr;
-      }));
-    } else {
-      // Select the date (max 3)
-      if (selectedDates.length < 3) {
-        setSelectedDates([...selectedDates, normalizedDate].sort((a, b) => a.getTime() - b.getTime()));
-      } else {
-        setError('You can select a maximum of 3 dates');
+  // Load available time slots when date is selected
+  useEffect(() => {
+    const loadTimeSlots = async () => {
+      if (!selectedDate || !doctor?.userID) {
+        setAvailableTimeSlots([]);
+        setSelectedTimeSlot(null);
+        return;
       }
-    }
+
+      console.log('[SCHEDULE_APPOINTMENT] Loading time slots', { 
+        date: selectedDate.toISOString(), 
+        doctorId: doctor.userID 
+      });
+
+      setLoadingTimeSlots(true);
+      setSelectedTimeSlot(null);
+      setError(null);
+
+      try {
+        const slots = await appointmentService.getAvailableTimeSlots(doctor.userID, selectedDate);
+        console.log('[SCHEDULE_APPOINTMENT] Available time slots loaded', { count: slots.length });
+        setAvailableTimeSlots(slots);
+      } catch (err: any) {
+        console.error('[SCHEDULE_APPOINTMENT] Error loading time slots:', err);
+        setError(err.message || 'Failed to load available time slots');
+        setAvailableTimeSlots([]);
+      } finally {
+        setLoadingTimeSlots(false);
+      }
+    };
+
+    loadTimeSlots();
+  }, [selectedDate, doctor]);
+
+  const handleDateSelect = (date: Date) => {
+    console.log('[SCHEDULE_APPOINTMENT] Date selected', { date: date.toISOString() });
+    setError(null);
+    setSelectedDate(date);
+    setSelectedTimeSlot(null);
+  };
+
+  const handleTimeSelect = (timeSlot: Date) => {
+    console.log('[SCHEDULE_APPOINTMENT] Time slot selected', { timeSlot: timeSlot.toISOString() });
+    setSelectedTimeSlot(timeSlot);
   };
 
   const handleRequestAppointment = async () => {
+    console.log('[SCHEDULE_APPOINTMENT] Request appointment called', {
+      selectedDate: selectedDate?.toISOString(),
+      selectedTimeSlot: selectedTimeSlot?.toISOString(),
+    });
+
     if (!patient) {
       setError('Patient data not loaded. Please refresh the page.');
       return;
@@ -107,8 +134,13 @@ const ScheduleAppointment: React.FC = () => {
       return;
     }
 
-    if (selectedDates.length === 0) {
-      setError('Please select at least one date');
+    if (!selectedDate) {
+      setError('Please select a date');
+      return;
+    }
+
+    if (!selectedTimeSlot) {
+      setError('Please select a time slot');
       return;
     }
 
@@ -121,41 +153,41 @@ const ScheduleAppointment: React.FC = () => {
     setError(null);
 
     try {
-      // Check availability for all selected dates
-      for (const date of selectedDates) {
-        const isAvailable = await appointmentService.checkAvailability(
-          doctor.userID,
-          date,
-          30 // Default duration
-        );
-
-        if (!isAvailable) {
-          setError(`Doctor is not available on ${formatSelectedDate(date)}. Please choose another date.`);
-          setSubmitting(false);
-          return;
-        }
-      }
-
-      // Create appointment requests for all selected dates
-      const appointmentPromises = selectedDates.map(date =>
-        appointmentService.createAppointment({
-          patientId: patient.userID,
-          doctorId: doctor.userID,
-          userId: user.userID,
-          dateTime: date,
-          duration: 30,
-          type: AppointmentType.CONSULTATION,
-          status: AppointmentStatus.SCHEDULED,
-          reason: 'Appointment request',
-          createdBy: user.userID, // Audit trail: who created the appointment
-        })
+      // Check availability for selected date and time
+      const isAvailable = await appointmentService.checkAvailability(
+        doctor.userID,
+        selectedTimeSlot,
+        30 // Default duration
       );
 
-      const createdAppointments = await Promise.all(appointmentPromises);
+      console.log('[SCHEDULE_APPOINTMENT] Availability check result', { isAvailable });
 
-      // Log audit trail for each appointment created
-      const auditPromises = createdAppointments.map(appointment =>
-        auditService.logAction(
+      if (!isAvailable) {
+        setError('This time slot is no longer available. Please select another time.');
+        setSubmitting(false);
+        return;
+      }
+
+      // Create appointment request with PENDING status
+      const appointment = await appointmentService.createAppointment({
+        patientId: patient.userID,
+        doctorId: doctor.userID,
+        userId: user.userID,
+        dateTime: selectedTimeSlot,
+        duration: 30,
+        type: AppointmentType.CONSULTATION,
+        reason: 'Appointment request',
+        createdBy: user.userID,
+      });
+
+      console.log('[SCHEDULE_APPOINTMENT] Appointment created', { 
+        appointmentId: appointment.appointmentId,
+        status: appointment.status,
+      });
+
+      // Log audit trail
+      try {
+        await auditService.logAction(
           AuditAction.APPOINTMENT_CREATED,
           AuditCategory.APPOINTMENTS,
           'appointment',
@@ -163,7 +195,7 @@ const ScheduleAppointment: React.FC = () => {
           {
             targetId: appointment.appointmentId,
             targetDisplayName: `Appointment with ${doctor.displayName}`,
-            description: `Scheduled appointment with ${doctor.displayName} on ${formatSelectedDate(appointment.dateTime)}`,
+            description: `Requested appointment with ${doctor.displayName} on ${formatDateTime(selectedTimeSlot)}`,
             metadata: {
               doctorId: appointment.doctorId,
               doctorName: doctor.displayName,
@@ -172,26 +204,42 @@ const ScheduleAppointment: React.FC = () => {
               reason: appointment.reason,
               status: appointment.status,
               duration: appointment.duration,
-              selectedDatesCount: selectedDates.length,
             }
           }
-        )
-      );
-
-      // Log audit trail (don't wait for it to complete)
-      Promise.all(auditPromises).catch(err => {
-        console.error('Error logging audit trail:', err);
+        );
+        console.log('[SCHEDULE_APPOINTMENT] Audit log created');
+      } catch (auditErr) {
+        console.error('[SCHEDULE_APPOINTMENT] Error logging audit trail:', auditErr);
         // Don't block navigation if audit logging fails
-      });
+      }
 
       // Success - navigate to appointments page
+      console.log('[SCHEDULE_APPOINTMENT] Navigating to appointments page');
       navigate('/patient/appointments');
     } catch (err: any) {
-      console.error('Error creating appointment:', err);
+      console.error('[SCHEDULE_APPOINTMENT] Error creating appointment:', err);
       setError(err.message || 'Failed to request appointment. Please try again.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const formatDateTime = (date: Date): string => {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const formatTime = (date: Date): string => {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
   };
 
   if (loading) {
@@ -216,33 +264,6 @@ const ScheduleAppointment: React.FC = () => {
       </div>
     );
   }
-
-  const formatSelectedDate = (date: Date): string => {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    
-    // Get day suffix
-    let suffix = 'th';
-    if (day === 1 || day === 21 || day === 31) suffix = 'st';
-    else if (day === 2 || day === 22) suffix = 'nd';
-    else if (day === 3 || day === 23) suffix = 'rd';
-    
-    return `${month} ${day}${suffix}, ${year}`;
-  };
-
-  const formatSelectedDates = (dates: Date[]): string => {
-    if (dates.length === 0) return '';
-    if (dates.length === 1) return formatSelectedDate(dates[0]);
-    if (dates.length === 2) {
-      return `${formatSelectedDate(dates[0])} and ${formatSelectedDate(dates[1])}`;
-    }
-    return `${formatSelectedDate(dates[0])}, ${formatSelectedDate(dates[1])}, and ${formatSelectedDate(dates[2])}`;
-  };
 
   return (
     <div className="min-h-screen bg-[#f5f7f8] flex flex-col">
@@ -319,34 +340,61 @@ const ScheduleAppointment: React.FC = () => {
 
           {/* Calendar Widget */}
           <Calendar
-            selectedDates={selectedDates}
+            selectedDates={selectedDate ? [selectedDate] : []}
             onDateSelect={handleDateSelect}
             minDate={new Date()}
-            maxSelections={3}
+            maxSelections={1}
           />
+        </div>
 
-          {/* Legend / Status */}
-          {selectedDates.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100 flex items-start gap-2">
-              <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">info</span>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                You have selected <span className="font-bold text-gray-800">
-                  {formatSelectedDates(selectedDates)}
-                </span>. Time slots will be confirmed by the clinic via email within 2 hours.
-                {selectedDates.length < 3 && (
-                  <span className="block mt-1">You can select up to {3 - selectedDates.length} more date{3 - selectedDates.length > 1 ? 's' : ''}.</span>
-                )}
-              </p>
-            </div>
-          )}
+        {/* Section: Time Selection */}
+        {selectedDate && (
+          <div className="px-4 mt-6">
+            <h2 className="text-[#111418] text-lg font-bold leading-tight mb-3">
+              Select a Time
+            </h2>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            {loadingTimeSlots ? (
+              <div className="flex items-center justify-center py-8">
+                <Loading size={32} message="Loading available times..." />
+              </div>
+            ) : availableTimeSlots.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {availableTimeSlots.map((slot, index) => {
+                  const isSelected = selectedTimeSlot?.getTime() === slot.getTime();
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleTimeSelect(slot)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 text-primary font-bold'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-primary/50'
+                      }`}
+                    >
+                      {formatTime(slot)}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  No available time slots for this date. Please select another date.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="px-4 mt-4">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">{error}</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       {/* Footer Action */}
@@ -354,7 +402,7 @@ const ScheduleAppointment: React.FC = () => {
         <div className="max-w-md mx-auto">
           <button
             onClick={handleRequestAppointment}
-            disabled={selectedDates.length === 0 || submitting}
+            disabled={!selectedDate || !selectedTimeSlot || submitting}
             className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <span>{submitting ? 'Requesting...' : 'Request Appointment'}</span>

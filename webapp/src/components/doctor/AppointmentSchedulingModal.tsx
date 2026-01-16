@@ -210,9 +210,9 @@ const AppointmentSchedulingModal: React.FC<AppointmentSchedulingModalProps> = ({
         }
 
         // Create new appointment
-        // When doctor invites a patient (not from pending), status should be SCHEDULED
-        // Only when updating a pending appointment should it be CONFIRMED
-        const appointmentStatus = AppointmentStatus.SCHEDULED;
+        // When doctor invites a patient (not from pending), status should be ACCEPTED
+        // Patient will need to accept to make it CONFIRMED
+        const appointmentStatus = AppointmentStatus.ACCEPTED;
         
         const newAppointment = await appointmentService.createAppointment({
           patientId: selectedPatient.userID,

@@ -5,3 +5,15 @@ node_modules
 .env.local
 .env.*.local
 
+webapp/dist/index.html
+webapp/dist/logo.png
+webapp/dist/assets/index-B3i3Srsk.css
+webapp/dist/assets/index-D5xqGs_e.js
+webapp/dist/assets/index-D5xqGs_e.js.map
+webapp/dist/assets/index-hc4fm3bw.css
+webapp/dist/assets/index-vqoCl_C2.js
+webapp/dist/assets/index-vqoCl_C2.js.map
+webapp/dist/index.html
+webapp/dist/assets/index-B3i3Srsk.css
+webapp/dist/assets/index-vqoCl_C2.js
+webapp/dist/assets/index-vqoCl_C2.js.map

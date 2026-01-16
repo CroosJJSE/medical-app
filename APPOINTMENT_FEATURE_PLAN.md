@@ -4,7 +4,7 @@
 ---
 
 ## Overview
-The appointment feature enables patients to request appointments with their assigned doctors, and allows doctors to manage their appointment schedule. The system supports appointment scheduling, status management, and calendar integration.
+The appointment feature enables patients to request appointments with their assigned doctors by selecting both date and time, and allows doctors to manage their appointment schedule. The system supports a bidirectional approval workflow where both patients and doctors can Accept, Reject, or Amend appointment requests. The system supports appointment scheduling, status management, and calendar integration.
 
 ---
 
@@ -14,25 +14,29 @@ The appointment feature enables patients to request appointments with their assi
 - **Entry Point**: Patient navigates to "Schedule Appointment" page
 - **Doctor Selection**: 
   - Patient selects from list of available/assigned doctors
-  - System displays doctor information (name, specialization)
-- **Date Selection**:
-  - Patient selects preferred date(s) using date picker (maximum 3 dates)
-  - Patient cannot select specific time slots (only dates)
-  - System validates dates are not in the past
-  - System validates dates are within doctor's working days
+  - System displays doctor information (name, specialization, working hours)
+- **Date & Time Selection**:
+  - Patient selects preferred date using date picker
+  - Patient selects preferred time from available time slots
+  - System displays available time slots based on doctor's working hours
+  - System validates date and time are not in the past
+  - System validates date is within doctor's working days
+  - System validates time is within doctor's working hours
+  - System checks for conflicts with existing appointments
 - **Appointment Request**:
   - Patient can optionally add reason for visit
-  - Patient submits appointment request(s)
-  - System creates appointment request(s) with status "PENDING"
-  - Each request is date-only (no time assigned yet)
+  - Patient submits appointment request
+  - System creates appointment request with status "PENDING"
+  - Appointment includes both date and time
 - **Availability Check**:
-  - System checks doctor's working days for selected dates
-  - Validates dates are within doctor's availability
+  - System checks doctor's working days for selected date
+  - System checks doctor's working hours for selected time
+  - Validates time slot is available (no conflicts)
 - **Confirmation**:
-  - Appointment request(s) created with PENDING status
+  - Appointment request created with PENDING status
   - Patient receives confirmation message
   - Redirects to appointments list page
-  - Patient waits for doctor to assign time slot(s)
+  - Patient waits for doctor to Accept, Reject, or Amend the request
 
 ### 2. View Appointments
 - **Appointments List Page**:
@@ -53,92 +57,109 @@ The appointment feature enables patients to request appointments with their assi
   - Call-to-action to schedule first appointment
 
 ### 3. Appointment Status Flow (Patient View)
-- **Pending**: Initial state when patient requests appointment (date-only, no time assigned)
-- **Scheduled**: Doctor has assigned time slot(s) - patient needs to confirm
-- **Confirmed**: Patient has confirmed the scheduled appointment
+- **Pending**: Initial state when patient requests appointment (waiting for doctor response)
+- **Amended**: Doctor has amended the appointment (date/time changed) - patient needs to respond
+- **Accepted**: Doctor has accepted the appointment - patient needs to confirm
+- **Confirmed**: Both doctor and patient have accepted - appointment is confirmed
 - **Completed**: Appointment has been completed
 - **Cancelled**: Appointment was cancelled (by patient or doctor)
 - **No Show**: Patient did not attend scheduled appointment
 
-### 4. Appointment Confirmation Flow (Patient)
-- **Notification**: Patient receives notification when doctor schedules appointment
-- **Confirmation Modal/Page**:
+### 4. Appointment Response Flow (Patient)
+- **Notification**: Patient receives notification when doctor responds to appointment request
+- **Response Options** (when status is PENDING, AMENDED, or ACCEPTED):
+  - **Accept**: Patient accepts the appointment as proposed
+    - If doctor already accepted: Status changes to CONFIRMED
+    - If doctor amended: Status changes to CONFIRMED (with amended details)
+    - If status was PENDING: Status changes to ACCEPTED (waiting for doctor)
+  - **Reject**: Patient rejects the appointment
+    - Patient must provide reason for rejection
+    - Status changes to CANCELLED
+    - Doctor receives notification with rejection reason
+  - **Amend**: Patient requests changes to date/time
+    - Patient selects new preferred date and/or time
+    - Patient must provide reason for amendment
+    - Status changes to AMENDED (waiting for doctor response)
+    - Doctor receives notification with amendment request
+- **Response Modal/Page**:
   - Shows appointment details (date, time, doctor, reason)
-  - Patient can accept or reject the appointment
-  - If rejected, patient must provide reason
-  - If accepted, status changes from "Scheduled" to "Confirmed"
+  - Displays current status and who needs to respond
+  - Shows Accept, Reject, and Amend buttons
+  - For Amend: Shows date/time picker for new selection
 - **Status Updates**:
   - Patient can view status changes in real-time
   - Notifications for status updates
+  - Clear indication of whose turn it is to respond
 
 ---
 
 ## Doctor Side
 
-### 1. Calendar-Based Appointment Management
+### 1. Appointment Request Management
 
-#### Calendar View
+#### Pending Requests List
+- **Location**: Displayed on appointments page or dashboard
+- **Content**: Lists all pending appointment requests (status: PENDING or AMENDED)
+- **Display Format**:
+  - Patient name and photo
+  - Patient ID
+  - Requested date and time
+  - Reason for visit (if provided)
+  - Request creation date
+  - Current status badge
+- **Actions Available**:
+  - **Accept**: Doctor accepts the appointment as requested
+    - Status changes from PENDING to ACCEPTED (waiting for patient confirmation)
+    - If patient already accepted: Status changes to CONFIRMED
+  - **Reject**: Doctor rejects the appointment
+    - Doctor must provide reason for rejection
+    - Status changes to CANCELLED
+    - Patient receives notification with rejection reason
+  - **Amend**: Doctor requests changes to date/time
+    - Doctor selects new preferred date and/or time
+    - Doctor must provide reason for amendment
+    - Status changes to AMENDED (waiting for patient response)
+    - Patient receives notification with amendment request
+- **Response Modal/Page**:
+  - Shows appointment details (date, time, patient, reason)
+  - Displays current status and who needs to respond
+  - Shows Accept, Reject, and Amend buttons
+  - For Amend: Shows date/time picker for new selection
+  - Displays available time slots for date selection
+- **Empty State**: Friendly message when no pending requests
+
+#### Calendar View (Optional/Secondary View)
 - **7-Day Window**: Calendar displays Monday through Sunday (current week view)
 - **Time Slots**: Each day is divided into 15-minute time cells
 - **Availability Display**:
   - Cells show doctor's availability based on working hours from registration
   - Available cells: White/light background
-  - Scheduled cells: Colored with patient name displayed
-  - Confirmed cells: Different color (e.g., blue) with patient name
+  - Pending cells: Yellow/orange with patient name displayed
+  - Accepted cells: Light blue with patient name
+  - Confirmed cells: Blue with patient name
   - Completed cells: Grayed out with patient name
   - Outside working hours: Disabled/grayed out
 - **Cell Interaction**:
-  - Each available cell has a small "+" button in the corner
-  - Clicking "+" opens appointment scheduling modal
-
-#### Appointment Scheduling Modal
-- **Time Selection**:
-  - Shows selected time slot (e.g., "4:00 PM - 4:15 PM")
-  - "Add Time" button to extend duration in 15-minute increments
-  - Can select multiple consecutive 15-minute slots (e.g., 30 min, 45 min, 60 min)
-  - Displays total duration and end time
-- **Patient Selection - Method 1: Pending Requests**:
-  - Shows list of pending appointment requests for the selected date
-  - Each request shows: Patient name, Patient ID, requested date, reason (if provided)
-  - Doctor selects a patient from pending requests
-  - Clicking "Schedule" assigns time slot(s) and changes status from PENDING to SCHEDULED
-- **Patient Selection - Method 2: Invite Patient**:
-  - "Invite" button opens patient search dropdown
-  - Search by patient name, ID, or phone number
-  - Shows only patients assigned to the doctor
-  - Doctor selects patient and creates appointment invitation
-  - Status set to SCHEDULED (patient needs to confirm)
-- **Modal Actions**:
-  - "Schedule" button: Creates/updates appointment with selected time slots
-  - "Cancel" button: Closes modal without changes
-  - After scheduling, modal closes and calendar cells update
-
-#### Pending Requests Section
-- **Location**: Displayed below the calendar view
-- **Content**: Lists all pending appointment requests (status: PENDING)
-- **Display Format**:
-  - Patient name and photo
-  - Patient ID
-  - Requested date(s)
-  - Reason for visit (if provided)
-  - Request creation date
-- **Actions**:
-  - When doctor schedules a pending request, it disappears from pending list
-  - Status changes from PENDING to SCHEDULED
-- **Empty State**: Friendly message when no pending requests
+  - Clicking on appointment cell opens appointment details modal
+  - Shows appointment status and available actions
 
 ### 2. Appointment Management Actions
-- **Schedule Appointment**:
-  - Assign time slot(s) to pending request or invite new patient
-  - Changes status from PENDING to SCHEDULED
-  - Patient receives notification to confirm
+- **Respond to Appointment Request**:
+  - Accept: Accept appointment as requested by patient
+  - Reject: Reject appointment with reason
+  - Amend: Request changes to date/time with reason
+- **Respond to Patient Amendment**:
+  - When patient amends appointment, doctor can:
+    - Accept: Accept the amended date/time
+    - Reject: Reject the amendment with reason
+    - Amend Again: Propose different date/time
 - **Update Status**:
   - Mark as "Completed" after consultation
   - Mark as "No Show" if patient doesn't attend
   - Cancel appointment if needed
 - **Start Encounter**:
   - Direct link to create new clinical encounter
-  - Available for SCHEDULED or CONFIRMED appointments
+  - Available for CONFIRMED appointments
   - Links appointment to encounter record
   - Pre-fills patient information
 - **View Patient Profile**:
@@ -164,49 +185,66 @@ The appointment feature enables patients to request appointments with their assi
 ## Data Flow
 
 ### Appointment Request (Patient)
-1. Patient selects doctor and up to 3 dates
-2. System validates dates (not in past, within doctor's working days)
-3. Appointment request created with status "PENDING" (date-only, no time)
-4. Stored in Firestore `appointments` collection
-5. Patient receives confirmation
-6. Request appears in doctor's pending requests list
+1. Patient selects doctor, date, and time
+2. System validates date and time (not in past, within doctor's working days/hours)
+3. System checks for time slot conflicts
+4. Appointment request created with status "PENDING" (includes date and time)
+5. Stored in Firestore `appointments` collection
+6. Patient receives confirmation
+7. Request appears in doctor's pending requests list
+8. Doctor receives notification of new appointment request
 
-### Appointment Scheduling (Doctor - Method 1: Pending Request)
-1. Doctor views calendar and clicks "+" on available time slot
-2. Modal opens showing pending requests for that date
-3. Doctor selects patient from pending requests
-4. Doctor can extend duration by adding more 15-minute slots
-5. Doctor clicks "Schedule"
-6. Appointment updated with:
-   - Specific dateTime (date + time)
-   - Duration (based on selected slots)
-   - Status changed from PENDING to SCHEDULED
-7. Request disappears from pending list
-8. Calendar cells update to show scheduled appointment
-9. Patient receives notification to confirm appointment
+### Doctor Response to Appointment Request
+1. Doctor views pending appointment request
+2. Doctor can choose one of three actions:
+   - **Accept**: 
+     - Status changes from PENDING to ACCEPTED
+     - If patient already accepted: Status changes to CONFIRMED
+     - Patient receives notification
+   - **Reject**: 
+     - Doctor provides rejection reason
+     - Status changes to CANCELLED
+     - Patient receives notification with reason
+   - **Amend**: 
+     - Doctor selects new date and/or time
+     - Doctor provides amendment reason
+     - Status changes to AMENDED
+     - Original date/time stored for reference
+     - Patient receives notification with amendment details
 
-### Appointment Scheduling (Doctor - Method 2: Invite Patient)
-1. Doctor views calendar and clicks "+" on available time slot
-2. Modal opens, doctor clicks "Invite" button
-3. Patient search dropdown appears
-4. Doctor searches and selects patient
-5. Doctor can extend duration by adding more 15-minute slots
-6. Doctor clicks "Schedule"
-7. New appointment created with:
-   - Specific dateTime (date + time)
-   - Duration (based on selected slots)
-   - Status: SCHEDULED
-8. Calendar cells update to show scheduled appointment
-9. Patient receives notification to confirm appointment
+### Patient Response to Doctor Action
+1. Patient receives notification about doctor's response
+2. Patient views appointment details (current date/time, doctor, reason)
+3. Patient can choose one of three actions:
+   - **Accept**: 
+     - If status was ACCEPTED: Status changes to CONFIRMED
+     - If status was AMENDED: Status changes to CONFIRMED (with amended date/time)
+     - Doctor receives notification
+   - **Reject**: 
+     - Patient provides rejection reason
+     - Status changes to CANCELLED
+     - Doctor receives notification with reason
+   - **Amend**: 
+     - Patient selects new preferred date and/or time
+     - Patient provides amendment reason
+     - Status changes to AMENDED (waiting for doctor)
+     - Doctor receives notification with amendment request
 
-### Appointment Confirmation (Patient)
-1. Patient receives notification about scheduled appointment
-2. Patient views appointment details (date, time, doctor, reason)
-3. Patient can:
-   - Accept: Status changes from SCHEDULED to CONFIRMED
-   - Reject: Status changes to CANCELLED, patient provides reason
-4. Both patient and doctor notified of confirmation status
-5. Calendar updates to show confirmed status
+### Amendment Cycle
+- If doctor amends after patient amends:
+  - Status remains AMENDED
+  - Patient receives notification and can respond again
+- If patient amends after doctor amends:
+  - Status remains AMENDED
+  - Doctor receives notification and can respond again
+- Cycle continues until one party accepts or rejects
+
+### Appointment Confirmation
+1. When both doctor and patient have accepted:
+   - Status automatically changes to CONFIRMED
+   - Both parties receive confirmation notification
+   - Appointment is locked (cannot be amended without cancellation)
+   - Calendar updates to show confirmed status
 
 ### Appointment Completion
 1. Doctor marks appointment as "Completed"
@@ -220,15 +258,16 @@ The appointment feature enables patients to request appointments with their assi
 ## Key Features
 
 ### For Patients
-- Simple date-based appointment requests (no time selection)
+- Date and time selection for appointment requests
+- Accept, Reject, or Amend appointment requests
 - View all appointments in organized list
 - Filter by status and date
 - See appointment details (doctor, time, location, status)
 - Mobile-optimized interface
 
 ### For Doctors
-- View all appointments with filtering options
-- Confirm or manage appointment status
+- View all appointment requests with filtering options
+- Accept, Reject, or Amend appointment requests
 - Quick access to patient profiles
 - Direct link to create encounters
 - Desktop-optimized interface
@@ -245,20 +284,37 @@ The appointment feature enables patients to request appointments with their assi
 ## Status Workflow
 
 ```
-Pending → Scheduled → Confirmed → Completed
+PENDING → ACCEPTED → CONFIRMED → COMPLETED
    ↓         ↓           ↓
-Cancelled Cancelled  Cancelled
+AMENDED  AMENDED    CANCELLED
    ↓         ↓
-  No Show  No Show
+CANCELLED CANCELLED
+   ↓
+ NO_SHOW
 ```
 
 ### Status Definitions
-- **PENDING**: Patient has requested appointment (date-only, no time assigned yet)
-- **SCHEDULED**: Doctor has assigned time slot(s), waiting for patient confirmation
-- **CONFIRMED**: Patient has confirmed the scheduled appointment
+- **PENDING**: Patient has requested appointment (waiting for doctor response)
+- **ACCEPTED**: One party has accepted (doctor or patient), waiting for other party
+- **AMENDED**: One party has requested changes to date/time, waiting for other party response
+- **CONFIRMED**: Both doctor and patient have accepted the appointment
 - **COMPLETED**: Appointment has been completed
 - **CANCELLED**: Appointment was cancelled (by patient or doctor)
 - **NO_SHOW**: Patient did not attend scheduled appointment
+
+### Status Transition Rules
+- **PENDING** → **ACCEPTED**: When doctor accepts patient's request
+- **PENDING** → **AMENDED**: When doctor amends patient's request
+- **PENDING** → **CANCELLED**: When doctor rejects patient's request
+- **ACCEPTED** → **CONFIRMED**: When patient accepts doctor's acceptance
+- **ACCEPTED** → **AMENDED**: When patient amends after doctor accepted
+- **ACCEPTED** → **CANCELLED**: When patient rejects after doctor accepted
+- **AMENDED** → **CONFIRMED**: When other party accepts the amendment
+- **AMENDED** → **AMENDED**: When other party proposes different amendment
+- **AMENDED** → **CANCELLED**: When other party rejects the amendment
+- **CONFIRMED** → **COMPLETED**: When doctor marks as completed
+- **CONFIRMED** → **CANCELLED**: When either party cancels
+- **Any status** → **NO_SHOW**: When doctor marks as no show
 
 ---
 
@@ -269,55 +325,73 @@ Cancelled Cancelled  Cancelled
 - Linked to patient and doctor via IDs
 - Timestamps stored as Firestore Timestamps
 - Status tracked via enum values
-- For PENDING appointments: dateTime contains only date (time set to 00:00 or null)
-- For SCHEDULED/CONFIRMED appointments: dateTime contains full date and time
+- All appointments include full dateTime (date and time)
+- Amendment history stored (original date/time, amended date/time, reason)
+- Response tracking: who accepted/rejected/amended and when
 
 ### Validation Rules
-- Date cannot be in the past
-- Patient can request maximum 3 dates per appointment request
+- Date and time cannot be in the past
+- Patient selects single date and time (not multiple dates)
 - Doctor must be available for selected date (within working days)
+- Time must be within doctor's working hours
 - Patient must be assigned to selected doctor
-- Time slots must be within doctor's working hours
 - Duration must be multiple of 15 minutes (minimum 15 minutes)
 - Cannot schedule overlapping appointments
-- Patient must confirm SCHEDULED appointments before they become CONFIRMED
+- Both parties must accept before appointment becomes CONFIRMED
+- Amendment requests must include reason
+- Rejection requests must include reason
 
 ### Permissions
 - Patients can create appointment requests (PENDING status) for themselves
+- Patients can Accept, Reject, or Amend appointment requests
 - Doctors can view and manage their appointments
-- Doctors can schedule appointments (change PENDING to SCHEDULED)
-- Doctors can update appointment status
-- Patients can confirm or reject SCHEDULED appointments
-- Both can cancel appointments
+- Doctors can Accept, Reject, or Amend appointment requests
+- Both parties can cancel appointments at any time
+- Only doctor can mark appointments as COMPLETED or NO_SHOW
 
 ### Calendar Implementation
 - **Time Slot Granularity**: 15 minutes (configurable)
 - **Calendar Window**: 7 days (Monday-Sunday)
 - **Working Hours**: Based on doctor's availability from registration
-- **Cell States**: Available, Scheduled, Confirmed, Completed, Outside Hours
-- **Real-time Updates**: Calendar updates when appointments are scheduled/updated
+- **Cell States**: Available, Pending, Accepted, Confirmed, Completed, Outside Hours
+- **Real-time Updates**: Calendar updates when appointments are created/updated
+- **Availability Display**: Shows available time slots for patient selection
 
 ---
 
 ## Backend Implementation Plan
 
 ### 1. Appointment Model Updates
-- **Status Enum**: Add `PENDING` status to `AppointmentStatus` enum
+- **Status Enum**: Update `AppointmentStatus` enum to include:
+  - `PENDING`: Initial request waiting for doctor response
+  - `ACCEPTED`: One party accepted, waiting for other party
+  - `AMENDED`: One party requested changes, waiting for response
+  - `CONFIRMED`: Both parties accepted
+  - `COMPLETED`: Appointment completed
+  - `CANCELLED`: Appointment cancelled
+  - `NO_SHOW`: Patient did not attend
 - **DateTime Handling**:
-  - For PENDING: Store date only (time component can be null or 00:00)
-  - For SCHEDULED+: Store full dateTime with specific time
+  - All appointments store full dateTime (date and time)
+  - Amendment history: Store original dateTime and amended dateTime
 - **Duration Field**: Ensure duration is stored in minutes (multiple of 15)
+- **Amendment Tracking**:
+  - `originalDateTime`: Original date/time requested
+  - `amendedDateTime`: Current/amended date/time
+  - `amendmentHistory`: Array of amendment records (who, when, reason)
+  - `lastAmendedBy`: User ID of last party to amend
+  - `lastAmendedAt`: Timestamp of last amendment
 
 ### 2. Appointment Repository Methods
 
 #### New Methods Needed:
-- `getPendingRequestsByDoctor(doctorId: string, date?: Date)`: Get all PENDING appointments for a doctor, optionally filtered by date
+- `getPendingRequestsByDoctor(doctorId: string)`: Get all PENDING and AMENDED appointments for a doctor
 - `getAppointmentsByDateRange(doctorId: string, startDate: Date, endDate: Date)`: Get appointments for calendar view (7-day window)
 - `getAppointmentsByTimeSlot(doctorId: string, date: Date, startTime: string, endTime: string)`: Check availability for specific time slot
-- `scheduleAppointment(appointmentId: string, dateTime: Date, duration: number)`: Update PENDING appointment to SCHEDULED with time
-- `createScheduledAppointment(appointmentData)`: Create new SCHEDULED appointment (for invite flow)
-- `confirmAppointment(appointmentId: string)`: Update SCHEDULED to CONFIRMED
-- `rejectAppointment(appointmentId: string, reason: string)`: Update SCHEDULED to CANCELLED with reason
+- `getAvailableTimeSlots(doctorId: string, date: Date)`: Get available time slots for a date
+- `acceptAppointment(appointmentId: string, userId: string)`: Accept appointment (by doctor or patient)
+- `rejectAppointment(appointmentId: string, userId: string, reason: string)`: Reject appointment with reason
+- `amendAppointment(appointmentId: string, userId: string, newDateTime: Date, reason: string)`: Amend appointment with new date/time
+- `cancelAppointment(appointmentId: string, userId: string, reason?: string)`: Cancel appointment
 
 ### 3. Appointment Service Methods
 
@@ -328,13 +402,17 @@ Cancelled Cancelled  Cancelled
 
 #### Calendar Data:
 - `getCalendarData(doctorId: string, startDate: Date, endDate: Date)`: Returns appointments grouped by date and time for calendar rendering
-- `getPendingRequests(doctorId: string, date?: Date)`: Get pending appointment requests
+- `getPendingRequests(doctorId: string)`: Get pending and amended appointment requests
 
 #### Appointment Actions:
-- `schedulePendingAppointment(appointmentId: string, dateTime: Date, duration: number)`: Schedule a pending request
-- `invitePatientToAppointment(doctorId: string, patientId: string, dateTime: Date, duration: number, reason?: string)`: Create invitation appointment
-- `confirmAppointmentByPatient(appointmentId: string)`: Patient confirms scheduled appointment
-- `rejectAppointmentByPatient(appointmentId: string, reason: string)`: Patient rejects scheduled appointment
+- `createAppointmentRequest(patientId: string, doctorId: string, dateTime: Date, duration: number, reason?: string)`: Patient creates appointment request
+- `acceptAppointmentByDoctor(appointmentId: string)`: Doctor accepts appointment request
+- `acceptAppointmentByPatient(appointmentId: string)`: Patient accepts appointment (after doctor accepted or amendment)
+- `rejectAppointmentByDoctor(appointmentId: string, reason: string)`: Doctor rejects appointment request
+- `rejectAppointmentByPatient(appointmentId: string, reason: string)`: Patient rejects appointment
+- `amendAppointmentByDoctor(appointmentId: string, newDateTime: Date, reason: string)`: Doctor amends appointment
+- `amendAppointmentByPatient(appointmentId: string, newDateTime: Date, reason: string)`: Patient amends appointment
+- `getAppointmentStatus(appointmentId: string)`: Get current appointment status and who needs to respond
 
 ### 4. Validation Logic
 
@@ -346,18 +424,33 @@ Cancelled Cancelled  Cancelled
 - Validate date is not in the past
 
 #### Appointment Status Transitions:
-- PENDING → SCHEDULED: Only by doctor
-- SCHEDULED → CONFIRMED: Only by patient
-- SCHEDULED → CANCELLED: By patient (with reason) or doctor
+- PENDING → ACCEPTED: By doctor (accepts patient's request)
+- PENDING → AMENDED: By doctor (amends patient's request)
+- PENDING → CANCELLED: By doctor (rejects patient's request)
+- ACCEPTED → CONFIRMED: By patient (accepts doctor's acceptance)
+- ACCEPTED → AMENDED: By patient (amends after doctor accepted)
+- ACCEPTED → CANCELLED: By patient (rejects after doctor accepted)
+- AMENDED → CONFIRMED: By other party (accepts amendment)
+- AMENDED → AMENDED: By other party (proposes different amendment)
+- AMENDED → CANCELLED: By other party (rejects amendment)
 - CONFIRMED → COMPLETED: Only by doctor
 - CONFIRMED → CANCELLED: By patient or doctor
+- Any status → CANCELLED: By either party
 - Any status → NO_SHOW: Only by doctor
 
 ### 5. Notification System
-- **When PENDING → SCHEDULED**: Notify patient to confirm appointment
-- **When SCHEDULED → CONFIRMED**: Notify doctor that patient confirmed
-- **When SCHEDULED → CANCELLED (by patient)**: Notify doctor with rejection reason
-- **When appointment is created via invite**: Notify patient of new appointment invitation
+- **When appointment request created (PENDING)**: Notify doctor of new request
+- **When PENDING → ACCEPTED (by doctor)**: Notify patient that doctor accepted
+- **When PENDING → AMENDED (by doctor)**: Notify patient of amendment with new date/time
+- **When PENDING → CANCELLED (by doctor)**: Notify patient with rejection reason
+- **When ACCEPTED → CONFIRMED (by patient)**: Notify doctor that patient confirmed
+- **When ACCEPTED → AMENDED (by patient)**: Notify doctor of patient's amendment request
+- **When ACCEPTED → CANCELLED (by patient)**: Notify doctor with rejection reason
+- **When AMENDED → CONFIRMED**: Notify both parties of confirmation
+- **When AMENDED → AMENDED**: Notify other party of new amendment
+- **When AMENDED → CANCELLED**: Notify other party with rejection reason
+- **When appointment is CANCELLED**: Notify other party
+- **When appointment is marked COMPLETED**: Notify patient
 
 ### 6. Database Queries & Indexes
 
@@ -369,21 +462,24 @@ Cancelled Cancelled  Cancelled
   - Index on: `doctorId`, `dateTime` (for calendar view)
 
 #### Query Patterns:
-- Get pending requests: `where('doctorId', '==', doctorId).where('status', '==', 'PENDING')`
-- Get calendar appointments: `where('doctorId', '==', doctorId).where('dateTime', '>=', startDate).where('dateTime', '<=', endDate)`
-- Check time slot conflicts: Query appointments overlapping with desired time slot
+- Get pending requests: `where('doctorId', '==', doctorId).where('status', 'in', ['PENDING', 'AMENDED'])`
+- Get accepted appointments: `where('doctorId', '==', doctorId).where('status', '==', 'ACCEPTED')`
+- Get calendar appointments: `where('doctorId', '==', doctorId).where('amendedDateTime', '>=', startDate).where('amendedDateTime', '<=', endDate)`
+- Check time slot conflicts: Query appointments overlapping with desired time slot (exclude CANCELLED)
 
 ### 7. Real-time Updates
-- Use Firestore real-time listeners for calendar updates
-- Update calendar cells when appointments are scheduled/updated
+- Use Firestore real-time listeners for appointment updates
+- Update calendar cells when appointments are created/updated
 - Update pending requests list in real-time
+- Show status changes and who needs to respond
 
 ### 8. Error Handling
 - Handle time slot conflicts gracefully
-- Validate doctor availability before scheduling
-- Handle patient not found errors in invite flow
+- Validate doctor availability before creating appointment request
 - Handle appointment not found errors
-- Validate status transitions
+- Validate status transitions (prevent invalid transitions)
+- Handle amendment conflicts (if time slot becomes unavailable during amendment)
+- Validate that user has permission to perform action (doctor can only respond to their appointments, patient can only respond to their appointments)
 
 ## Future Enhancements
 - Calendar navigation (previous/next week)
@@ -398,5 +494,6 @@ Cancelled Cancelled  Cancelled
 
 ---
 
-*Document Version: 2.0*
+*Document Version: 3.0*
+*Last Updated: Updated appointment flow to support bidirectional Accept/Reject/Amend workflow with date and time selection*
 

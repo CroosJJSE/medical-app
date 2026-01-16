@@ -89,11 +89,13 @@ export enum AppointmentType {
 
 // Appointment Status
 export enum AppointmentStatus {
-  SCHEDULED = 'scheduled',
-  CONFIRMED = 'confirmed',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-  NO_SHOW = 'no-show'
+  PENDING = 'pending',           // Patient requested, waiting for doctor response
+  ACCEPTED = 'accepted',         // One party accepted, waiting for other party
+  AMENDED = 'amended',           // One party requested changes, waiting for response
+  CONFIRMED = 'confirmed',       // Both parties accepted
+  COMPLETED = 'completed',      // Appointment completed
+  CANCELLED = 'cancelled',       // Appointment cancelled
+  NO_SHOW = 'no-show'           // Patient did not attend
 }
 
 // Recurrence Pattern
@@ -189,6 +191,42 @@ export enum TimelineEventType {
   SYMPTOM = 'symptom'
 }
 
+// Notification Type
+export enum NotificationType {
+  // Appointments
+  APPOINTMENT_REQUEST_CREATED = 'APPOINTMENT_REQUEST_CREATED',
+  APPOINTMENT_ACCEPTED = 'APPOINTMENT_ACCEPTED',
+  APPOINTMENT_AMENDED = 'APPOINTMENT_AMENDED',
+  APPOINTMENT_REJECTED = 'APPOINTMENT_REJECTED',
+  APPOINTMENT_CONFIRMED = 'APPOINTMENT_CONFIRMED',
+  APPOINTMENT_CANCELLED = 'APPOINTMENT_CANCELLED',
+  APPOINTMENT_COMPLETED = 'APPOINTMENT_COMPLETED',
+  
+  // Test Results
+  TEST_RESULT_UPLOADED = 'TEST_RESULT_UPLOADED',
+  TEST_RESULT_REVIEWED = 'TEST_RESULT_REVIEWED',
+  TEST_RESULT_CONFIRMED = 'TEST_RESULT_CONFIRMED',
+  TEST_RESULT_ABNORMAL = 'TEST_RESULT_ABNORMAL',
+  
+  // Encounters
+  ENCOUNTER_CREATED = 'ENCOUNTER_CREATED',
+  ENCOUNTER_UPDATED = 'ENCOUNTER_UPDATED',
+  
+  // Patient Allocation
+  PATIENT_ASSIGNED = 'PATIENT_ASSIGNED',
+  PATIENT_SHARED = 'PATIENT_SHARED',
+  PATIENT_RECLAIMED = 'PATIENT_RECLAIMED',
+  SHARING_REQUEST_APPROVED = 'SHARING_REQUEST_APPROVED',
+  SHARING_REQUEST_REJECTED = 'SHARING_REQUEST_REJECTED',
+  
+  // User Approval
+  REGISTRATION_APPROVED = 'REGISTRATION_APPROVED',
+  REGISTRATION_REJECTED = 'REGISTRATION_REJECTED',
+  
+  // Profile
+  PROFILE_UPDATED = 'PROFILE_UPDATED',
+}
+
 // Firebase Collection Names
 export const COLLECTIONS = {
   USERS: 'users',
@@ -214,7 +252,8 @@ export const ID_PREFIXES = {
   MEDICATION: 'MED',
   DISEASE: 'DIS',
   TIMELINE: 'TLN',
-  AUDIT_LOG: 'AUD'
+  AUDIT_LOG: 'AUD',
+  NOTIFICATION: 'NOT'
 } as const;
 
 // Default Values

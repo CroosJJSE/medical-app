@@ -26,7 +26,15 @@ const Appointments: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('upcoming');
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+  const [showUpdateTimeModal, setShowUpdateTimeModal] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [cancelReason, setCancelReason] = useState('');
+  const [updateTimeDate, setUpdateTimeDate] = useState<Date | null>(null);
+  const [updateTimeSlots, setUpdateTimeSlots] = useState<Date[]>([]);
+  const [updateTimeSelected, setUpdateTimeSelected] = useState<Date | null>(null);
 
   // Convert Firestore Timestamp or Date to Date object
   const toDate = (date: any): Date => {
@@ -67,18 +75,22 @@ const Appointments: React.FC = () => {
         })
       );
 
-      // Sort by date (most recent first for past, upcoming first for future)
+      // Sort by date: upcoming appointments (closest first), past appointments (most recent first)
       appointmentsWithDoctors.sort((a, b) => {
         const timeA = a.dateTime.getTime();
         const timeB = b.dateTime.getTime();
         const now = Date.now();
         
-        // If both are in the past or both are in the future, sort by date
-        if ((timeA < now && timeB < now) || (timeA >= now && timeB >= now)) {
-          return timeB - timeA; // Most recent first
+        // Both are in the past - sort descending (most recent first)
+        if (timeA < now && timeB < now) {
+          return timeB - timeA;
+        }
+        // Both are upcoming - sort ascending (closest first)
+        if (timeA >= now && timeB >= now) {
+          return timeA - timeB;
         }
         // Future appointments come before past
-        return timeB - timeA;
+        return timeA >= now ? -1 : 1;
       });
 
       setAppointments(appointmentsWithDoctors);
@@ -99,19 +111,21 @@ const Appointments: React.FC = () => {
     await loadAppointments();
   };
 
-  const handleConfirmAppointment = async (appointmentId: string) => {
-    if (!user) return;
+  const handleAcceptAppointment = async (appointmentId: string) => {
+    console.log('[PATIENT_APPOINTMENTS] handleAcceptAppointment called', { appointmentId });
+    if (!user?.userID) return;
     
-    setConfirmingId(appointmentId);
+    setProcessingId(appointmentId);
     try {
-      // Update appointment status to CONFIRMED
-      await appointmentService.updateAppointment(appointmentId, {
-        status: AppointmentStatus.CONFIRMED,
+      const appointment = await appointmentService.acceptAppointment(appointmentId, user.userID);
+      console.log('[PATIENT_APPOINTMENTS] Appointment accepted', { 
+        appointmentId, 
+        newStatus: appointment.status 
       });
 
       // Log audit trail
-      const appointment = appointments.find(apt => apt.appointmentId === appointmentId);
-      if (appointment) {
+      const apt = appointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
         await auditService.logAction(
           AuditAction.APPOINTMENT_UPDATED,
           AuditCategory.APPOINTMENTS,
@@ -119,29 +133,213 @@ const Appointments: React.FC = () => {
           user,
           {
             targetId: appointmentId,
-            targetDisplayName: `Appointment with ${appointment.doctor?.displayName || 'Doctor'}`,
-            description: `Patient confirmed appointment scheduled by doctor`,
+            targetDisplayName: `Appointment with ${apt.doctor?.displayName || 'Doctor'}`,
+            description: `Patient accepted appointment`,
             changes: [
-              { field: 'status', oldValue: AppointmentStatus.SCHEDULED, newValue: AppointmentStatus.CONFIRMED }
+              { field: 'status', oldValue: apt.status, newValue: appointment.status }
             ],
             metadata: {
               patientId: user.userID,
-              doctorId: appointment.doctorId,
-              dateTime: appointment.dateTime.toISOString(),
+              doctorId: apt.doctorId,
+              dateTime: apt.dateTime.toISOString(),
             },
           }
-        ).catch(err => console.error('Error logging audit:', err));
+        ).catch(err => console.error('[PATIENT_APPOINTMENTS] Error logging audit:', err));
       }
 
-      // Reload appointments to reflect the change
       await loadAppointments();
-    } catch (error) {
-      console.error('Error confirming appointment:', error);
-      alert('Failed to confirm appointment. Please try again.');
+    } catch (error: any) {
+      console.error('[PATIENT_APPOINTMENTS] Error accepting appointment:', error);
+      alert(error.message || 'Failed to accept appointment. Please try again.');
     } finally {
-      setConfirmingId(null);
+      setProcessingId(null);
     }
   };
+
+  const handleRejectAppointment = async (appointmentId: string) => {
+    console.log('[PATIENT_APPOINTMENTS] handleRejectAppointment called', { 
+      appointmentId, 
+      reason: rejectReason 
+    });
+    if (!user?.userID || !rejectReason.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+    
+    setProcessingId(appointmentId);
+    try {
+      await appointmentService.rejectAppointment(appointmentId, user.userID, rejectReason.trim());
+      console.log('[PATIENT_APPOINTMENTS] Appointment rejected');
+
+      // Log audit trail
+      const apt = appointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
+        await auditService.logAction(
+          AuditAction.APPOINTMENT_UPDATED,
+          AuditCategory.APPOINTMENTS,
+          'appointment',
+          user,
+          {
+            targetId: appointmentId,
+            targetDisplayName: `Appointment with ${apt.doctor?.displayName || 'Doctor'}`,
+            description: `Patient rejected appointment`,
+            changes: [
+              { field: 'status', oldValue: apt.status, newValue: AppointmentStatus.CANCELLED }
+            ],
+            metadata: {
+              patientId: user.userID,
+              doctorId: apt.doctorId,
+              dateTime: apt.dateTime.toISOString(),
+              rejectionReason: rejectReason,
+            },
+          }
+        ).catch(err => console.error('[PATIENT_APPOINTMENTS] Error logging audit:', err));
+      }
+
+      setShowRejectModal(null);
+      setRejectReason('');
+      await loadAppointments();
+    } catch (error: any) {
+      console.error('[PATIENT_APPOINTMENTS] Error rejecting appointment:', error);
+      alert(error.message || 'Failed to reject appointment. Please try again.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleUpdateTime = async (appointmentId: string) => {
+    console.log('[PATIENT_APPOINTMENTS] handleUpdateTime called', { 
+      appointmentId, 
+      newDate: updateTimeDate?.toISOString(),
+      newTime: updateTimeSelected?.toISOString()
+    });
+    if (!user?.userID || !updateTimeSelected) {
+      alert('Please select a new time');
+      return;
+    }
+    
+    setProcessingId(appointmentId);
+    try {
+      // Update appointment time (keeping status as PENDING)
+      await appointmentService.updateAppointment(appointmentId, {
+        dateTime: updateTimeSelected,
+        updatedAt: new Date(),
+      });
+      console.log('[PATIENT_APPOINTMENTS] Appointment time updated', { appointmentId });
+
+      // Log audit trail
+      const apt = appointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
+        await auditService.logAction(
+          AuditAction.APPOINTMENT_UPDATED,
+          AuditCategory.APPOINTMENTS,
+          'appointment',
+          user,
+          {
+            targetId: appointmentId,
+            targetDisplayName: `Appointment with ${apt.doctor?.displayName || 'Doctor'}`,
+            description: `Patient updated appointment time`,
+            changes: [
+              { field: 'dateTime', oldValue: apt.dateTime.toISOString(), newValue: updateTimeSelected.toISOString() }
+            ],
+            metadata: {
+              patientId: user.userID,
+              doctorId: apt.doctorId,
+              originalDateTime: apt.dateTime.toISOString(),
+              newDateTime: updateTimeSelected.toISOString(),
+            },
+          }
+        ).catch(err => console.error('[PATIENT_APPOINTMENTS] Error logging audit:', err));
+      }
+
+      setShowUpdateTimeModal(null);
+      setUpdateTimeDate(null);
+      setUpdateTimeSelected(null);
+      setUpdateTimeSlots([]);
+      await loadAppointments();
+    } catch (error: any) {
+      console.error('[PATIENT_APPOINTMENTS] Error updating appointment time:', error);
+      alert(error.message || 'Failed to update appointment time. Please try again.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId: string) => {
+    console.log('[PATIENT_APPOINTMENTS] handleCancelAppointment called', { 
+      appointmentId, 
+      reason: cancelReason 
+    });
+    if (!user?.userID || !cancelReason.trim()) {
+      alert('Please provide a reason for cancellation');
+      return;
+    }
+    
+    setProcessingId(appointmentId);
+    try {
+      await appointmentService.cancelAppointment(appointmentId, user.userID, cancelReason.trim());
+      console.log('[PATIENT_APPOINTMENTS] Appointment cancelled');
+
+      // Log audit trail
+      const apt = appointments.find(apt => apt.appointmentId === appointmentId);
+      if (apt) {
+        await auditService.logAction(
+          AuditAction.APPOINTMENT_CANCELLED,
+          AuditCategory.APPOINTMENTS,
+          'appointment',
+          user,
+          {
+            targetId: appointmentId,
+            targetDisplayName: `Appointment with ${apt.doctor?.displayName || 'Doctor'}`,
+            description: `Patient cancelled appointment`,
+            changes: [
+              { field: 'status', oldValue: apt.status, newValue: AppointmentStatus.CANCELLED }
+            ],
+            metadata: {
+              patientId: user.userID,
+              doctorId: apt.doctorId,
+              dateTime: apt.dateTime.toISOString(),
+              cancellationReason: cancelReason,
+            },
+          }
+        ).catch(err => console.error('[PATIENT_APPOINTMENTS] Error logging audit:', err));
+      }
+
+      setShowCancelModal(null);
+      setCancelReason('');
+      await loadAppointments();
+    } catch (error: any) {
+      console.error('[PATIENT_APPOINTMENTS] Error cancelling appointment:', error);
+      alert(error.message || 'Failed to cancel appointment. Please try again.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Load time slots when update time date is selected
+  useEffect(() => {
+    const loadUpdateTimeSlots = async () => {
+      if (!updateTimeDate || !showUpdateTimeModal) {
+        setUpdateTimeSlots([]);
+        setUpdateTimeSelected(null);
+        return;
+      }
+
+      const appointment = appointments.find(apt => apt.appointmentId === showUpdateTimeModal);
+      if (!appointment) return;
+
+      try {
+        const slots = await appointmentService.getAvailableTimeSlots(appointment.doctorId, updateTimeDate);
+        console.log('[PATIENT_APPOINTMENTS] Loaded update time slots', { count: slots.length });
+        setUpdateTimeSlots(slots);
+      } catch (error) {
+        console.error('[PATIENT_APPOINTMENTS] Error loading update time slots:', error);
+        setUpdateTimeSlots([]);
+      }
+    };
+
+    loadUpdateTimeSlots();
+  }, [updateTimeDate, showUpdateTimeModal, appointments]);
 
   // Filter appointments
   const filteredAppointments = appointments.filter((apt) => {
@@ -204,6 +402,26 @@ const Appointments: React.FC = () => {
       groups[dateKey].push(apt);
     });
     
+    // Sort appointments within each group by time (closest first for upcoming, most recent first for past)
+    Object.keys(groups).forEach(key => {
+      const now = new Date();
+      groups[key].sort((a, b) => {
+        const timeA = a.dateTime.getTime();
+        const timeB = b.dateTime.getTime();
+        
+        // For upcoming appointments, sort ascending (closest first)
+        if (timeA >= now && timeB >= now) {
+          return timeA - timeB;
+        }
+        // For past appointments, sort descending (most recent first)
+        if (timeA < now && timeB < now) {
+          return timeB - timeA;
+        }
+        // Future comes before past
+        return timeA >= now ? -1 : 1;
+      });
+    });
+    
     return groups;
   };
 
@@ -213,8 +431,26 @@ const Appointments: React.FC = () => {
     if (b === 'Today') return 1;
     if (a === 'Tomorrow') return -1;
     if (b === 'Tomorrow') return 1;
-    return new Date(groupedAppointments[b][0].dateTime).getTime() - 
-           new Date(groupedAppointments[a][0].dateTime).getTime();
+    
+    // For upcoming appointments, sort ascending (closest first)
+    // For past appointments, sort descending (most recent first)
+    const dateA = new Date(groupedAppointments[a][0].dateTime);
+    const dateB = new Date(groupedAppointments[b][0].dateTime);
+    const now = new Date();
+    
+    // Both are upcoming or both are past
+    if ((dateA >= now && dateB >= now) || (dateA < now && dateB < now)) {
+      if (filter === 'upcoming') {
+        // For upcoming tab: closest first (ascending)
+        return dateA.getTime() - dateB.getTime();
+      } else {
+        // For past tab: most recent first (descending)
+        return dateB.getTime() - dateA.getTime();
+      }
+    }
+    
+    // Future comes before past
+    return dateA >= now ? -1 : 1;
   });
 
   // Format time
@@ -229,10 +465,14 @@ const Appointments: React.FC = () => {
   // Get status badge styling
   const getStatusBadge = (status: AppointmentStatus) => {
     switch (status) {
+      case AppointmentStatus.PENDING:
+        return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+      case AppointmentStatus.ACCEPTED:
+        return 'bg-blue-50 text-blue-700 border-blue-100';
+      case AppointmentStatus.AMENDED:
+        return 'bg-orange-50 text-orange-700 border-orange-100';
       case AppointmentStatus.CONFIRMED:
         return 'bg-green-50 text-green-700 border-green-100';
-      case AppointmentStatus.SCHEDULED:
-        return 'bg-blue-50 text-blue-700 border-blue-100';
       case AppointmentStatus.COMPLETED:
         return 'bg-slate-100 text-slate-600 border-slate-200';
       case AppointmentStatus.CANCELLED:
@@ -247,10 +487,14 @@ const Appointments: React.FC = () => {
   // Get status label
   const getStatusLabel = (status: AppointmentStatus): string => {
     switch (status) {
+      case AppointmentStatus.PENDING:
+        return 'Pending';
+      case AppointmentStatus.ACCEPTED:
+        return 'Accepted';
+      case AppointmentStatus.AMENDED:
+        return 'Amended';
       case AppointmentStatus.CONFIRMED:
         return 'Confirmed';
-      case AppointmentStatus.SCHEDULED:
-        return 'Scheduled';
       case AppointmentStatus.COMPLETED:
         return 'Completed';
       case AppointmentStatus.CANCELLED:
@@ -260,6 +504,27 @@ const Appointments: React.FC = () => {
       default:
         return status;
     }
+  };
+
+  // Check if patient needs to respond (to doctor's actions)
+  const needsPatientResponse = (apt: AppointmentWithDoctor): boolean => {
+    if (!user?.userID) return false;
+    // Patient needs to respond if:
+    // 1. Status is ACCEPTED (doctor accepted, waiting for patient to confirm)
+    // 2. Status is AMENDED and last amended by doctor (doctor amended, waiting for patient response)
+    return (
+      apt.status === AppointmentStatus.ACCEPTED ||
+      (apt.status === AppointmentStatus.AMENDED && apt.lastAmendedBy === apt.doctorId)
+    );
+  };
+
+  // Check if patient can update time or cancel (only for PENDING appointments created by patient)
+  const canPatientUpdateOrCancel = (apt: AppointmentWithDoctor): boolean => {
+    if (!user?.userID) return false;
+    // Patient can update time or cancel only if:
+    // Status is PENDING and created by patient (check both userId and createdBy for compatibility)
+    return apt.status === AppointmentStatus.PENDING && 
+           (apt.userId === user.userID || apt.createdBy === user.userID);
   };
 
   // Get location text
@@ -493,31 +758,75 @@ const Appointments: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Confirm Button for Scheduled Appointments created by doctor (invitations) */}
-                      {apt.status === AppointmentStatus.SCHEDULED && !isPast && apt.createdBy !== user?.userID && (
-                        <div className="mt-4 pt-3 border-t border-gray-100">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleConfirmAppointment(apt.appointmentId);
-                            }}
-                            disabled={confirmingId === apt.appointmentId}
-                            className="w-full py-2.5 px-4 rounded-xl bg-primary text-white font-bold text-sm hover:bg-blue-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                          >
-                            {confirmingId === apt.appointmentId ? (
-                              <>
-                                <span className="material-symbols-outlined animate-spin text-[18px]">
-                                  progress_activity
-                                </span>
-                                Confirming...
-                              </>
-                            ) : (
-                              <>
-                                <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                                Confirm Appointment
-                              </>
-                            )}
-                          </button>
+                      {/* Action Buttons for PENDING status (patient can update time or cancel) */}
+                      {canPatientUpdateOrCancel(apt) && !isPast && (
+                        <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowUpdateTimeModal(apt.appointmentId);
+                                setUpdateTimeDate(apt.dateTime);
+                              }}
+                              disabled={processingId === apt.appointmentId}
+                              className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">schedule</span>
+                              Update Time
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowCancelModal(apt.appointmentId);
+                              }}
+                              disabled={processingId === apt.appointmentId}
+                              className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">close</span>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons for ACCEPTED or AMENDED status (patient can accept or reject doctor's action) */}
+                      {needsPatientResponse(apt) && !isPast && (
+                        <div className="mt-4 pt-3 border-t border-gray-100 space-y-2">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAcceptAppointment(apt.appointmentId);
+                              }}
+                              disabled={processingId === apt.appointmentId}
+                              className="flex-1 py-2.5 px-4 rounded-xl bg-green-600 text-white font-bold text-sm hover:bg-green-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              {processingId === apt.appointmentId ? (
+                                <>
+                                  <span className="material-symbols-outlined animate-spin text-[18px]">
+                                    progress_activity
+                                  </span>
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                  Accept
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowRejectModal(apt.appointmentId);
+                              }}
+                              disabled={processingId === apt.appointmentId}
+                              className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">close</span>
+                              Reject
+                            </button>
+                          </div>
                         </div>
                       )}
 
@@ -572,6 +881,150 @@ const Appointments: React.FC = () => {
           <span className="material-symbols-outlined text-[32px]">add</span>
         </button>
       </div>
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Reject Appointment</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for rejecting this appointment:
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter reason..."
+              className="w-full p-3 border border-gray-300 rounded-lg mb-4 min-h-[100px]"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(null);
+                  setRejectReason('');
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRejectAppointment(showRejectModal)}
+                disabled={!rejectReason.trim() || processingId === showRejectModal}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                {processingId === showRejectModal ? 'Rejecting...' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Time Modal (for PENDING appointments) */}
+      {showUpdateTimeModal && (
+        <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full my-8">
+            <h3 className="text-lg font-bold mb-4">Update Appointment Time</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select a new time for your appointment:
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-semibold mb-2">Date</label>
+              <input
+                type="date"
+                value={updateTimeDate ? updateTimeDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  const newDate = e.target.value ? new Date(e.target.value) : null;
+                  setUpdateTimeDate(newDate);
+                  setUpdateTimeSelected(null);
+                }}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {updateTimeDate && updateTimeSlots.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-2">New Time</label>
+                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                  {updateTimeSlots.map((slot, index) => {
+                    const isSelected = updateTimeSelected?.getTime() === slot.getTime();
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setUpdateTimeSelected(slot)}
+                        className={`p-2 rounded-lg border-2 text-sm ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 text-primary font-bold'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-primary/50'
+                        }`}
+                      >
+                        {formatTime(slot)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowUpdateTimeModal(null);
+                  setUpdateTimeDate(null);
+                  setUpdateTimeSelected(null);
+                  setUpdateTimeSlots([]);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUpdateTime(showUpdateTimeModal)}
+                disabled={!updateTimeSelected || processingId === showUpdateTimeModal}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 disabled:opacity-50"
+              >
+                {processingId === showUpdateTimeModal ? 'Updating...' : 'Update Time'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Modal (for PENDING appointments) */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Cancel Appointment</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for cancelling this appointment:
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Enter reason..."
+              className="w-full p-3 border border-gray-300 rounded-lg mb-4 min-h-[100px]"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(null);
+                  setCancelReason('');
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleCancelAppointment(showCancelModal)}
+                disabled={!cancelReason.trim() || processingId === showCancelModal}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                {processingId === showCancelModal ? 'Cancelling...' : 'Cancel Appointment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <BottomNavigation />

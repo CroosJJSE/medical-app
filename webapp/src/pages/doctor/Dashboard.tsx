@@ -50,7 +50,10 @@ const Dashboard: React.FC = () => {
         // Get today's appointments
         const appointments = await appointmentService.getAppointmentsByDoctor(doctorId, today, tomorrow);
         const todayApts = appointments.filter(apt => 
-          apt.status === AppointmentStatus.SCHEDULED || apt.status === AppointmentStatus.CONFIRMED
+          apt.status === AppointmentStatus.PENDING ||
+          apt.status === AppointmentStatus.ACCEPTED ||
+          apt.status === AppointmentStatus.AMENDED ||
+          apt.status === AppointmentStatus.CONFIRMED
         ).sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
 
         // Fetch patient data for appointments
@@ -133,18 +136,22 @@ const Dashboard: React.FC = () => {
 
   const getStatusBadge = (status: AppointmentStatus) => {
     const badges = {
-      [AppointmentStatus.SCHEDULED]: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 ring-yellow-600/20',
+      [AppointmentStatus.PENDING]: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 ring-yellow-600/20',
+      [AppointmentStatus.ACCEPTED]: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-blue-600/20',
+      [AppointmentStatus.AMENDED]: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 ring-orange-600/20',
       [AppointmentStatus.CONFIRMED]: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 ring-green-600/20',
       [AppointmentStatus.COMPLETED]: 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 ring-gray-500/10',
       [AppointmentStatus.CANCELLED]: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 ring-red-600/20',
       [AppointmentStatus.NO_SHOW]: 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 ring-gray-500/10',
     };
-    return badges[status] || badges[AppointmentStatus.SCHEDULED];
+    return badges[status] || badges[AppointmentStatus.PENDING];
   };
 
   const getStatusLabel = (status: AppointmentStatus) => {
     const labels = {
-      [AppointmentStatus.SCHEDULED]: 'Scheduled',
+      [AppointmentStatus.PENDING]: 'Pending',
+      [AppointmentStatus.ACCEPTED]: 'Accepted',
+      [AppointmentStatus.AMENDED]: 'Amended',
       [AppointmentStatus.CONFIRMED]: 'Confirmed',
       [AppointmentStatus.COMPLETED]: 'Completed',
       [AppointmentStatus.CANCELLED]: 'Cancelled',
@@ -315,7 +322,10 @@ const Dashboard: React.FC = () => {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              {apt.status === AppointmentStatus.CONFIRMED || apt.status === AppointmentStatus.SCHEDULED ? (
+                              {(apt.status === AppointmentStatus.CONFIRMED || 
+                                apt.status === AppointmentStatus.ACCEPTED ||
+                                apt.status === AppointmentStatus.AMENDED ||
+                                apt.status === AppointmentStatus.PENDING) ? (
                                 <button
                                   onClick={() => navigate(`/doctor/new-encounter?appointmentId=${apt.appointmentId}&patientId=${apt.patientId}`)}
                                   className="bg-[#3c83f6] hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors inline-flex items-center gap-2"

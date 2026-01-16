@@ -21,8 +21,7 @@ export interface Doctor {
     title?: string;                 // Dr., Prof., etc.
     specialization: string;
     qualifications: string[];
-    licenseNumber: string;
-    licenseExpiry?: Date;
+    licenseNumber?: string;
   };
 
   contactInfo: {
