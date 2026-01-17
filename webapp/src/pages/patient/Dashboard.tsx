@@ -4,11 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/common/Loading';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import NotificationIcon from '@/components/common/NotificationIcon';
+import NotificationPanel from '@/components/common/NotificationPanel';
 import appointmentService from '@/services/appointmentService';
 import * as testResultService from '@/services/testResultService';
 import type { Appointment } from '@/models/Appointment';
 import type { TestResult } from '@/models/TestResult';
 import { AppointmentStatus } from '@/enums';
+import logo from '@/assets/logo.png';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -16,6 +19,7 @@ const Dashboard: React.FC = () => {
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [recentTestResults, setRecentTestResults] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -97,30 +101,46 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between bg-white/95 backdrop-blur-sm px-5 py-3 border-b border-gray-200 transition-all">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-            <span className="material-symbols-outlined filled text-xl">medical_services</span>
+          <div className="flex items-center justify-center w-8 h-8">
+            <img 
+              src={logo} 
+              alt="CareSync Logo" 
+              className="h-8 w-8 object-contain"
+            />
           </div>
           <h1 className="text-[#1f2937] text-xl font-extrabold tracking-tight leading-tight">
             CareSync
           </h1>
         </div>
-        <button
-          onClick={() => navigate('/patient/profile')}
-          className="relative flex items-center justify-center rounded-full overflow-hidden w-10 h-10 border-2 border-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-        >
-          {user?.photoURL ? (
-            <img
-              alt={`Profile photo of ${user.displayName}`}
-              className="w-full h-full object-cover"
-              src={user.photoURL}
-            />
-          ) : (
-            <div className="w-full h-full bg-primary flex items-center justify-center text-white font-bold">
-              {firstName.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white transform translate-x-px -translate-y-px"></span>
-        </button>
+        <div className="flex items-center gap-2 relative">
+          <NotificationIcon
+            userId={user?.userID || user?.userId}
+            onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+          />
+          <NotificationPanel
+            userId={user?.userID || user?.userId}
+            isOpen={notificationPanelOpen}
+            onClose={() => setNotificationPanelOpen(false)}
+            onNavigateToNotifications={() => navigate('/patient/notifications')}
+          />
+          <button
+            onClick={() => navigate('/patient/profile')}
+            className="relative flex items-center justify-center rounded-full overflow-hidden w-10 h-10 border-2 border-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            {user?.photoURL ? (
+              <img
+                alt={`Profile photo of ${user.displayName}`}
+                className="w-full h-full object-cover"
+                src={user.photoURL}
+              />
+            ) : (
+              <div className="w-full h-full bg-primary flex items-center justify-center text-white font-bold">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white transform translate-x-px -translate-y-px"></span>
+          </button>
+        </div>
       </header>
 
       {/* Greeting Section */}

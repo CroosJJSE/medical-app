@@ -5,8 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationCard from '@/components/common/NotificationCard';
+import NotificationIcon from '@/components/common/NotificationIcon';
+import NotificationPanel from '@/components/common/NotificationPanel';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 import { NotificationType } from '@/enums';
 import type { Notification } from '@/models/Notification';
+import logo from '@/assets/logo.png';
 
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
@@ -15,6 +19,7 @@ const NotificationsPage: React.FC = () => {
   
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
 
   const { notifications, markAsRead, markAsUnread, markAllAsRead, loading } = useNotifications({
     userId,
@@ -49,10 +54,39 @@ const NotificationsPage: React.FC = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div className="relative flex flex-col min-h-screen w-full max-w-md mx-auto bg-gray-50 shadow-2xl pb-24">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between bg-white/95 backdrop-blur-sm px-5 py-3 border-b border-gray-200 transition-all">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8">
+            <img 
+              src={logo} 
+              alt="CareSync Logo" 
+              className="h-8 w-8 object-contain"
+            />
+          </div>
+          <h1 className="text-[#1f2937] text-xl font-extrabold tracking-tight leading-tight">
+            CareSync
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 relative">
+          <NotificationIcon
+            userId={userId}
+            onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+          />
+          <NotificationPanel
+            userId={userId}
+            isOpen={notificationPanelOpen}
+            onClose={() => setNotificationPanelOpen(false)}
+            onNavigateToNotifications={() => navigate('/patient/notifications')}
+          />
+        </div>
+      </header>
+
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
             {unreadCount > 0 && (
@@ -148,7 +182,9 @@ const NotificationsPage: React.FC = () => {
             </div>
           )}
         </div>
+        </div>
       </div>
+      <BottomNavigation />
     </div>
   );
 };

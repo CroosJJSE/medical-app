@@ -1,16 +1,25 @@
 // src/pages/doctor/NewEncounter.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useEncounterData } from '@/hooks/useEncounterData';
 import DoctorHeader from '@/components/layout/DoctorHeader';
 import Loading from '@/components/common/Loading';
+import AutocompleteInput from '@/components/common/AutocompleteInput';
 import patientService from '@/services/patientService';
-import appointmentService from '@/services/appointmentService';
 import encounterService from '@/services/encounterService';
+import appointmentService from '@/services/appointmentService';
+import { generatePrescriptionPdf } from '@/services/prescriptionPdfService';
+import { uploadPrescriptionPdf } from '@/services/storageService';
+import { createEncounterNotification } from '@/services/notificationService';
+import { getDoctor } from '@/services/doctorService';
 import type { Patient } from '@/models/Patient';
 import type { Appointment } from '@/models/Appointment';
 import type { Encounter } from '@/models/Encounter';
-import { EncounterType } from '@/enums';
+import type { Disease } from '@/models/Disease';
+import type { Medication } from '@/models/Medication';
+import type { Doctor } from '@/models/Doctor';
+import { EncounterType, AppointmentType, AppointmentStatus, NotificationType, DayOfWeek } from '@/enums';
 
 interface Diagnosis {
   code: string;
@@ -22,7 +31,6 @@ interface Prescription {
   name: string;
   dosage: string;
   frequency: string;
-  duration: string;
 }
 
 const NewEncounter: React.FC = () => {
@@ -36,6 +44,36 @@ const NewEncounter: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [actualPatientId, setActualPatientId] = useState<string | null>(patientId);
+
+  // Encounter data (diseases and medications) with caching
+  const {
+    diseases,
+    medications,
+    metadata,
+    loading: dataLoading,
+    error: dataError,
+    searchDiseases: searchDiseasesFn,
+    searchMedications: searchMedicationsFn,
+    refresh: refreshEncounterData,
+  } = useEncounterData(true);
+
+  // Force refresh on mount if cache has old structure (without dosageOptions or wrong medication count)
+  useEffect(() => {
+    if (dataLoading || medications.length === 0 || !metadata) return;
+    
+    // Check if cache has old medication structure (without dosageOptions)
+    const sampleMed = medications[0];
+    const hasOldStructure = sampleMed?.prescriptionInfo && 
+      !sampleMed.prescriptionInfo.dosageOptions;
+    
+    // Check if medication count doesn't match (old cache had 698, new has 409)
+    const hasWrongCount = metadata.medicationCount !== medications.length;
+    
+    if ((hasOldStructure || hasWrongCount) && !dataLoading) {
+      refreshEncounterData();
+    }
+  }, [medications, metadata, dataLoading, refreshEncounterData]);
 
   // Form state
   const [chiefComplaint, setChiefComplaint] = useState('');
@@ -46,7 +84,6 @@ const NewEncounter: React.FC = () => {
   // Diagnosis state
   const [diagnosisSearch, setDiagnosisSearch] = useState('');
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<Diagnosis[]>([]);
-  const [diagnosisOptions, setDiagnosisOptions] = useState<Diagnosis[]>([]); // Will be loaded from DB
 
   // Prescription state
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -54,69 +91,339 @@ const NewEncounter: React.FC = () => {
     name: '',
     dosage: '',
     frequency: '',
-    duration: '',
   });
-  const [medicationOptions, setMedicationOptions] = useState<any[]>([]); // Will be loaded from DB
+  const [medicationSearch, setMedicationSearch] = useState('');
+  const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+  const [dosageDropdownOpen, setDosageDropdownOpen] = useState(false);
+
+  // Frequency options (not stored in DB, can be customized in UI)
+  const frequencyOptions = [
+    'once daily',
+    'twice daily',
+    'thrice daily',
+    'four times daily',
+    'once weekly',
+    'twice weekly',
+    'as needed',
+    'every 4 hours',
+    'every 6 hours',
+    'every 8 hours',
+    'every 12 hours',
+  ];
+
+  // Encounter date and time state
+  const [encounterDate, setEncounterDate] = useState('');
+  const [encounterTime, setEncounterTime] = useState('');
 
   // Follow-up state
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTime, setFollowUpTime] = useState('');
   const [followUpNotes, setFollowUpNotes] = useState('');
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [showTimeSlots, setShowTimeSlots] = useState(false);
+  const [doctorInfo, setDoctorInfo] = useState<Doctor | null>(null);
+  const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
-      if (!user?.userID || !patientId) {
+      if (!user?.userID) {
         setLoading(false);
         return;
       }
 
       try {
-        // Load patient data
-        const patientData = await patientService.getPatient(patientId);
-        setPatient(patientData);
+        let resolvedPatientId = patientId;
 
-        // Load appointment data if appointmentId is provided
-        if (appointmentId) {
+        // If appointmentId is provided but patientId is not, load appointment first to get patientId
+        if (appointmentId && !patientId) {
           try {
             const appointmentData = await appointmentService.getAppointment(appointmentId);
             setAppointment(appointmentData);
+            resolvedPatientId = appointmentData.patientId;
+            setActualPatientId(resolvedPatientId);
+            
+            // Set encounter date and time from appointment
+            if (appointmentData.dateTime) {
+              const appointmentDate = new Date(appointmentData.dateTime);
+              const dateStr = appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+              const timeStr = appointmentDate.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
+              setEncounterDate(dateStr);
+              setEncounterTime(timeStr);
+            }
           } catch (error) {
             console.error('Error loading appointment:', error);
+            alert('Failed to load appointment. Please try again.');
+            navigate('/doctor/appointments');
+            return;
           }
+        } else if (appointmentId && patientId) {
+          // Both appointmentId and patientId are provided
+          setActualPatientId(patientId);
+          try {
+            const appointmentData = await appointmentService.getAppointment(appointmentId);
+            setAppointment(appointmentData);
+            
+            // Set encounter date and time from appointment
+            if (appointmentData.dateTime) {
+              const appointmentDate = new Date(appointmentData.dateTime);
+              const dateStr = appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+              const timeStr = appointmentDate.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
+              setEncounterDate(dateStr);
+              setEncounterTime(timeStr);
+            }
+          } catch (error) {
+            console.error('Error loading appointment:', error);
+            // Continue without appointment data
+          }
+        } else {
+          // No appointment - use system time and set patientId
+          setActualPatientId(patientId);
+          const now = new Date();
+          setEncounterDate(now.toISOString().split('T')[0]);
+          setEncounterTime(now.toTimeString().split(' ')[0].substring(0, 5));
         }
 
-        // TODO: Load diagnosis options from database
-        // TODO: Load medication options from database
+        // Load patient data if we have a patientId
+        if (resolvedPatientId) {
+          try {
+            const patientData = await patientService.getPatient(resolvedPatientId);
+            setPatient(patientData);
+          } catch (error) {
+            console.error('Error loading patient:', error);
+            alert('Failed to load patient data. Please try again.');
+            navigate('/doctor/patients');
+            return;
+          }
+        } else {
+          // No patientId available
+          alert('Patient information is required. Please try again.');
+          navigate('/doctor/patients');
+          return;
+        }
+
+        // Encounter data (diseases and medications) is loaded via useEncounterData hook
       } catch (error) {
         console.error('Error loading data:', error);
+        // On error, still set system time
+        const now = new Date();
+        setEncounterDate(now.toISOString().split('T')[0]);
+        setEncounterTime(now.toTimeString().split(' ')[0].substring(0, 5));
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [user, patientId, appointmentId]);
+  }, [user, patientId, appointmentId, navigate]);
 
-  const handleAddDiagnosis = () => {
-    if (diagnosisSearch.trim()) {
-      // TODO: Search from database, for now add as-is
-      const newDiagnosis: Diagnosis = {
-        code: '', // Will be populated from DB search
-        name: diagnosisSearch.trim(),
-      };
+  // Load doctor info on mount
+  useEffect(() => {
+    const loadDoctorInfo = async () => {
+      if (!user?.userID) return;
+      try {
+        const doctor = await getDoctor(user.userID);
+        setDoctorInfo(doctor);
+      } catch (error) {
+        console.error('Error loading doctor info:', error);
+      }
+    };
+    loadDoctorInfo();
+  }, [user]);
+
+  // Calculate available time slots when follow-up date changes
+  useEffect(() => {
+    const calculateAvailableTimeSlots = async () => {
+      if (!followUpDate || !doctorInfo || !user?.userID) {
+        setAvailableTimeSlots([]);
+        setShowTimeSlots(false);
+        return;
+      }
+
+      setLoadingTimeSlots(true);
+      try {
+        const selectedDate = new Date(followUpDate);
+        const dayOfWeek = selectedDate.getDay();
+        const dayNames: DayOfWeek[] = [
+          DayOfWeek.SUNDAY,
+          DayOfWeek.MONDAY,
+          DayOfWeek.TUESDAY,
+          DayOfWeek.WEDNESDAY,
+          DayOfWeek.THURSDAY,
+          DayOfWeek.FRIDAY,
+          DayOfWeek.SATURDAY,
+        ];
+        const currentDay = dayNames[dayOfWeek];
+
+        // Check if it's a working day
+        if (!doctorInfo.availability?.workingDays?.includes(currentDay)) {
+          setAvailableTimeSlots([]);
+          setLoadingTimeSlots(false);
+          return;
+        }
+
+        // Check if day is blocked
+        const dateStr = followUpDate; // YYYY-MM-DD format
+        if (doctorInfo.blockedDays?.includes(dateStr)) {
+          setAvailableTimeSlots([]);
+          setLoadingTimeSlots(false);
+          return;
+        }
+
+        // Get working hours
+        const workingHours = doctorInfo.availability?.workingHours;
+        if (!workingHours) {
+          setAvailableTimeSlots([]);
+          setLoadingTimeSlots(false);
+          return;
+        }
+
+        const [startHour, startMin] = workingHours.start.split(':').map(Number);
+        const [endHour, endMin] = workingHours.end.split(':').map(Number);
+
+        // Generate all possible time slots (15-minute intervals)
+        const allSlots: string[] = [];
+        let currentHour = startHour;
+        let currentMin = startMin;
+
+        while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
+          const time = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
+          allSlots.push(time);
+          currentMin += 15;
+          if (currentMin >= 60) {
+            currentMin = 0;
+            currentHour++;
+          }
+        }
+
+        // Get existing appointments for this date
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const existingAppointments = await appointmentService.getAppointmentsByDoctor(user.userID);
+        // Filter appointments for the selected date
+        const appointmentsForDate = existingAppointments.filter(apt => {
+          const aptDate = new Date(apt.dateTime);
+          return aptDate >= startOfDay && aptDate <= endOfDay;
+        });
+
+        // Get busy slots
+        const busySlots = doctorInfo.busySlots || [];
+        const busySlotsForDate = busySlots
+          .filter(slot => slot.date === dateStr)
+          .map(slot => slot.time);
+
+        // Get occupied time slots from existing appointments
+        const occupiedSlots = new Set<string>();
+        appointmentsForDate.forEach(apt => {
+          if (apt.status !== AppointmentStatus.CANCELLED) {
+            const aptDate = new Date(apt.dateTime);
+            const aptTime = `${aptDate.getHours().toString().padStart(2, '0')}:${aptDate.getMinutes().toString().padStart(2, '0')}`;
+            occupiedSlots.add(aptTime);
+            
+            // Also mark slots occupied by appointment duration (default 30 minutes)
+            const duration = apt.duration || 30;
+            const [aptHour, aptMin] = aptTime.split(':').map(Number);
+            let slotHour = aptHour;
+            let slotMin = aptMin;
+            for (let i = 0; i < duration; i += 15) {
+              const slotTime = `${slotHour.toString().padStart(2, '0')}:${slotMin.toString().padStart(2, '0')}`;
+              occupiedSlots.add(slotTime);
+              slotMin += 15;
+              if (slotMin >= 60) {
+                slotMin = 0;
+                slotHour++;
+              }
+            }
+          }
+        });
+
+        // Filter out occupied and busy slots
+        const availableSlots = allSlots.filter(slot => {
+          return !occupiedSlots.has(slot) && !busySlotsForDate.includes(slot);
+        });
+
+        setAvailableTimeSlots(availableSlots);
+      } catch (error) {
+        console.error('Error calculating available time slots:', error);
+        setAvailableTimeSlots([]);
+      } finally {
+        setLoadingTimeSlots(false);
+      }
+    };
+
+    calculateAvailableTimeSlots();
+  }, [followUpDate, doctorInfo, user]);
+
+  // Search results for diagnosis
+  const diagnosisSearchResults = useMemo(() => {
+    if (!diagnosisSearch.trim()) return [];
+    return searchDiseasesFn(diagnosisSearch, 10);
+  }, [diagnosisSearch, searchDiseasesFn]);
+
+  // Search results for medications
+  const medicationSearchResults = useMemo(() => {
+    if (!medicationSearch.trim()) return [];
+    return searchMedicationsFn(medicationSearch, 10);
+  }, [medicationSearch, searchMedicationsFn]);
+
+  // Handle diagnosis selection
+  const handleSelectDiagnosis = (disease: Disease) => {
+    const newDiagnosis: Diagnosis = {
+      code: disease.icd10Code || '',
+      name: disease.name,
+    };
+    // Check if already selected
+    if (!selectedDiagnoses.some(d => d.name === newDiagnosis.name)) {
       setSelectedDiagnoses([...selectedDiagnoses, newDiagnosis]);
-      setDiagnosisSearch('');
     }
+    setDiagnosisSearch('');
   };
+
+  // Handle medication selection
+  const handleSelectMedication = (medication: Medication) => {
+    setSelectedMedication(medication);
+    const firstDosage = medication.prescriptionInfo?.dosageOptions?.[0] || '';
+    setNewPrescription({
+      ...newPrescription,
+      name: medication.name,
+      medicationId: medication.medicationId,
+      dosage: firstDosage,
+      frequency: frequencyOptions[0],
+    });
+    setMedicationSearch('');
+  };
+
+  // Get dosage options from selected medication or find by name
+  const dosageOptions = useMemo(() => {
+    // If medication is selected, use its dosage options
+    if (selectedMedication?.prescriptionInfo?.dosageOptions) {
+      return selectedMedication.prescriptionInfo.dosageOptions.filter(d => d && d.trim());
+    }
+    
+    // If medication name is typed, try to find matching medication
+    if (newPrescription.name && medications.length > 0) {
+      const foundMed = medications.find(m => 
+        m.name.toLowerCase() === newPrescription.name.toLowerCase()
+      );
+      if (foundMed?.prescriptionInfo?.dosageOptions) {
+        return foundMed.prescriptionInfo.dosageOptions.filter(d => d && d.trim());
+      }
+    }
+    
+    return [];
+  }, [selectedMedication, newPrescription.name, medications]);
 
   const handleRemoveDiagnosis = (index: number) => {
     setSelectedDiagnoses(selectedDiagnoses.filter((_, i) => i !== index));
   };
 
   const handleAddPrescription = () => {
-    if (newPrescription.name && newPrescription.dosage && newPrescription.frequency && newPrescription.duration) {
+    if (newPrescription.name && newPrescription.dosage && newPrescription.frequency) {
       setPrescriptions([...prescriptions, { ...newPrescription }]);
-      setNewPrescription({ name: '', dosage: '', frequency: '', duration: '' });
+      setNewPrescription({ name: '', dosage: '', frequency: '' });
+      setSelectedMedication(null);
     }
   };
 
@@ -125,34 +432,46 @@ const NewEncounter: React.FC = () => {
   };
 
   const handleSaveDraft = async () => {
-    if (!user?.userID || !patientId || !chiefComplaint.trim()) {
+    if (!user?.userID || !actualPatientId || !chiefComplaint.trim()) {
       alert('Please fill in at least the Chief Complaint field');
       return;
     }
 
     setSaving(true);
     try {
+      // Use selected encounter date and time, or fallback to current time
+      const encounterDateTime = encounterDate && encounterTime 
+        ? new Date(`${encounterDate}T${encounterTime}`)
+        : new Date();
+
       const encounterData: Omit<Encounter, 'encounterId' | 'createdAt' | 'updatedAt' | 'isDraft'> = {
-        patientId,
+        patientId: actualPatientId,
         doctorId: user.userID,
-        appointmentId: appointmentId || undefined,
-        encounterDate: new Date(),
+        ...(appointmentId && { appointmentId }),
+        encounterDate: encounterDateTime,
         encounterType: EncounterType.FOLLOW_UP,
         subjective: {
           chiefComplaint,
-          historyOfPresentingComplaint: historyOfPresentIllness || undefined,
+          ...(historyOfPresentIllness && { historyOfPresentingComplaint: historyOfPresentIllness }),
         },
         objective: {
-          physicalExamination: physicalExamination || undefined,
+          ...(physicalExamination && { physicalExamination }),
         },
         assessment: {
           icd10Codes: selectedDiagnoses.map(d => d.code || d.name),
           differentialDiagnosis: selectedDiagnoses.map(d => d.name),
         },
         plan: {
-          treatmentPlan: planInstructions || undefined,
-          medications: prescriptions.map(p => p.medicationId || p.name),
-          followUp: followUpDate ? `${followUpDate}${followUpTime ? ` ${followUpTime}` : ''}${followUpNotes ? ` - ${followUpNotes}` : ''}` : undefined,
+          ...(planInstructions && { treatmentPlan: planInstructions }),
+          medications: prescriptions.map(p => `${p.name}${p.dosage ? ` ${p.dosage}` : ''}${p.frequency ? ` ${p.frequency}` : ''}`),
+          // Follow-up is optional for drafts
+          ...(followUpDate && followUpTime && {
+            followUp: {
+              date: new Date(`${followUpDate}T${followUpTime}`),
+              time: followUpTime,
+              ...(followUpNotes && { notes: followUpNotes }),
+            },
+          }),
         },
         createdBy: user.userID,
       };
@@ -168,44 +487,160 @@ const NewEncounter: React.FC = () => {
   };
 
   const handleFinalize = async () => {
-    if (!user?.userID || !patientId || !chiefComplaint.trim()) {
+    if (!user?.userID || !actualPatientId || !chiefComplaint.trim()) {
       alert('Please fill in at least the Chief Complaint field');
+      return;
+    }
+
+    // Validate follow-up date and time are required
+    if (!followUpDate || !followUpTime) {
+      alert('Follow-up date and time are required');
       return;
     }
 
     setSaving(true);
     try {
-      const encounterData: Omit<Encounter, 'encounterId' | 'createdAt' | 'updatedAt' | 'isDraft'> = {
-        patientId,
+      // Use selected encounter date and time, or fallback to current time
+      const encounterDateTime = encounterDate && encounterTime 
+        ? new Date(`${encounterDate}T${encounterTime}`)
+        : new Date();
+
+      // Create follow-up appointment if date and time are provided
+      let followUpAppointmentId: string | undefined;
+      if (followUpDate && followUpTime) {
+        try {
+          // Combine date and time into a Date object
+          const followUpDateTime = new Date(`${followUpDate}T${followUpTime}`);
+          
+          // Validate the date is in the future
+          if (followUpDateTime <= encounterDateTime) {
+            alert('Follow-up date and time must be after the encounter date and time');
+            setSaving(false);
+            return;
+          }
+
+          // Create appointment for follow-up
+          const followUpAppointment = await appointmentService.createAppointment({
+            patientId: actualPatientId,
+            doctorId: user.userID,
+            userId: user.userID, // Doctor is creating the appointment
+            dateTime: followUpDateTime,
+            type: AppointmentType.FOLLOW_UP,
+            reason: followUpNotes || 'Follow-up appointment',
+            status: AppointmentStatus.CONFIRMED, // Doctor-created appointments are auto-confirmed
+            duration: 30, // Default 30 minutes
+            createdBy: user.userID, // Doctor created this appointment
+          });
+          
+          followUpAppointmentId = followUpAppointment.appointmentId;
+        } catch (appointmentError: any) {
+          console.error('Error creating follow-up appointment:', appointmentError);
+          alert('Failed to create follow-up appointment: ' + (appointmentError.message || 'Unknown error'));
+          setSaving(false);
+          return;
+        }
+      }
+
+      const encounterData: Omit<Encounter, 'encounterId' | 'createdAt' | 'updatedAt' | 'isDraft' | 'prescriptionPdfUrl'> = {
+        patientId: actualPatientId,
         doctorId: user.userID,
-        appointmentId: appointmentId || undefined,
-        encounterDate: new Date(),
+        ...(appointmentId && { appointmentId }),
+        encounterDate: encounterDateTime,
         encounterType: EncounterType.FOLLOW_UP,
         subjective: {
           chiefComplaint,
-          historyOfPresentingComplaint: historyOfPresentIllness || undefined,
+          ...(historyOfPresentIllness && { historyOfPresentingComplaint: historyOfPresentIllness }),
         },
         objective: {
-          physicalExamination: physicalExamination || undefined,
+          ...(physicalExamination && { physicalExamination }),
         },
         assessment: {
           icd10Codes: selectedDiagnoses.map(d => d.code || d.name),
           differentialDiagnosis: selectedDiagnoses.map(d => d.name),
         },
         plan: {
-          treatmentPlan: planInstructions || undefined,
-          medications: prescriptions.map(p => p.medicationId || p.name),
-          followUp: followUpDate ? `${followUpDate}${followUpTime ? ` ${followUpTime}` : ''}${followUpNotes ? ` - ${followUpNotes}` : ''}` : undefined,
+          ...(planInstructions && { treatmentPlan: planInstructions }),
+          medications: prescriptions.map(p => `${p.name}${p.dosage ? ` ${p.dosage}` : ''}${p.frequency ? ` ${p.frequency}` : ''}`),
+          ...(followUpDate && followUpTime && {
+            followUp: {
+              date: new Date(`${followUpDate}T${followUpTime}`),
+              time: followUpTime,
+              ...(followUpNotes && { notes: followUpNotes }),
+              ...(followUpAppointmentId && { appointmentId: followUpAppointmentId }),
+            },
+          }),
         },
         createdBy: user.userID,
       };
 
-      await encounterService.createEncounter(encounterData);
-      alert('Encounter finalized successfully');
+      // Create encounter first
+      const createdEncounter = await encounterService.createEncounter(encounterData);
+      
+      // Generate and upload prescription PDF
+      let pdfUrl: string | undefined;
+      try {
+        if (!patient || !user?.userID) {
+          throw new Error('Patient or doctor information missing');
+        }
+        
+        const doctor = await getDoctor(user.userID);
+        if (!doctor) {
+          throw new Error('Doctor not found');
+        }
+        
+        // Generate PDF
+        const pdfBlob = await generatePrescriptionPdf(createdEncounter, patient, doctor);
+        
+        // Upload to Firebase Storage
+        pdfUrl = await uploadPrescriptionPdf(pdfBlob, createdEncounter.encounterId);
+        
+        // Update encounter with PDF URL
+        await encounterService.updateEncounter(createdEncounter.encounterId, {
+          prescriptionPdfUrl: pdfUrl,
+        });
+        
+        // Update local encounter object
+        createdEncounter.prescriptionPdfUrl = pdfUrl;
+      } catch (pdfError: any) {
+        console.error('Error generating/uploading PDF:', pdfError);
+        // Don't fail the encounter creation if PDF fails
+        alert('Encounter finalized, but PDF generation failed: ' + (pdfError.message || 'Unknown error'));
+      }
+      
+      // Send notification to patient with PDF download link
+      try {
+        const doctor = await getDoctor(user.userID);
+        const doctorName = doctor?.professionalInfo
+          ? `${doctor.professionalInfo.title || 'Dr.'} ${doctor.professionalInfo.firstName} ${doctor.professionalInfo.lastName}`
+          : doctor?.displayName || 'Your doctor';
+        
+        const patientName = patient?.personalInfo
+          ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`
+          : patient?.displayName || 'Patient';
+        
+        await createEncounterNotification(
+          actualPatientId, // Patient's userID
+          NotificationType.ENCOUNTER_CREATED,
+          createdEncounter.encounterId,
+          {
+            doctorName,
+            patientName,
+            encounterDate: new Date(createdEncounter.encounterDate),
+            prescriptionPdfUrl: pdfUrl, // Include PDF URL in metadata
+          }
+        );
+      } catch (notificationError: any) {
+        console.error('Error sending notification:', notificationError);
+        // Don't fail if notification fails
+      }
+      
+      alert('Encounter finalized successfully' + 
+        (followUpAppointmentId ? ' and follow-up appointment scheduled' : '') +
+        (pdfUrl ? ' and prescription PDF generated' : ''));
       
       // Navigate back
-      if (patientId) {
-        navigate(`/doctor/patient-profile/${patientId}`);
+      if (actualPatientId) {
+        navigate(`/doctor/patient-profile/${actualPatientId}`);
       } else {
         navigate('/doctor/dashboard');
       }
@@ -334,7 +769,7 @@ const NewEncounter: React.FC = () => {
             <div>
               <h2 className="text-xl font-bold text-[#111418] flex items-center gap-2">
                 {patient.displayName || `${patient.personalInfo?.firstName || ''} ${patient.personalInfo?.lastName || ''}`.trim() || 'Patient'}
-                <span className="text-sm font-normal text-gray-500">(ID: {patient.patientId || patient.userID})</span>
+                <span className="text-sm font-normal text-gray-500">(ID: {patient.userID})</span>
               </h2>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mt-1">
                 <span className="flex items-center gap-1">
@@ -354,14 +789,14 @@ const NewEncounter: React.FC = () => {
           </div>
           <div className="flex gap-3 w-full md:w-auto mt-2 md:mt-0">
             <button
-              onClick={() => navigate(`/doctor/patient-profile/${patientId}`)}
+              onClick={() => actualPatientId && navigate(`/doctor/patient-profile/${actualPatientId}`)}
               className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-lg px-4 py-2 bg-[#f0f2f5] text-[#111418] text-sm font-bold hover:bg-gray-200 transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">history</span>
               View History
             </button>
             <button
-              onClick={() => navigate(`/doctor/patient-profile/${patientId}`)}
+              onClick={() => actualPatientId && navigate(`/doctor/patient-profile/${actualPatientId}`)}
               className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-lg px-4 py-2 bg-[#f0f2f5] text-[#111418] text-sm font-bold hover:bg-gray-200 transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -383,6 +818,34 @@ const NewEncounter: React.FC = () => {
                 </h3>
               </div>
               <div className="p-6 flex flex-col gap-6">
+                {/* Encounter Date and Time */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[#111418] text-sm font-bold leading-normal">
+                      Encounter Date <span className="text-red-500 font-normal">*Required</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={encounterDate}
+                      onChange={(e) => setEncounterDate(e.target.value)}
+                      className="flex w-full rounded-lg text-[#111418] border border-[#dbdfe6] bg-white focus:border-primary focus:ring-1 focus:ring-primary p-3 text-base transition-shadow"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[#111418] text-sm font-bold leading-normal">
+                      Encounter Time <span className="text-red-500 font-normal">*Required</span>
+                    </label>
+                    <input
+                      type="time"
+                      value={encounterTime}
+                      onChange={(e) => setEncounterTime(e.target.value)}
+                      className="flex w-full rounded-lg text-[#111418] border border-[#dbdfe6] bg-white focus:border-primary focus:ring-1 focus:ring-primary p-3 text-base transition-shadow"
+                      required
+                    />
+                  </div>
+                </div>
+
                 {/* Chief Complaint */}
                 <div className="flex flex-col gap-2">
                   <label className="text-[#111418] text-sm font-bold leading-normal flex justify-between">
@@ -443,17 +906,42 @@ const NewEncounter: React.FC = () => {
                 </h3>
               </div>
               <div className="p-5 flex flex-col gap-4">
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-[20px]">search</span>
-                  <input
-                    type="text"
+                {dataLoading ? (
+                  <div className="text-sm text-gray-500 text-center py-2">
+                    Loading diseases...
+                  </div>
+                ) : dataError ? (
+                  <div className="text-sm text-red-500 text-center py-2">
+                    Error loading diseases. Using cached data if available.
+                  </div>
+                ) : (
+                  <AutocompleteInput<Disease>
                     value={diagnosisSearch}
-                    onChange={(e) => setDiagnosisSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddDiagnosis()}
-                    className="w-full rounded-lg border border-[#dbdfe6] pl-10 pr-3 py-2 text-sm bg-white text-[#111418] placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                    placeholder="Search ICD-10 or add diagnosis..."
+                    onChange={setDiagnosisSearch}
+                    onSelect={handleSelectDiagnosis}
+                    searchResults={diagnosisSearchResults}
+                    getItemLabel={(disease) => disease.name}
+                    getItemKey={(disease, index) => disease.diseaseId || `disease-${index}`}
+                    placeholder="Search ICD-10 or diagnosis name..."
+                    icon="search"
+                    maxResults={10}
+                    emptyMessage="No diseases found"
+                    renderItem={(disease) => (
+                      <div className="flex flex-col">
+                        <span className="font-medium">{disease.name}</span>
+                        {disease.icd10Code && (
+                          <span className="text-xs text-gray-500">ICD-10: {disease.icd10Code}</span>
+                        )}
+                        {disease.symptoms && disease.symptoms.length > 0 && (
+                          <span className="text-xs text-gray-400 mt-1">
+                            Symptoms: {disease.symptoms.slice(0, 3).join(', ')}
+                            {disease.symptoms.length > 3 && '...'}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   />
-                </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {selectedDiagnoses.map((diagnosis, index) => (
                     <span
@@ -504,18 +992,14 @@ const NewEncounter: React.FC = () => {
                         <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="block text-xs text-gray-500 uppercase font-semibold">Dosage</span>
                         <span className="text-[#111418]">{prescription.dosage}</span>
                       </div>
                       <div>
-                        <span className="block text-xs text-gray-500 uppercase font-semibold">Freq</span>
+                        <span className="block text-xs text-gray-500 uppercase font-semibold">Frequency</span>
                         <span className="text-[#111418]">{prescription.frequency}</span>
-                      </div>
-                      <div>
-                        <span className="block text-xs text-gray-500 uppercase font-semibold">Duration</span>
-                        <span className="text-[#111418]">{prescription.duration}</span>
                       </div>
                     </div>
                   </div>
@@ -524,35 +1008,144 @@ const NewEncounter: React.FC = () => {
                 {/* Add New Form Area */}
                 <div className="p-4 bg-gray-50/50">
                   <div className="grid grid-cols-1 gap-3">
+                    {dataLoading ? (
+                      <div className="text-sm text-gray-500 text-center py-2">
+                        Loading medications...
+                      </div>
+                    ) : dataError ? (
+                      <div className="text-sm text-red-500 text-center py-2">
+                        Error loading medications. Using cached data if available.
+                      </div>
+                    ) : (
+                      <AutocompleteInput<Medication>
+                        value={medicationSearch}
+                        onChange={setMedicationSearch}
+                        onSelect={handleSelectMedication}
+                        searchResults={medicationSearchResults}
+                        getItemLabel={(med) => med.name}
+                        getItemKey={(med, index) => med.medicationId || `med-${index}`}
+                        placeholder="Search medication name..."
+                        icon="search"
+                        maxResults={10}
+                        emptyMessage="No medications found"
+                        renderItem={(med) => (
+                          <div className="flex flex-col">
+                            <span className="font-medium">{med.name}</span>
+                            {med.genericName && med.genericName !== med.name && (
+                              <span className="text-xs text-gray-500">Generic: {med.genericName}</span>
+                            )}
+                            {med.strength && (
+                              <span className="text-xs text-gray-400 mt-1">
+                                {med.form} • {med.strength}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      />
+                    )}
                     <input
                       type="text"
                       value={newPrescription.name}
-                      onChange={(e) => setNewPrescription({ ...newPrescription, name: e.target.value })}
+                      onChange={(e) => {
+                        setNewPrescription({ ...newPrescription, name: e.target.value, medicationId: undefined });
+                        setSelectedMedication(null); // Clear selection if manually typing
+                      }}
                       className="w-full rounded-md border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                      placeholder="Medication Name"
+                      placeholder="Medication Name (auto-filled when selected above, or type manually)"
                     />
-                    <div className="grid grid-cols-3 gap-3">
-                      <input
-                        type="text"
-                        value={newPrescription.dosage}
-                        onChange={(e) => setNewPrescription({ ...newPrescription, dosage: e.target.value })}
-                        className="w-full rounded-md border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                        placeholder="Dosage"
-                      />
-                      <input
-                        type="text"
-                        value={newPrescription.frequency}
-                        onChange={(e) => setNewPrescription({ ...newPrescription, frequency: e.target.value })}
-                        className="w-full rounded-md border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                        placeholder="Freq"
-                      />
-                      <input
-                        type="text"
-                        value={newPrescription.duration}
-                        onChange={(e) => setNewPrescription({ ...newPrescription, duration: e.target.value })}
-                        className="w-full rounded-md border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
-                        placeholder="Duration"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Dosage with dropdown and typing */}
+                      <div className="flex flex-col gap-1 relative">
+                        <label className="text-xs text-gray-500 uppercase font-semibold">Dosage</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            list="dosage-options"
+                            value={newPrescription.dosage}
+                            onChange={(e) => {
+                              setNewPrescription({ ...newPrescription, dosage: e.target.value });
+                              setDosageDropdownOpen(true);
+                            }}
+                            onFocus={() => setDosageDropdownOpen(true)}
+                            onBlur={() => {
+                              // Delay closing to allow click on dropdown item
+                              setTimeout(() => setDosageDropdownOpen(false), 200);
+                            }}
+                            className="w-full rounded-md border border-[#dbdfe6] px-3 py-2 pr-8 text-sm bg-white text-[#111418] placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary"
+                            placeholder={dosageOptions.length > 0 ? "Select from dropdown or type..." : "Dosage"}
+                            autoComplete="off"
+                          />
+                          {dosageOptions.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setDosageDropdownOpen(!dosageDropdownOpen)}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                              <svg
+                                className={`w-4 h-4 transition-transform ${dosageDropdownOpen ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          )}
+                          {/* Custom dropdown list */}
+                          {dosageDropdownOpen && dosageOptions.length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-white border border-[#dbdfe6] rounded-md shadow-lg max-h-48 overflow-auto">
+                              {dosageOptions.map((dosage, idx) => {
+                                // Clean up any extra quotes in dosage options
+                                const cleanDosage = dosage.trim().replace(/^["']|["']$/g, '');
+                                const isSelected = newPrescription.dosage === cleanDosage;
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => {
+                                      setNewPrescription({ ...newPrescription, dosage: cleanDosage });
+                                      setDosageDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-primary/10 transition-colors ${
+                                      isSelected ? 'bg-primary/20 font-medium' : 'text-[#111418]'
+                                    }`}
+                                  >
+                                    {cleanDosage}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <datalist id="dosage-options">
+                          {dosageOptions.map((dosage, idx) => {
+                            // Clean up any extra quotes in dosage options
+                            const cleanDosage = dosage.trim().replace(/^["']|["']$/g, '');
+                            return <option key={idx} value={cleanDosage} />;
+                          })}
+                        </datalist>
+                        {dosageOptions.length > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            <span>{dosageOptions.length} option{dosageOptions.length !== 1 ? 's' : ''} available</span>
+                            <span className="ml-2 text-gray-400">• Click dropdown arrow or type</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Frequency dropdown */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 uppercase font-semibold">Frequency</label>
+                        <select
+                          value={newPrescription.frequency}
+                          onChange={(e) => setNewPrescription({ ...newPrescription, frequency: e.target.value })}
+                          className="w-full rounded-md border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] focus:border-primary focus:ring-1 focus:ring-primary"
+                        >
+                          {frequencyOptions.map((freq, idx) => (
+                            <option key={idx} value={freq}>
+                              {freq}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <button
                       onClick={handleAddPrescription}
@@ -576,22 +1169,80 @@ const NewEncounter: React.FC = () => {
               <div className="p-5 flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Date</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Date <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="date"
+                      required
                       value={followUpDate}
                       onChange={(e) => setFollowUpDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
                       className="w-full rounded-lg border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Time (Optional)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-500 uppercase">
+                        Time <span className="text-red-500">*</span>
+                      </label>
+                      {followUpDate && (
+                        <button
+                          type="button"
+                          onClick={() => setShowTimeSlots(!showTimeSlots)}
+                          disabled={loadingTimeSlots || availableTimeSlots.length === 0}
+                          className="text-xs text-primary hover:text-blue-600 font-medium disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {loadingTimeSlots ? (
+                            <>
+                              <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-sm">schedule</span>
+                              {showTimeSlots ? 'Hide' : 'Show'} Available Times ({availableTimeSlots.length})
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="time"
+                      required
                       value={followUpTime}
                       onChange={(e) => setFollowUpTime(e.target.value)}
                       className="w-full rounded-lg border border-[#dbdfe6] px-3 py-2 text-sm bg-white text-[#111418] focus:border-primary focus:ring-1 focus:ring-primary"
                     />
+                    {showTimeSlots && followUpDate && (
+                      <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                        {availableTimeSlots.length > 0 ? (
+                          <div className="grid grid-cols-3 gap-2">
+                            {availableTimeSlots.map((time) => (
+                              <button
+                                key={time}
+                                type="button"
+                                onClick={() => {
+                                  setFollowUpTime(time);
+                                  setShowTimeSlots(false);
+                                }}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                  followUpTime === time
+                                    ? 'bg-primary text-white'
+                                    : 'bg-white text-gray-700 hover:bg-primary/10 border border-gray-300'
+                                }`}
+                              >
+                                {time}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 text-center py-2">
+                            No available time slots for this date
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">

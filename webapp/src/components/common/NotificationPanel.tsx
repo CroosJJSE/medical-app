@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/enums';
 import NotificationCard from './NotificationCard';
 import type { Notification } from '@/models/Notification';
 
@@ -20,6 +22,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
   onNavigateToNotifications,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userRole = user?.role || UserRole.PATIENT;
   const panelRef = useRef<HTMLDivElement>(null);
   const { notifications, markAsRead, markAsUnread, markAllAsRead, loading } = useNotifications({
     userId,
@@ -42,30 +46,52 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
   }, [isOpen, onClose]);
 
   const handleNotificationClick = (notification: Notification) => {
+    console.log('[NOTIFICATION_PANEL] Notification clicked', {
+      notificationId: notification.notificationId,
+      targetType: notification.targetType,
+      targetId: notification.targetId,
+      userRole,
+    });
+    
     // Navigate based on notification target
     const route = getNotificationRoute(notification);
+    console.log('[NOTIFICATION_PANEL] Generated route:', route);
+    
     if (route) {
+      console.log('[NOTIFICATION_PANEL] Navigating to:', route);
       navigate(route);
       onClose();
+    } else {
+      console.warn('[NOTIFICATION_PANEL] No route generated for notification', notification);
     }
   };
 
   const getNotificationRoute = (notification: Notification): string | null => {
     if (!notification.targetId) return null;
 
+    // Determine route prefix based on user role
+    const prefix = userRole === UserRole.DOCTOR ? '/doctor' : '/patient';
+
     switch (notification.targetType) {
       case 'appointment':
-        return `/appointments?appointmentId=${notification.targetId}`;
+        return `${prefix}/appointments?appointmentId=${notification.targetId}`;
       case 'test_result':
-        return notification.type.includes('REVIEW') || notification.type.includes('CONFIRMED')
-          ? `/test-results?testResultId=${notification.targetId}`
-          : `/test-results-review?testResultId=${notification.targetId}`;
+        if (userRole === UserRole.DOCTOR) {
+          return `/doctor/test-results-review?testResultId=${notification.targetId}`;
+        } else {
+          return `/patient/test-results?testResultId=${notification.targetId}`;
+        }
       case 'encounter':
-        return `/patient-profile/${notification.metadata?.patientId || ''}?encounterId=${notification.targetId}`;
+        if (userRole === UserRole.DOCTOR) {
+          return `/doctor/patient-profile/${notification.metadata?.patientId || ''}?encounterId=${notification.targetId}`;
+        } else {
+          return `/patient/timeline`;
+        }
       case 'patient':
-        return `/patients?patientId=${notification.targetId}`;
+        return `/doctor/patients?patientId=${notification.targetId}`;
       case 'user':
-        return notification.type.includes('APPROVED') ? '/dashboard' : '/pending-approval';
+        const dashboardRoute = userRole === UserRole.DOCTOR ? '/doctor/dashboard' : '/patient/dashboard';
+        return notification.type.includes('APPROVED') ? dashboardRoute : '/pending-approval';
       default:
         return null;
     }
@@ -78,7 +104,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-full mt-2 w-96 max-h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 z-50 flex flex-col"
+      className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-96 max-h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 z-50 flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">

@@ -21,6 +21,13 @@ export const createNotification = async (
     icon?: string;
   }
 ): Promise<Notification> => {
+  console.log('[NOTIFICATION_SERVICE] createNotification called', {
+    userId,
+    type,
+    targetType: options.targetType,
+    targetId: options.targetId,
+  });
+
   const title = options.title || getDefaultTitle(type);
   const icon = options.icon || getDefaultIcon(type);
 
@@ -39,7 +46,19 @@ export const createNotification = async (
     expiresAt: options.expiresAt,
   };
 
-  return await notificationRepository.create(userId, notification);
+  try {
+    const createdNotification = await notificationRepository.create(userId, notification);
+    console.log('[NOTIFICATION_SERVICE] Notification created successfully', {
+      notificationId: createdNotification.notificationId,
+      userId,
+      type,
+      path: `users/${userId}/notifications/${createdNotification.notificationId}`,
+    });
+    return createdNotification;
+  } catch (error) {
+    console.error('[NOTIFICATION_SERVICE] Failed to create notification:', error);
+    throw error;
+  }
 };
 
 /**
@@ -128,21 +147,25 @@ export const createAppointmentNotification = async (
 ): Promise<Notification> => {
   const { message, title } = getAppointmentMessage(type, appointmentData);
   
+  // Build metadata object, excluding undefined values
+  const metadata: Record<string, any> = {
+    appointmentDate: appointmentData.appointmentDate.toISOString(),
+  };
+  
+  if (appointmentData.doctorName) metadata.doctorName = appointmentData.doctorName;
+  if (appointmentData.patientName) metadata.patientName = appointmentData.patientName;
+  if (appointmentData.appointmentStatus) metadata.appointmentStatus = appointmentData.appointmentStatus;
+  if (appointmentData.reason) metadata.reason = appointmentData.reason;
+  if (appointmentData.newDate) metadata.newDate = appointmentData.newDate.toISOString();
+  if (appointmentData.newTime) metadata.newTime = appointmentData.newTime;
+  if (appointmentData.cancellationReason) metadata.cancellationReason = appointmentData.cancellationReason;
+
   return await createNotification(userId, type, {
     title,
     message,
     targetType: 'appointment',
     targetId: appointmentId,
-    metadata: {
-      doctorName: appointmentData.doctorName,
-      patientName: appointmentData.patientName,
-      appointmentDate: appointmentData.appointmentDate.toISOString(),
-      appointmentStatus: appointmentData.appointmentStatus,
-      reason: appointmentData.reason,
-      newDate: appointmentData.newDate?.toISOString(),
-      newTime: appointmentData.newTime,
-      cancellationReason: appointmentData.cancellationReason,
-    },
+    metadata,
     priority: type === NotificationType.APPOINTMENT_CANCELLED ? 'high' : 'normal',
   });
 };
@@ -164,18 +187,22 @@ export const createTestResultNotification = async (
 ): Promise<Notification> => {
   const { message, title } = getTestResultMessage(type, testResultData);
   
+  // Build metadata object, excluding undefined values
+  const metadata: Record<string, any> = {
+    testName: testResultData.testName,
+  };
+  
+  if (testResultData.patientName) metadata.patientName = testResultData.patientName;
+  if (testResultData.doctorName) metadata.doctorName = testResultData.doctorName;
+  if (testResultData.uploadDate) metadata.uploadDate = testResultData.uploadDate.toISOString();
+  if (testResultData.hasAbnormalValues !== undefined) metadata.hasAbnormalValues = testResultData.hasAbnormalValues;
+
   return await createNotification(userId, type, {
     title,
     message,
     targetType: 'test_result',
     targetId: testResultId,
-    metadata: {
-      patientName: testResultData.patientName,
-      doctorName: testResultData.doctorName,
-      testName: testResultData.testName,
-      uploadDate: testResultData.uploadDate?.toISOString(),
-      hasAbnormalValues: testResultData.hasAbnormalValues,
-    },
+    metadata,
     priority: testResultData.hasAbnormalValues || type === NotificationType.TEST_RESULT_ABNORMAL ? 'urgent' : 'normal',
   });
 };
@@ -191,20 +218,28 @@ export const createEncounterNotification = async (
     doctorName: string;
     patientName?: string;
     encounterDate: Date;
+    prescriptionPdfUrl?: string; // PDF download URL
   }
 ): Promise<Notification> => {
   const { message, title } = getEncounterMessage(type, encounterData);
   
+  // Build metadata object, excluding undefined values
+  const metadata: Record<string, any> = {
+    doctorName: encounterData.doctorName,
+    encounterDate: encounterData.encounterDate.toISOString(),
+  };
+  
+  if (encounterData.patientName) metadata.patientName = encounterData.patientName;
+  if (encounterData.prescriptionPdfUrl) metadata.prescriptionPdfUrl = encounterData.prescriptionPdfUrl;
+
   return await createNotification(userId, type, {
     title,
-    message,
+    message: encounterData.prescriptionPdfUrl 
+      ? `${message} Your prescription PDF is ready for download.`
+      : message,
     targetType: 'encounter',
     targetId: encounterId,
-    metadata: {
-      doctorName: encounterData.doctorName,
-      patientName: encounterData.patientName,
-      encounterDate: encounterData.encounterDate.toISOString(),
-    },
+    metadata,
   });
 };
 
@@ -225,18 +260,21 @@ export const createPatientAllocationNotification = async (
 ): Promise<Notification> => {
   const { message, title } = getPatientAllocationMessage(type, allocationData);
   
+  // Build metadata object, excluding undefined values
+  const metadata: Record<string, any> = {};
+  
+  if (allocationData.patientName) metadata.patientName = allocationData.patientName;
+  if (allocationData.doctorName) metadata.doctorName = allocationData.doctorName;
+  if (allocationData.requestingDoctorName) metadata.requestingDoctorName = allocationData.requestingDoctorName;
+  if (allocationData.patientCount !== undefined) metadata.patientCount = allocationData.patientCount;
+  if (allocationData.rejectionReason) metadata.rejectionReason = allocationData.rejectionReason;
+
   return await createNotification(userId, type, {
     title,
     message,
     targetType: 'patient',
     targetId: patientId,
-    metadata: {
-      patientName: allocationData.patientName,
-      doctorName: allocationData.doctorName,
-      requestingDoctorName: allocationData.requestingDoctorName,
-      patientCount: allocationData.patientCount,
-      rejectionReason: allocationData.rejectionReason,
-    },
+    metadata,
   });
 };
 
@@ -254,15 +292,18 @@ export const createUserApprovalNotification = async (
 ): Promise<Notification> => {
   const { message, title } = getUserApprovalMessage(type, approvalData);
   
+  // Build metadata object, excluding undefined values
+  const metadata: Record<string, any> = {};
+  
+  if (approvalData.userRole) metadata.userRole = approvalData.userRole;
+  if (approvalData.rejectionReason) metadata.rejectionReason = approvalData.rejectionReason;
+  if (approvalData.userDisplayName) metadata.userDisplayName = approvalData.userDisplayName;
+
   return await createNotification(userId, type, {
     title,
     message,
     targetType: 'user',
-    metadata: {
-      userRole: approvalData.userRole,
-      rejectionReason: approvalData.rejectionReason,
-      userDisplayName: approvalData.userDisplayName,
-    },
+    metadata,
     priority: type === NotificationType.REGISTRATION_APPROVED ? 'high' : 'normal',
   });
 };
@@ -405,6 +446,7 @@ function getEncounterMessage(
   data: {
     doctorName: string;
     encounterDate: Date;
+    prescriptionPdfUrl?: string;
   }
 ): { message: string; title: string } {
   const dateStr = formatDate(data.encounterDate);

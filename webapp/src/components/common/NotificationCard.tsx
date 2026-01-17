@@ -89,8 +89,27 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           )}
         </div>
 
-        {/* Read/Unread toggle buttons */}
-        <div className="flex items-center gap-2 mt-3">
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {/* Download Prescription PDF button */}
+          {notification.metadata?.prescriptionPdfUrl && (
+            <a
+              href={notification.metadata.prescriptionPdfUrl}
+              download
+              onClick={(e) => {
+                e.stopPropagation();
+                // Open in new tab as fallback
+                window.open(notification.metadata?.prescriptionPdfUrl, '_blank');
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm"
+              title="Download Prescription PDF"
+            >
+              <span className="material-symbols-outlined text-sm">download</span>
+              <span>Download Prescription</span>
+            </a>
+          )}
+          
+          {/* Read/Unread toggle buttons */}
           {!notification.isRead ? (
             <button
               onClick={(e) => {

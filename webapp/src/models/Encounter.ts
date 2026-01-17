@@ -87,11 +87,18 @@ import {
         notes?: string;
       }>;
       patientEducation?: string[];
-      followUp?: string; // instructions or date
+      followUp?: {
+        date: Date;
+        time: string; // Time string (HH:mm format)
+        notes?: string;
+        appointmentId?: string; // Reference to created appointment
+      };
     };
   
     isDraft: boolean;
-  
+
+    prescriptionPdfUrl?: string; // URL to prescription PDF in Firebase Storage
+
     createdBy: string;
     createdAt: Date;
     updatedAt: Date;

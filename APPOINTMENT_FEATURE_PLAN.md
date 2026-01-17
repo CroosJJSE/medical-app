@@ -4,7 +4,7 @@
 ---
 
 ## Overview
-The appointment feature enables patients to request appointments with their assigned doctors by selecting both date and time, and allows doctors to manage their appointment schedule. The system supports a bidirectional approval workflow where both patients and doctors can Accept, Reject, or Amend appointment requests. The system supports appointment scheduling, status management, and calendar integration.
+The appointment feature enables patients to request appointments with their assigned doctors by selecting both date and time, and allows doctors to manage their appointment schedule. **Patients only select date and time when requesting appointments; doctors set the time range (start time and end time) when accepting, amending, or inviting patients to appointments.** The system supports a bidirectional approval workflow where both patients and doctors can Accept, Reject, or Amend appointment requests. The system supports appointment scheduling, status management, and calendar integration.
 
 ---
 
@@ -23,11 +23,12 @@ The appointment feature enables patients to request appointments with their assi
   - System validates date is within doctor's working days
   - System validates time is within doctor's working hours
   - System checks for conflicts with existing appointments
+  - **Note**: Patient only selects date and time; duration/time range is set by doctor when accepting
 - **Appointment Request**:
   - Patient can optionally add reason for visit
   - Patient submits appointment request
   - System creates appointment request with status "PENDING"
-  - Appointment includes both date and time
+  - Appointment includes date and time (no duration yet)
 - **Availability Check**:
   - System checks doctor's working days for selected date
   - System checks doctor's working hours for selected time
@@ -37,6 +38,7 @@ The appointment feature enables patients to request appointments with their assi
   - Patient receives confirmation message
   - Redirects to appointments list page
   - Patient waits for doctor to Accept, Reject, or Amend the request
+  - Doctor will set the time range (start time and end time) when accepting the request
 
 ### 2. View Appointments
 - **Appointments List Page**:
@@ -47,6 +49,7 @@ The appointment feature enables patients to request appointments with their assi
   - Doctor name and photo
   - Doctor specialization
   - Date and time
+  - Time range (start time to end time) if set by doctor
   - Status badge (Scheduled, Confirmed, Completed, Cancelled, No Show)
   - Location (clinic address or "Online Consultation")
 - **Status Tracking**:
@@ -82,10 +85,10 @@ The appointment feature enables patients to request appointments with their assi
     - Status changes to AMENDED (waiting for doctor response)
     - Doctor receives notification with amendment request
 - **Response Modal/Page**:
-  - Shows appointment details (date, time, doctor, reason)
+  - Shows appointment details (date, time, time range if set by doctor, doctor, reason)
   - Displays current status and who needs to respond
   - Shows Accept, Reject, and Amend buttons
-  - For Amend: Shows date/time picker for new selection
+  - For Amend: Shows date/time picker for new selection (patient cannot set time range)
 - **Status Updates**:
   - Patient can view status changes in real-time
   - Notifications for status updates
@@ -109,6 +112,7 @@ The appointment feature enables patients to request appointments with their assi
   - Current status badge
 - **Actions Available**:
   - **Accept**: Doctor accepts the appointment as requested
+    - **Doctor sets time range**: Doctor selects start time and end time for the appointment
     - Status changes from PENDING to ACCEPTED (waiting for patient confirmation)
     - If patient already accepted: Status changes to CONFIRMED
   - **Reject**: Doctor rejects the appointment
@@ -117,6 +121,7 @@ The appointment feature enables patients to request appointments with their assi
     - Patient receives notification with rejection reason
   - **Amend**: Doctor requests changes to date/time
     - Doctor selects new preferred date and/or time
+    - **Doctor sets time range**: Doctor selects start time and end time for the appointment
     - Doctor must provide reason for amendment
     - Status changes to AMENDED (waiting for patient response)
     - Patient receives notification with amendment request
@@ -124,13 +129,14 @@ The appointment feature enables patients to request appointments with their assi
   - Shows appointment details (date, time, patient, reason)
   - Displays current status and who needs to respond
   - Shows Accept, Reject, and Amend buttons
+  - **Time Range Selection**: When Accepting or Amending, doctor must select start time and end time
   - For Amend: Shows date/time picker for new selection
   - Displays available time slots for date selection
 - **Empty State**: Friendly message when no pending requests
 
 #### Calendar View (Optional/Secondary View)
 - **7-Day Window**: Calendar displays Monday through Sunday (current week view)
-- **Time Slots**: Each day is divided into 15-minute time cells
+- **Time Slots**: Each day is divided into time cells for visualization (appointments can span multiple cells based on time range set by doctor)
 - **Availability Display**:
   - Cells show doctor's availability based on working hours from registration
   - Available cells: White/light background
@@ -139,20 +145,32 @@ The appointment feature enables patients to request appointments with their assi
   - Confirmed cells: Blue with patient name
   - Completed cells: Grayed out with patient name
   - Outside working hours: Disabled/grayed out
+  - Appointments display their full time range (start time to end time) as set by doctor
 - **Cell Interaction**:
   - Clicking on appointment cell opens appointment details modal
   - Shows appointment status and available actions
 
 ### 2. Appointment Management Actions
+- **Invite Patient to Appointment**:
+  - Doctor can invite a patient to an appointment
+  - Doctor selects date and time
+  - **Doctor sets time range**: Doctor selects start time and end time for the appointment
+  - Doctor can optionally add reason for appointment
+  - Appointment is created with status "PENDING" (waiting for patient response)
+  - Patient receives notification of appointment invitation
 - **Respond to Appointment Request**:
   - Accept: Accept appointment as requested by patient
+    - **Doctor sets time range**: Doctor selects start time and end time when accepting
   - Reject: Reject appointment with reason
   - Amend: Request changes to date/time with reason
+    - **Doctor sets time range**: Doctor selects start time and end time when amending
 - **Respond to Patient Amendment**:
   - When patient amends appointment, doctor can:
     - Accept: Accept the amended date/time
+      - **Doctor sets time range**: Doctor selects start time and end time when accepting
     - Reject: Reject the amendment with reason
     - Amend Again: Propose different date/time
+      - **Doctor sets time range**: Doctor selects start time and end time when amending
 - **Update Status**:
   - Mark as "Completed" after consultation
   - Mark as "No Show" if patient doesn't attend
@@ -175,10 +193,11 @@ The appointment feature enables patients to request appointments with their assi
   - System prevents double-booking
   - Checks existing appointments before allowing scheduling
   - Highlights conflicts if any
-- **Time Slot Duration**:
-  - Default: 15 minutes per cell
-  - Configurable (can be changed later)
-  - Doctor can extend duration by selecting multiple cells
+- **Time Range Management**:
+  - Doctor sets the time range (start time and end time) when accepting or amending appointment requests
+  - Doctor sets the time range when inviting a patient to an appointment
+  - Time range must be within doctor's working hours
+  - System validates time range doesn't conflict with existing appointments
 
 ---
 
@@ -188,33 +207,45 @@ The appointment feature enables patients to request appointments with their assi
 1. Patient selects doctor, date, and time
 2. System validates date and time (not in past, within doctor's working days/hours)
 3. System checks for time slot conflicts
-4. Appointment request created with status "PENDING" (includes date and time)
+4. Appointment request created with status "PENDING" (includes date and time, no time range yet)
 5. Stored in Firestore `appointments` collection
 6. Patient receives confirmation
 7. Request appears in doctor's pending requests list
 8. Doctor receives notification of new appointment request
 
+### Doctor Invites Patient to Appointment
+1. Doctor selects patient, date, and time
+2. **Doctor sets time range**: Doctor selects start time and end time for the appointment
+3. System validates date and time range (not in past, within doctor's working days/hours)
+4. System checks for time range conflicts with existing appointments
+5. Appointment created with status "PENDING" (includes date, time, and time range)
+6. Stored in Firestore `appointments` collection
+7. Patient receives notification of appointment invitation with time range
+8. Patient can Accept, Reject, or Amend the invitation
+
 ### Doctor Response to Appointment Request
 1. Doctor views pending appointment request
 2. Doctor can choose one of three actions:
    - **Accept**: 
+     - **Doctor sets time range**: Doctor selects start time and end time for the appointment
      - Status changes from PENDING to ACCEPTED
      - If patient already accepted: Status changes to CONFIRMED
-     - Patient receives notification
+     - Patient receives notification with confirmed time range
    - **Reject**: 
      - Doctor provides rejection reason
      - Status changes to CANCELLED
      - Patient receives notification with reason
    - **Amend**: 
      - Doctor selects new date and/or time
+     - **Doctor sets time range**: Doctor selects start time and end time for the appointment
      - Doctor provides amendment reason
      - Status changes to AMENDED
      - Original date/time stored for reference
-     - Patient receives notification with amendment details
+     - Patient receives notification with amendment details including new time range
 
 ### Patient Response to Doctor Action
 1. Patient receives notification about doctor's response
-2. Patient views appointment details (current date/time, doctor, reason)
+2. Patient views appointment details (current date/time, time range if set by doctor, doctor, reason)
 3. Patient can choose one of three actions:
    - **Accept**: 
      - If status was ACCEPTED: Status changes to CONFIRMED
@@ -335,8 +366,11 @@ CANCELLED CANCELLED
 - Doctor must be available for selected date (within working days)
 - Time must be within doctor's working hours
 - Patient must be assigned to selected doctor
-- Duration must be multiple of 15 minutes (minimum 15 minutes)
-- Cannot schedule overlapping appointments
+- **Time range is set by doctor**: Doctor must set start time and end time when accepting or amending appointment request
+- **Time range is set by doctor**: Doctor sets time range when inviting patient to appointment
+- Time range must be within doctor's working hours
+- End time must be after start time
+- Cannot schedule overlapping appointments (based on time range)
 - Both parties must accept before appointment becomes CONFIRMED
 - Amendment requests must include reason
 - Rejection requests must include reason
@@ -350,12 +384,12 @@ CANCELLED CANCELLED
 - Only doctor can mark appointments as COMPLETED or NO_SHOW
 
 ### Calendar Implementation
-- **Time Slot Granularity**: 15 minutes (configurable)
 - **Calendar Window**: 7 days (Monday-Sunday)
 - **Working Hours**: Based on doctor's availability from registration
 - **Cell States**: Available, Pending, Accepted, Confirmed, Completed, Outside Hours
+- **Appointment Display**: Appointments show their full time range (start time to end time) as set by doctor
 - **Real-time Updates**: Calendar updates when appointments are created/updated
-- **Availability Display**: Shows available time slots for patient selection
+- **Availability Display**: Shows available time slots for patient selection (patient selects date/time only)
 
 ---
 
@@ -373,7 +407,10 @@ CANCELLED CANCELLED
 - **DateTime Handling**:
   - All appointments store full dateTime (date and time)
   - Amendment history: Store original dateTime and amended dateTime
-- **Duration Field**: Ensure duration is stored in minutes (multiple of 15)
+- **Time Range Fields**: 
+  - `startTime`: Start time of appointment (set by doctor)
+  - `endTime`: End time of appointment (set by doctor)
+  - `duration`: Calculated duration in minutes (derived from startTime and endTime)
 - **Amendment Tracking**:
   - `originalDateTime`: Original date/time requested
   - `amendedDateTime`: Current/amended date/time
@@ -386,18 +423,18 @@ CANCELLED CANCELLED
 #### New Methods Needed:
 - `getPendingRequestsByDoctor(doctorId: string)`: Get all PENDING and AMENDED appointments for a doctor
 - `getAppointmentsByDateRange(doctorId: string, startDate: Date, endDate: Date)`: Get appointments for calendar view (7-day window)
-- `getAppointmentsByTimeSlot(doctorId: string, date: Date, startTime: string, endTime: string)`: Check availability for specific time slot
+- `getAppointmentsByTimeRange(doctorId: string, date: Date, startTime: string, endTime: string)`: Check availability for specific time range
 - `getAvailableTimeSlots(doctorId: string, date: Date)`: Get available time slots for a date
 - `acceptAppointment(appointmentId: string, userId: string)`: Accept appointment (by doctor or patient)
 - `rejectAppointment(appointmentId: string, userId: string, reason: string)`: Reject appointment with reason
-- `amendAppointment(appointmentId: string, userId: string, newDateTime: Date, reason: string)`: Amend appointment with new date/time
+- `amendAppointment(appointmentId: string, userId: string, newDateTime: Date, startTime?: string, endTime?: string, reason: string)`: Amend appointment with new date/time (time range required if doctor is amending)
 - `cancelAppointment(appointmentId: string, userId: string, reason?: string)`: Cancel appointment
 
 ### 3. Appointment Service Methods
 
 #### Availability Checking:
-- `getAvailableTimeSlots(doctorId: string, date: Date)`: Returns array of available 15-minute slots for a date
-- `checkTimeSlotAvailability(doctorId: string, date: Date, startTime: string, duration: number)`: Check if specific time slot is available
+- `getAvailableTimeSlots(doctorId: string, date: Date)`: Returns array of available time slots for a date (for patient selection)
+- `checkTimeRangeAvailability(doctorId: string, date: Date, startTime: string, endTime: string)`: Check if specific time range is available (no conflicts)
 - `getDoctorWorkingHours(doctorId: string)`: Get doctor's working hours and days from doctor profile
 
 #### Calendar Data:
@@ -405,22 +442,24 @@ CANCELLED CANCELLED
 - `getPendingRequests(doctorId: string)`: Get pending and amended appointment requests
 
 #### Appointment Actions:
-- `createAppointmentRequest(patientId: string, doctorId: string, dateTime: Date, duration: number, reason?: string)`: Patient creates appointment request
-- `acceptAppointmentByDoctor(appointmentId: string)`: Doctor accepts appointment request
+- `createAppointmentRequest(patientId: string, doctorId: string, dateTime: Date, reason?: string)`: Patient creates appointment request (no duration, only date/time)
+- `acceptAppointmentByDoctor(appointmentId: string, startTime: string, endTime: string)`: Doctor accepts appointment request and sets time range
 - `acceptAppointmentByPatient(appointmentId: string)`: Patient accepts appointment (after doctor accepted or amendment)
 - `rejectAppointmentByDoctor(appointmentId: string, reason: string)`: Doctor rejects appointment request
 - `rejectAppointmentByPatient(appointmentId: string, reason: string)`: Patient rejects appointment
-- `amendAppointmentByDoctor(appointmentId: string, newDateTime: Date, reason: string)`: Doctor amends appointment
-- `amendAppointmentByPatient(appointmentId: string, newDateTime: Date, reason: string)`: Patient amends appointment
+- `amendAppointmentByDoctor(appointmentId: string, newDateTime: Date, startTime: string, endTime: string, reason: string)`: Doctor amends appointment and sets time range
+- `amendAppointmentByPatient(appointmentId: string, newDateTime: Date, reason: string)`: Patient amends appointment (date/time only, no time range)
+- `invitePatientToAppointment(doctorId: string, patientId: string, dateTime: Date, startTime: string, endTime: string, reason?: string)`: Doctor invites patient and sets time range
 - `getAppointmentStatus(appointmentId: string)`: Get current appointment status and who needs to respond
 
 ### 4. Validation Logic
 
 #### Time Slot Validation:
-- Validate time slot is within doctor's working hours
+- Validate time range is within doctor's working hours (for appointments with time range set)
 - Validate time slot is on a working day
-- Check for conflicts with existing appointments
-- Ensure duration is multiple of 15 minutes
+- Check for conflicts with existing appointments (based on time range)
+- Validate end time is after start time
+- Validate time range doesn't overlap with existing appointments
 - Validate date is not in the past
 
 #### Appointment Status Transitions:
@@ -494,6 +533,6 @@ CANCELLED CANCELLED
 
 ---
 
-*Document Version: 3.0*
-*Last Updated: Updated appointment flow to support bidirectional Accept/Reject/Amend workflow with date and time selection*
+*Document Version: 3.1*
+*Last Updated: Updated appointment flow - patients only select date/time; doctors set time range when accepting, amending, or inviting patients*
 

@@ -4,6 +4,7 @@
     "dotenv": "^17.2.3",
     "es6-promise": "^4.2.8",
     "firebase": "^12.7.0",
+    "firebase-admin": "^13.6.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.11.0"

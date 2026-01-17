@@ -1,0 +1,37 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Prescription PDFs
+    // Path format: prescriptions/{encounterId}/{fileName}
+    match /prescriptions/{encounterId}/{fileName} {
+      // Allow authenticated users to read prescription PDFs
+      // Access control is handled at the application level via encounter data
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to write (upload) prescription PDFs
+      // Only doctors should upload, but we validate this in the app
+      // Storage rules can't easily check Firestore user roles
+      allow write: if isAuthenticated() 
+                   && request.resource.size < 10 * 1024 * 1024  // Max 10MB
+                   && request.resource.contentType == 'application/pdf';
+    }
+    
+    // Test results (if using Firebase Storage for test results)
+    match /test-results/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid == userId);
+      allow write: if isAuthenticated() && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

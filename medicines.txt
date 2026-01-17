@@ -1,933 +1,954 @@
-Common formulary- medicines list
+﻿Common formulary- medicines list
+
 
 Drugs used in the treatment of infections
-Acyclovir 
-Intravenous Infusion 250mg Vial							
-Tablet 200mg
-Tablet 800mg
-Oral suspension 200mg/5mL, 125mL Bottle
-Albendazole Tablet 400mg
-Amikacin 
-Injection 250mg in 1mL Vial
-Injection 500mg in 2mL Vial
-Amoxicillin 
-Capsule 250mg
-Capsule 500mg
-Oral suspension 125mg/5mL, 100mL Bottle
-Amphotericin B for Injection  50mg
-Ampicillin 
-Injection 1g vial
-Injection 250mg vial
-Artesunate Injection 60mg Vial
-Azithromycin Tablet 250mg
-Benzathine penicillin Injection 1.2 million unit Vial
-Benzyl penicillin Injection 1,000,000 IU Vial
-Cefalexin (Cephalexin) 
-Capsule 250mg
-Capsule 500mg
-Syrup 125mg in 5mL,100mL Bottle
-Cefixime Tablet 200mg
-Cefotaxime 
-Injection 1g vial
-Injection 500mg vial
-Ceftazidime 
-Injection 1g Vial
-Injection 500mg Vial
-Ceftriaxone 
-Injection 1g Vial
-Injection 500mg Vial
-Cefuroxime 
-Axetil Tablet 500mg
-Injection 750mg Vial
-Oral suspension 125mg/5mL in 100mL Bottle
-Sodium Injection 250mg Vial
-Ciprofloxacin 
-Intravenous infusion 200mg in 100mL Vial
-Tablet 250mg
-Tablet 500 mg
-Clarithromycin 
-for Infusion 500mg Vial
-Tablet 250mg
-Clindamycin  
-Capsule 300mg
-Capsule 150mg
- Injection 300mg/2mL Ampoule
-Clofazimine 
-Capsule/Tablet 100mg
-Capsule/Tablet 50mg
-Co-amoxiclav  
-Injection 1000mg/200mg Vial
- Injection 500mg/100mg Vial
- Oral suspension 125/31mg/5mL, 100mL Bottle
- Tablet 375mg
- Tablet 625mg
-Co-Trimoxazole Tablet 480 mg
-Colistimethate for Injection 1,000,000IU Vial
-Dapsone Tablet 50mg
-Diethylcarbamazine Tablet 50mg
-Doxycycline Capsule 100mg
-Flucloxacillin 
-capsule 250mg
- Capsule 500mg
- injection 500mg
- Injection, 1g vial
-Fluconazole 
-Capsule 200mg
-Capsule 50mg
-Injection 200mg in 100mL Vial
-Furazolidone Tablet 100mg
-Gentamicin Injection 80mg /2mL Ampoule
-Griseofulvin Tablet 500mg
-Imipenem and Cilastatin for Injection 500mg
-Itraconazole Capsule 100mg
-Levamisole Hydrochloride Tablet 40mg
-Levofloxacin 
-Injection 500mg in 100mL Bottle
-Tablet 500mg
-Linezolid Injection 2mg/mL in 300mL Collapsible bag/Bottle
-Liposomal form of Amphotericin B 50mg Vial
-MDT-MB Adult
-MDT-MB Paediatric
-MDT-PB Adult
-MDT-PB Paediatric
-Mebendazole 
-Tablet 100mg
- Tablet 500mg
-Meropenem 
- Injection 1g Vial
-Injection 500mg Vial
- Injection 500mg in 100mL Bottle
-Metronidazole 
-Oral suspension 200mg/5mL in 100mL Bottle
-Tablet 200mg
- Tablet 400 mg
-Netilmicin Injection 100mg in 2ml Vial
-Nitrofurantoin Tablet 50mg
-Norfloxacin Tablet 400 mg
-Phenoxymethylpenicillin 
-Tablet 250 mg
- Tablet 500mg
-Piperacillin 4g with Tazobactam 500mg Vial
-Sulbactam Sodium and Cefoperazone Sodium (1:1) for Injection 
-1g Vial
-2g Vial
-Sulphadiazine Tablet 500mg
-Teicoplanin Injection 
-200mg Vial
-400mg Vial
-Terbinafine Tablet 250mg
-Valganciclovir Tablet 450mg
-Vancomycin Injection 
-1g Vial
- 500mg Vial
-Voriconazole 
-Injection 200mg in 10mL Vial
-Tablet 200mg
+1. Acyclovir 
+   1. Intravenous Infusion 250mg Vial                                                        
+   2. Tablet 200mg
+   3. Tablet 800mg
+   4. Oral suspension 200mg/5mL, 125mL Bottle
+2. Albendazole Tablet 400mg
+3. Amikacin 
+   1. Injection 250mg in 1mL Vial
+   2. Injection 500mg in 2mL Vial
+4. Amoxicillin 
+   1. Capsule 250mg
+   2. Capsule 500mg
+   3. Oral suspension 125mg/5mL, 100mL Bottle
+5. Amphotericin B for Injection  50mg
+6. Ampicillin 
+   1. Injection 1g vial
+   2. Injection 250mg vial
+7. Artesunate Injection 60mg Vial
+8. Azithromycin Tablet 250mg
+9. Benzathine penicillin Injection 1.2 million unit Vial
+10. Benzyl penicillin Injection 1,000,000 IU Vial
+11. Cefalexin (Cephalexin) 
+   1. Capsule 250mg
+   2. Capsule 500mg
+   3. Syrup 125mg in 5mL,100mL Bottle
+12. Cefixime Tablet 200mg
+13. Cefotaxime 
+   1. Injection 1g vial
+   2. Injection 500mg vial
+14. Ceftazidime 
+   1. Injection 1g Vial
+   2. Injection 500mg Vial
+15. Ceftriaxone 
+   1. Injection 1g Vial
+   2. Injection 500mg Vial
+16. Cefuroxime 
+   1. Axetil Tablet 500mg
+   2. Injection 750mg Vial
+   3. Oral suspension 125mg/5mL in 100mL Bottle
+   4. Sodium Injection 250mg Vial
+17. Ciprofloxacin 
+   1. Intravenous infusion 200mg in 100mL Vial
+   2. Tablet 250mg
+   3. Tablet 500 mg
+18. Clarithromycin 
+   1. for Infusion 500mg Vial
+   2. Tablet 250mg
+19. Clindamycin  
+   1. Capsule 300mg
+   2. Capsule 150mg
+   3.  Injection 300mg/2mL Ampoule
+20. Clofazimine 
+   1. Capsule/Tablet 100mg
+   2. Capsule/Tablet 50mg
+21. Co-amoxiclav  
+   1. Injection 1000mg/200mg Vial
+   2.  Injection 500mg/100mg Vial
+   3.  Oral suspension 125/31mg/5mL, 100mL Bottle
+   4.  Tablet 375mg
+   5.  Tablet 625mg
+22. Co-Trimoxazole Tablet 480 mg
+23. Colistimethate for Injection 1,000,000IU Vial
+24. Dapsone Tablet 50mg
+25. Diethylcarbamazine Tablet 50mg
+26. Doxycycline Capsule 100mg
+27. Flucloxacillin 
+   1. capsule 250mg
+   2.  Capsule 500mg
+   3.  injection 500mg
+   4.  Injection, 1g vial
+28. Fluconazole 
+   1. Capsule 200mg
+   2. Capsule 50mg
+   3. Injection 200mg in 100mL Vial
+29. Furazolidone Tablet 100mg
+30. Gentamicin Injection 80mg /2mL Ampoule
+31. Griseofulvin Tablet 500mg
+32. Imipenem and Cilastatin for Injection 500mg
+33. Itraconazole Capsule 100mg
+34. Levamisole Hydrochloride Tablet 40mg
+35. Levofloxacin 
+   1. Injection 500mg in 100mL Bottle
+   2. Tablet 500mg
+36. Linezolid Injection 2mg/mL in 300mL Collapsible bag/Bottle
+37. Liposomal form of Amphotericin B 50mg Vial
+38. MDT-MB Adult
+39. MDT-MB Paediatric
+40. MDT-PB Adult
+41. MDT-PB Paediatric
+42. Mebendazole 
+   1. Tablet 100mg
+   2.  Tablet 500mg
+43. Meropenem 
+   1.  Injection 1g Vial
+   2. Injection 500mg Vial
+   3.  Injection 500mg in 100mL Bottle
+44. Metronidazole 
+   1. Oral suspension 200mg/5mL in 100mL Bottle
+   2. Tablet 200mg
+   3.  Tablet 400 mg
+45. Netilmicin Injection 100mg in 2ml Vial
+46. Nitrofurantoin Tablet 50mg
+47. Norfloxacin Tablet 400 mg
+48. Phenoxymethylpenicillin 
+   1. Tablet 250 mg
+   2.  Tablet 500mg
+49. Piperacillin 4g with Tazobactam 500mg Vial
+50. Sulbactam Sodium and Cefoperazone Sodium (1:1) for Injection 
+   1. 1g Vial
+   2. 2g Vial
+51. Sulphadiazine Tablet 500mg
+52. Teicoplanin Injection 
+   1. 200mg Vial
+   2. 400mg Vial
+53. Terbinafine Tablet 250mg
+54. Valganciclovir Tablet 450mg
+55. Vancomycin Injection 
+   1. 1g Vial
+   2.  500mg Vial
+56. Voriconazole 
+   1. Injection 200mg in 10mL Vial
+   2. Tablet 200mg
+
 
 Drugs used in the treatment of cardiovascular disorders
-Activated Prothrombin Complex Concentrate Injection 500IU vial
-Adenosine Injection 6mg in 2mL Vial
-Alprostadil Injection 500microgram/1mL Ampoule/Vial
-Alteplase (Recombinant Tissue type plasminogen activator) 
-20mg Vial
-50mg Vial
-Amiodarone
- Intravenous infusion 150mg in 3mL Ampoule
-Tablet 100mg
-Amlodipine Besylate 
-Tablet 2.5mg
-Tablet 5mg
-Aspirin Enteric coated Tablet 75mg
-Atenolol Tablet 50 mg
-Atorvastatin 
-Tablet 10mg
-Tablet 20mg
-Bisoprolol Fumarate 
-Tablet 2.5mg
- Tablet 5mg
-Captopril 
-Tablet  12.5 mg
-Tablet 25mg
-Carvedilol 
-Tablet 12.5mg
-Tablet 3.125mg
-Tablet 6.25mg
-Clopidogrel Tablet 75mg
-Digoxin
- Injection 500microgram in 2mL  Ampoule
-Digoxin Tablet 0.25 mg
-Diltiazem Hydrochloride 
-Tablet 30mg
-Tablet 60mg
-Dobutamine Injection 250mg in 20mL Vial
-Dopamine Hydrochloride Injection 200mg in 5mL Ampoule
-Dried Factor IX Fraction 500 IU - 600IU Vial
-Dried factor VII fraction 1000 micrograms -2500 micrograms vial
-Dried Factor VIII fraction 200-350IU Vial (with von Willebrand factor)
-Dried Factor VIII fraction 200IU-350IU Vial
-Enalapril Tablet 5mg
-Enoxaparin Sodium Injection, 
-4,000IU/0.4mL Prefilled syringe/Vial
- 6,000IU/0.6mL Prefilled syringe/Vial
-Ephedrine Injection 30mg/mL Ampoule
-Esmolol Hydrochloride Injection 100mg in 10mL Vial
-Fenofibrate Capsule 200mg
-Furosemide (Frusemide) 
-Injection 100mg/10mL Ampoule
- Injection 20mg in 2mL Ampoule
- Tablet 40 mg
-Glyceryl Trinitrate  (Nitroglycerin) 
-Injection 50mg in 10mL Vial/Ampoule
-Tablet 0.5 mg
-Heparin Injection 25,000IU/5mL Vial
-Hydralazine Injection 20mg/mL Ampoule
-Hydrochlorothiazide Tablet 25mg
-Isoprenaline Injection  2mg/2mL Ampoule
-Labetalol Hydrochloride 
-Injection 100mg/20mL  Ampoule
-Tablet 100mg
-Losartan Potassium Tablet 50mg
-Mannitol Intravenous Infusion 20% w/v 250mL Bottle
-Metaraminol Injection 10mg in 1mL Ampoule
-Methyldopa Tablet 250 mg
-Metoprolol Tartrate 
-Injection 1mg/mL, 5mL Ampoule
-Tablet  25mg
-Tablet  50mg
-Milrinone Lactate Injection 10mg/10mL Ampoule
-Nicorandil Tablet 10mg
-Nifedipine Extended Release Tablet 20mg
-Nimodipine Tablet 30mg
-Noradrenaline Acid tartrate 4mg/2mL Ampoule
-Phenylephrine Injection 10mg/1mL Vial
-Prazosin Tablet 1 mg
-Prolong-released Isosorbide Mononitrate 
-Tablet 30mg
- Tablet 60mg
-Propranolol 
-Injection 1mg in 1ml ampoule
-Tablet 40 mg
-Protamine Sulphate Injection 50mg in 5mL Ampoule
-Prothrombin Complex Concentrate Injection 500IU Vial
-Sodium Nitroprusside for Injection 50mg Vial
-Sodium Tetradecyl sulphate Injection 60 mg in 2mL Ampoule
-Spironolactone Tablet 25 mg
-Streptokinase Injection 1,500,000 IU
-Tenecteplase Injection 40mg Vial
-Tranexamic acid 
-Injection 500mg/5mL Ampoule
-Tablet /Capsule 500mg
- Tablet/Capsule 250mg
-Verapamil 
-Injection 5mg in 2mL Ampoule
-Tablet 40mg
-Warfarin Sodium 
-Tablet 0.5mg
- Tablet 1mg
- Tablet 3mg
- Tablet 5 mg
+1. Activated Prothrombin Complex Concentrate Injection 500IU vial
+2. Adenosine Injection 6mg in 2mL Vial
+3. Alprostadil Injection 500microgram/1mL Ampoule/Vial
+4. Alteplase (Recombinant Tissue type plasminogen activator) 
+   1. 20mg Vial
+   2. 50mg Vial
+5. Amiodarone
+   1.  Intravenous infusion 150mg in 3mL Ampoule
+   2. Tablet 100mg
+6. Amlodipine Besylate 
+   1. Tablet 2.5mg
+   2. Tablet 5mg
+7. Aspirin Enteric coated Tablet 75mg
+8. Atenolol Tablet 50 mg
+9. Atorvastatin 
+   1. Tablet 10mg
+   2. Tablet 20mg
+10. Bisoprolol Fumarate 
+   1. Tablet 2.5mg
+   2.  Tablet 5mg
+11. Captopril 
+   1. Tablet  12.5 mg
+   2. Tablet 25mg
+12. Carvedilol 
+   1. Tablet 12.5mg
+   2. Tablet 3.125mg
+   3. Tablet 6.25mg
+13. Clopidogrel Tablet 75mg
+14. Digoxin
+   1.  Injection 500microgram in 2mL  Ampoule
+   2. Digoxin Tablet 0.25 mg
+15. Diltiazem Hydrochloride 
+   1. Tablet 30mg
+   2. Tablet 60mg
+16. Dobutamine Injection 250mg in 20mL Vial
+17. Dopamine Hydrochloride Injection 200mg in 5mL Ampoule
+18. Dried Factor IX Fraction 500 IU - 600IU Vial
+19. Dried factor VII fraction 1000 micrograms -2500 micrograms vial
+20. Dried Factor VIII fraction 200-350IU Vial (with von Willebrand factor)
+21. Dried Factor VIII fraction 200IU-350IU Vial
+22. Enalapril Tablet 5mg
+23. Enoxaparin Sodium Injection, 
+   1. 4,000IU/0.4mL Prefilled syringe/Vial
+   2.  6,000IU/0.6mL Prefilled syringe/Vial
+24. Ephedrine Injection 30mg/mL Ampoule
+25. Esmolol Hydrochloride Injection 100mg in 10mL Vial
+26. Fenofibrate Capsule 200mg
+27. Furosemide (Frusemide) 
+   1. Injection 100mg/10mL Ampoule
+   2.  Injection 20mg in 2mL Ampoule
+   3.  Tablet 40 mg
+28. Glyceryl Trinitrate  (Nitroglycerin) 
+   1. Injection 50mg in 10mL Vial/Ampoule
+   2. Tablet 0.5 mg
+29. Heparin Injection 25,000IU/5mL Vial
+30. Hydralazine Injection 20mg/mL Ampoule
+31. Hydrochlorothiazide Tablet 25mg
+32. Isoprenaline Injection  2mg/2mL Ampoule
+33. Labetalol Hydrochloride 
+   1. Injection 100mg/20mL  Ampoule
+   2. Tablet 100mg
+34. Losartan Potassium Tablet 50mg
+35. Mannitol Intravenous Infusion 20% w/v 250mL Bottle
+36. Metaraminol Injection 10mg in 1mL Ampoule
+37. Methyldopa Tablet 250 mg
+38. Metoprolol Tartrate 
+   1. Injection 1mg/mL, 5mL Ampoule
+   2. Tablet  25mg
+   3. Tablet  50mg
+39. Milrinone Lactate Injection 10mg/10mL Ampoule
+40. Nicorandil Tablet 10mg
+41. Nifedipine Extended Release Tablet 20mg
+42. Nimodipine Tablet 30mg
+43. Noradrenaline Acid tartrate 4mg/2mL Ampoule
+44. Phenylephrine Injection 10mg/1mL Vial
+45. Prazosin Tablet 1 mg
+46. Prolong-released Isosorbide Mononitrate 
+   1. Tablet 30mg
+   2.  Tablet 60mg
+47. Propranolol 
+   1. Injection 1mg in 1ml ampoule
+   2. Tablet 40 mg
+48. Protamine Sulphate Injection 50mg in 5mL Ampoule
+49. Prothrombin Complex Concentrate Injection 500IU Vial
+50. Sodium Nitroprusside for Injection 50mg Vial
+51. Sodium Tetradecyl sulphate Injection 60 mg in 2mL Ampoule
+52. Spironolactone Tablet 25 mg
+53. Streptokinase Injection 1,500,000 IU
+54. Tenecteplase Injection 40mg Vial
+55. Tranexamic acid 
+   1. Injection 500mg/5mL Ampoule
+   2. Tablet /Capsule 500mg
+   3.  Tablet/Capsule 250mg
+56. Verapamil 
+   1. Injection 5mg in 2mL Ampoule
+   2. Tablet 40mg
+57. Warfarin Sodium 
+   1. Tablet 0.5mg
+   2.  Tablet 1mg
+   3.  Tablet 3mg
+   4.  Tablet 5 mg
+
 
 Drugs used in the treatment of central nervous system disorders
-Alprazolam 
-0.25mg Tablet
- 0.5mg Tablet
-Amantadine  Capsule 100mg
-Amisulpride 
-Tablet 100mg
- Tablet 200mg
-Amitriptyline 
-Tablet 10mg
-Tablet 25mg
-Aripiprazole Tablet 10mg
-Benzhexol Tablet 2mg
-Benztropine Injection 2mg/2ml Ampoule
-Betahistine 
-Tablet 16mg
-Tablet 8mg
-Botulinum  Toxin 
-50IU Vial
-100IU Vial
-Carbamazepine 
-Extended release Tablet 200mg
-Tablet 100mg
-Tablet 200mg
-Chlordiazepoxide Tablet 10mg
-Chlorpromazine Tablet 50mg
-Cinnarizine Tablet 25mg
-Clobazam 
-Tablet 10mg
-Tablet 5mg
-Clomipramine Hydrochloride Tablet 25 mg
-Clonazepam 
-Tablet 0.5mg
- Tablet 2mg
-Clozapine Tablet 100mg
-Co-careldopa 
-Modified Release Tablet 25mg/100mg
- Modified Release Tablet 50mg/200mg
- Tablet 25mg/100mg
- Tablet 25mg/250mg
-Dexamphetamine Tablet 5mg
-Diazepam 
-Injection 10mg/2mL  Ampoule
-Tablet 5mg
-Donepezil Hydrochloride Tablet 5mg
-Duloxetine (as hydrochloride)
- Capsule 20 mg
- Capsule  30mg
- Capsule  60mg
-Flunarizine Hydrochloride Tablet 5mg
-Fluoxetine Hydrochloride Capsule 20mg
-Flupenthixol Injection 40mg/2ml Ampoule
-Fluphenazine Decanoate Injection 25mg in 1ml Ampoule
-Gabapentin 
-Capsule 100mg
-Capsule 300mg
-Haloperidol 
-Injection 5mg in 1mL  Ampoule
-Tablet 1.5mg
-Tablet 5mg
-Imipramine Tablet 25 mg
-Lamotrigine 
-Tablet 100mg
-Tablet 25mg
-Tablet 50mg
-Levetiracetam 
-Injection  500mg in 5mL Vial/Ampoule
-Tablet 250mg
-Tablet 500 mg
-Lithium Carbonate Tablet 250mg
-Lorazepam 
-Injection 4mg/1mL  Ampoule
-Tablet 1mg
-Memantine Hydrochloride Tablet  5mg
-Methylphenidate Hydrochloride Tablet 10mg
-Olanzapine 
-Orodispersible Tablet 10mg
-Orodispersible Tablet 5mg
-Tablet 10mg
-Tablet 5mg
-Ondansetron 
-Injection 8mg in 4mL Ampoule
-Tablet 4mg
-Paracetamol 500mg + Codeine phosphate 8mg Tablet
-Paracetamol 
-Infusion 10mg/mL, 100mL Glass bottle/Vial/Collapsible bag
- Oral solution 120mg/5mL, 60mL Bottle
- Suppository 125mg
- Suppository 250mg
- Suppository 500mg
-Tablet 500mg
-Phenobarbital Injection 200mg/mL Ampoule
-Phenytoin Sodium 
-Injection 250mg in 5mL Ampoule
-Tablet 100 mg
- Tablet 50mg
-Prochlorperazine Tablet 5mg
-Quetiapine  
-Tablet 100mg
- Tablet 25mg
-Risperidone
- Tablet 1mg
- Tablet 2mg
-Sertraline 
-Tablet 25mg
-Tablet 50mg
-Sodium Valproate 
-Tablet 100mg
-Tablet 200mg
-Topiramate 
-Tablet 25mg
-Tablet 50mg
-Tramadol Hydrochloride 
-Capsule 50mg
- Injection 100mg in 2mL  Ampoule
-Trifluoperazine Tablet 5mg
-Venlafaxine Hydrochloride 
-Extended release Capsule 37.5mg
-Extended release Capsules 75mg
-Zuclopenthixol 
-Acetate Injection 50mg/1mL Ampoule
- Deconate Injection 200mg/mL, 1mL Ampoule
+1. Alprazolam 
+   1. 0.25mg Tablet
+   2.  0.5mg Tablet
+2. Amantadine  Capsule 100mg
+3. Amisulpride 
+   1. Tablet 100mg
+   2.  Tablet 200mg
+4. Amitriptyline 
+   1. Tablet 10mg
+   2. Tablet 25mg
+5. Aripiprazole Tablet 10mg
+6. Benzhexol Tablet 2mg
+7. Benztropine Injection 2mg/2ml Ampoule
+8. Betahistine 
+   1. Tablet 16mg
+   2. Tablet 8mg
+9. Botulinum  Toxin 
+   1. 50IU Vial
+   2. 100IU Vial
+10. Carbamazepine 
+   1. Extended release Tablet 200mg
+   2. Tablet 100mg
+   3. Tablet 200mg
+11. Chlordiazepoxide Tablet 10mg
+12. Chlorpromazine Tablet 50mg
+13. Cinnarizine Tablet 25mg
+14. Clobazam 
+   1. Tablet 10mg
+   2. Tablet 5mg
+15. Clomipramine Hydrochloride Tablet 25 mg
+16. Clonazepam 
+   1. Tablet 0.5mg
+   2.  Tablet 2mg
+17. Clozapine Tablet 100mg
+18. Co-careldopa 
+   1. Modified Release Tablet 25mg/100mg
+   2.  Modified Release Tablet 50mg/200mg
+   3.  Tablet 25mg/100mg
+   4.  Tablet 25mg/250mg
+19. Dexamphetamine Tablet 5mg
+20. Diazepam 
+   1. Injection 10mg/2mL  Ampoule
+   2. Tablet 5mg
+21. Donepezil Hydrochloride Tablet 5mg
+22. Duloxetine (as hydrochloride)
+   1.  Capsule 20 mg
+   2.  Capsule  30mg
+   3.  Capsule  60mg
+23. Flunarizine Hydrochloride Tablet 5mg
+24. Fluoxetine Hydrochloride Capsule 20mg
+25. Flupenthixol Injection 40mg/2ml Ampoule
+26. Fluphenazine Decanoate Injection 25mg in 1ml Ampoule
+27. Gabapentin 
+   1. Capsule 100mg
+   2. Capsule 300mg
+28. Haloperidol 
+   1. Injection 5mg in 1mL  Ampoule
+   2. Tablet 1.5mg
+   3. Tablet 5mg
+29. Imipramine Tablet 25 mg
+30. Lamotrigine 
+   1. Tablet 100mg
+   2. Tablet 25mg
+   3. Tablet 50mg
+31. Levetiracetam 
+   1. Injection  500mg in 5mL Vial/Ampoule
+   2. Tablet 250mg
+   3. Tablet 500 mg
+32. Lithium Carbonate Tablet 250mg
+33. Lorazepam 
+   1. Injection 4mg/1mL  Ampoule
+   2. Tablet 1mg
+34. Memantine Hydrochloride Tablet  5mg
+35. Methylphenidate Hydrochloride Tablet 10mg
+36. Olanzapine 
+   1. Orodispersible Tablet 10mg
+   2. Orodispersible Tablet 5mg
+   3. Tablet 10mg
+   4. Tablet 5mg
+37. Ondansetron 
+   1. Injection 8mg in 4mL Ampoule
+   2. Tablet 4mg
+38. Paracetamol 500mg + Codeine phosphate 8mg Tablet
+39. Paracetamol 
+   1. Infusion 10mg/mL, 100mL Glass bottle/Vial/Collapsible bag
+   2.  Oral solution 120mg/5mL, 60mL Bottle
+   3.  Suppository 125mg
+   4.  Suppository 250mg
+   5.  Suppository 500mg
+   6. Tablet 500mg
+40. Phenobarbital Injection 200mg/mL Ampoule
+41. Phenytoin Sodium 
+   1. Injection 250mg in 5mL Ampoule
+   2. Tablet 100 mg
+   3.  Tablet 50mg
+42. Prochlorperazine Tablet 5mg
+43. Quetiapine  
+   1. Tablet 100mg
+   2.  Tablet 25mg
+44. Risperidone
+   1.  Tablet 1mg
+   2.  Tablet 2mg
+45. Sertraline 
+   1. Tablet 25mg
+   2. Tablet 50mg
+46. Sodium Valproate 
+   1. Tablet 100mg
+   2. Tablet 200mg
+47. Topiramate 
+   1. Tablet 25mg
+   2. Tablet 50mg
+48. Tramadol Hydrochloride 
+   1. Capsule 50mg
+   2.  Injection 100mg in 2mL  Ampoule
+49. Trifluoperazine Tablet 5mg
+50. Venlafaxine Hydrochloride 
+   1. Extended release Capsule 37.5mg
+   2. Extended release Capsules 75mg
+51. Zuclopenthixol 
+   1. Acetate Injection 50mg/1mL Ampoule
+   2.  Deconate Injection 200mg/mL, 1mL Ampoule
+
+
 
 
 Drugs affecting nutrition and blood
-Albumin solution (Human) 5%, 250mL Bottle
-Alfacalcidol Capsule 250microgram
-Ascorbic Acid Tablet 100mg (Vitamin C)
-Calcium 
-Carbonate Tablet 1.25g
-Gluconate Injection 10% in 10mL  Ampoule
- Lactate Tablet 300mg
-Polystyrene sulphonate 15g-17g powder sachet
-Cholecalciferol Tablet 50,000IU-60,000IU (Colecalciferol)
-Compound Sodium Lactate Intravenous Infusion 500mL Bottle
-Deferasirox 
-Tablet 100mg
- Tablet 400mg
- Mesylate for Injection 500mg
-Dextran 40,10% w/v in Sodium Chloride 0.9% for Intravenous Infusion 500mL Bottle
-Dextrose/Glucose 
-Injection 10%w/v, 500mL Bottle
- Injection 25% w/v, 25mL Ampoule
- Injection 5% w/v 500mL Bottle
- Intravenous Infusion 50%, 50mL  Vial/Ampoule
-Sachet 75g (for hyperglycemia in pregnancy)
+1. Albumin solution (Human) 5%, 250mL Bottle
+2. Alfacalcidol Capsule 250microgram
+3. Ascorbic Acid Tablet 100mg (Vitamin C)
+4. Calcium 
+   1. Carbonate Tablet 1.25g
+   2. Gluconate Injection 10% in 10mL  Ampoule
+   3.  Lactate Tablet 300mg
+   4. Polystyrene sulphonate 15g-17g powder sachet
+5. Cholecalciferol Tablet 50,000IU-60,000IU (Colecalciferol)
+6. Compound Sodium Lactate Intravenous Infusion 500mL Bottle
+7. Deferasirox 
+   1. Tablet 100mg
+   2.  Tablet 400mg
+   3.  Mesylate for Injection 500mg
+8. Dextran 40,10% w/v in Sodium Chloride 0.9% for Intravenous Infusion 500mL Bottle
+9. Dextrose/Glucose 
+   1. Injection 10%w/v, 500mL Bottle
+   2.  Injection 25% w/v, 25mL Ampoule
+   3.  Injection 5% w/v 500mL Bottle
+   4.  Intravenous Infusion 50%, 50mL  Vial/Ampoule
+   5. Sachet 75g (for hyperglycemia in pregnancy)
 
-Eltrombopag 
-Tablet  25mg
- Tablet 50mg
-Epoetin Injection 
-10,000 IU Pre-filled syringe
- 2,000 IU Pre-filled syringe
-4000IU Prefilled syringe
-Fat emulsion 
-Injection 20% in 100mL Bottle
- Intravenous Injection 10% w/v, 500mL Bottle
-Ferrous sulphate Tablet 200mg
-Folic Acid Tablet 1mg
-Human Albumin Solution 20% in 50mL Bottle
-Hydroxocobalamin Injection 1mg in 1mL  Ampoule
-Iron Sucrose solution for Injection/Infusion 100mg/5mL Ampoule
-Magnesium 
-Glycinate tablet 400mg (200mg of elemental Magnesium)
-Sulphate Injection  50% in 10mL Ampoule/Vial
-Oral Rehydration Powder 
-200ml sachet
- sachets 1 Liter (non-flavored)
-Peritoneal Dialysis solution 1.5% in 1000mL Bottle
-Phytomenadione Injection 
-10mg in 1mL Ampoule
-1mg in 0.5mL Ampoule
-Potassium Chloride 
-Extended release Tablet  600mg
-Injection concentrate 2mmol/mL, 10mL Ampoule
-Protein Hydrolysate Injection 
-10% w/v in 500mL Bottle
-100mL Bottle (Amino acid Solu.)
-Pyridoxine Hydrochloride 
-Tablet 100mg
-Tablet 10mg
-Tablet 25mg
-Sodium Bicarbonate 
-Injection 8.4% w/v in 50mL-100mL Bottle
-Tablet 600mg
-Sodium Chloride 0.45% and Dextrose/Glucose 5% Intravenous Infusion 500mL] Bottle
-Sodium Chloride for Intravenous Infusion 
-0.9% w/v, 5mL Ampoule
-0.9%w/v, 500mL Bottle
-0.45%w/v Bottle 500mL
-0.9%w/v  Collapsible bag 1000mL
-BP 3% w/v 500mL Bottle
-Sterile Water for Injection 10mL Vial
-Tetrastarch Solution for Intravenous Infusion 500mL Collapsible bag
-Thiamine hydrochloride 
-Injection 100mg in 2mL Ampoule
- Tablet 100mg
-Total Parenteral Nutrition in 500mL-1,500mL multiple component in collapsible bag (central or peripheral)
-Vitamin A High potency oral Capsule
-Vitamin B complex Tablet
-Vitamin B1 Tablet 10mg
+
+10. Eltrombopag 
+   1. Tablet  25mg
+   2.  Tablet 50mg
+11. Epoetin Injection 
+   1. 10,000 IU Pre-filled syringe
+   2.  2,000 IU Pre-filled syringe
+   3. 4000IU Prefilled syringe
+12. Fat emulsion 
+   1. Injection 20% in 100mL Bottle
+   2.  Intravenous Injection 10% w/v, 500mL Bottle
+13. Ferrous sulphate Tablet 200mg
+14. Folic Acid Tablet 1mg
+15. Human Albumin Solution 20% in 50mL Bottle
+16. Hydroxocobalamin Injection 1mg in 1mL  Ampoule
+17. Iron Sucrose solution for Injection/Infusion 100mg/5mL Ampoule
+18. Magnesium 
+   1. Glycinate tablet 400mg (200mg of elemental Magnesium)
+   2. Sulphate Injection  50% in 10mL Ampoule/Vial
+19. Oral Rehydration Powder 
+   1. 200ml sachet
+   2.  sachets 1 Liter (non-flavored)
+20. Peritoneal Dialysis solution 1.5% in 1000mL Bottle
+21. Phytomenadione Injection 
+   1. 10mg in 1mL Ampoule
+   2. 1mg in 0.5mL Ampoule
+22. Potassium Chloride 
+   1. Extended release Tablet  600mg
+   2. Injection concentrate 2mmol/mL, 10mL Ampoule
+23. Protein Hydrolysate Injection 
+   1. 10% w/v in 500mL Bottle
+   2. 100mL Bottle (Amino acid Solu.)
+24. Pyridoxine Hydrochloride 
+   1. Tablet 100mg
+   2. Tablet 10mg
+   3. Tablet 25mg
+25. Sodium Bicarbonate 
+   1. Injection 8.4% w/v in 50mL-100mL Bottle
+   2. Tablet 600mg
+26. Sodium Chloride 0.45% and Dextrose/Glucose 5% Intravenous Infusion 500mL] Bottle
+27. Sodium Chloride for Intravenous Infusion 
+   1. 0.9% w/v, 5mL Ampoule
+   2. 0.9%w/v, 500mL Bottle
+   3. 0.45%w/v Bottle 500mL
+   4. 0.9%w/v  Collapsible bag 1000mL
+   5. BP 3% w/v 500mL Bottle
+28. Sterile Water for Injection 10mL Vial
+29. Tetrastarch Solution for Intravenous Infusion 500mL Collapsible bag
+30. Thiamine hydrochloride 
+   1. Injection 100mg in 2mL Ampoule
+   2.  Tablet 100mg
+31. Total Parenteral Nutrition in 500mL-1,500mL multiple component in collapsible bag (central or peripheral)
+32. Vitamin A High potency oral Capsule
+33. Vitamin B complex Tablet
+34. Vitamin B1 Tablet 10mg
+
 
 Drugs used in respiratory system disorders
-Adrenaline/ Epinephrine Injection 1mg/1mL Ampoule
-Aminophylline Injection 250mg in 10ml Ampoule
-Beclomethasone dipropionate aerosol inhaler
- 250mcg/metered dose, 200 dose unit
-50mcg/metered dose, 200 dose unit
- Dry Powder Capsule 200microgram
- Dry Powder Capsule 400microgram
- Pressurized inhalation 100microgram/metered dose (200 doses)
-Beractant suspension  8mL (25mg/mL) Vial
-Breath Activated Inhaler Device (for Dry Powder capsules)
-Budesonide Respiratory Suspension 0.5mg in 2mL  Respule
-Cetirizine 
-Oral Solution/Syrup 5mg/5mL, 60mL Bottle
-Tablet 10mg
-Chlorphenamine (Chlorpheniramine) 
-Tablet 4mg
-Injection 10mg/mL Ampoule
-Oral solution 2mg/5mL in 60mL Bottle
-Fluticasone Propionate 
-125mcg with Salmeterol Xinafoate 25mcg / metered dose,120 dose unit
-50mcg with Salmeterol xinafoate 25mcg / metered dose,120 dose unit
-Fluticasone Propionate 
-125mcg/dose 120 metered doses aerasol inhaler
- 250mcg with Salmeterol xinafoate 25mcg / metered dose,120 dose unit
-Ipratropium  Bromide 
-Respiratory Solution 0.5mg in 2ml Vial
- Respiratory Solution, 250mcg/1mL in 15mL-20mL Bottle
-Montelukast Sodium 
-Chewable Tablet 4mg
- Chewable Tablet 5mg
- Tablet 10mg
-Plastic,  mask to compatible with  Spacer device
-Promethazine Hydrochloride 
-Tablet  25mg
-Tablet 10mg
-Injection 25mg in 1mL Ampoule
-Salbutamol 
-(Albuterol) Tablet 2mg
- aerosol Inhaler 100mcg/metered dose, 200 dose Unit
- Dry powder capsule 200microgram (for breath activated  device)
-Dry powder capsule 400microgram (for breath induced devise)
- Injection 5mg in 5mL Ampoule
- Oral Solution 2mg/5mL in 60mL Bottle
- Respiratory Solution 0.5% in 15mL Vial
-Salmeterol 
-Xinafoate 50mcg + Fluticasone Propionate 250mcg, dry powder capsules for breath induced device.
- Xinafoate 50mcg + Fluticasone Propionate 500mcg, Dry powder capsules (for breath induced device)
-Spacer device for compatible with all metered dose inhalers
-Theophylline 
-Extended Release Tablet 125mg
-Oral solution/Syrup 25mg/5mL in 60mL Bottle
+1. Adrenaline/ Epinephrine Injection 1mg/1mL Ampoule
+2. Aminophylline Injection 250mg in 10ml Ampoule
+3. Beclomethasone dipropionate aerosol inhaler
+   1.  250mcg/metered dose, 200 dose unit
+   2. 50mcg/metered dose, 200 dose unit
+   3.  Dry Powder Capsule 200microgram
+   4.  Dry Powder Capsule 400microgram
+   5.  Pressurized inhalation 100microgram/metered dose (200 doses)
+4. Beractant suspension  8mL (25mg/mL) Vial
+5. Breath Activated Inhaler Device (for Dry Powder capsules)
+6. Budesonide Respiratory Suspension 0.5mg in 2mL  Respule
+7. Cetirizine 
+   1. Oral Solution/Syrup 5mg/5mL, 60mL Bottle
+   2. Tablet 10mg
+8. Chlorphenamine (Chlorpheniramine) 
+   1. Tablet 4mg
+   2. Injection 10mg/mL Ampoule
+   3. Oral solution 2mg/5mL in 60mL Bottle
+9. Fluticasone Propionate 
+   1. 125mcg with Salmeterol Xinafoate 25mcg / metered dose,120 dose unit
+   2. 50mcg with Salmeterol xinafoate 25mcg / metered dose,120 dose unit
+10. Fluticasone Propionate 
+   1. 125mcg/dose 120 metered doses aerasol inhaler
+   2.  250mcg with Salmeterol xinafoate 25mcg / metered dose,120 dose unit
+11. Ipratropium  Bromide 
+   1. Respiratory Solution 0.5mg in 2ml Vial
+   2.  Respiratory Solution, 250mcg/1mL in 15mL-20mL Bottle
+12. Montelukast Sodium 
+   1. Chewable Tablet 4mg
+   2.  Chewable Tablet 5mg
+   3.  Tablet 10mg
+13. Plastic,  mask to compatible with  Spacer device
+14. Promethazine Hydrochloride 
+   1. Tablet  25mg
+   2. Tablet 10mg
+   3. Injection 25mg in 1mL Ampoule
+15. Salbutamol 
+   1. (Albuterol) Tablet 2mg
+   2.  aerosol Inhaler 100mcg/metered dose, 200 dose Unit
+   3.  Dry powder capsule 200microgram (for breath activated  device)
+   4. Dry powder capsule 400microgram (for breath induced devise)
+   5.  Injection 5mg in 5mL Ampoule
+   6.  Oral Solution 2mg/5mL in 60mL Bottle
+   7.  Respiratory Solution 0.5% in 15mL Vial
+16. Salmeterol 
+   1. Xinafoate 50mcg + Fluticasone Propionate 250mcg, dry powder capsules for breath induced device.
+   2.  Xinafoate 50mcg + Fluticasone Propionate 500mcg, Dry powder capsules (for breath induced device)
+17. Spacer device for compatible with all metered dose inhalers
+18. Theophylline 
+   1. Extended Release Tablet 125mg
+   2. Oral solution/Syrup 25mg/5mL in 60mL Bottle
+
 
 Immunological products and vaccines
-Anti D.(Rho) Immunoglobulin (Human) Injection 300microgram in 1.5mL  Ampoule/Vial
-Anti Rabies
- serum Injection 1,000 IU in 5mL  Ampoule
- human Immunoglobulin 300 I.U. Vial
-Anti-tetanus Human Immunoglobulin 250IU Ampoule/Vial/Prefilled syringe
-Hepatitis B vaccine single dose Vial
-Human immunoglobulin for intravenous use
- 1g Vial
- 2.5g - 3.0g in Vial
- 5g - 6g vial
-Meningococcal Conjugate Quadrivalent  Vaccine Single Dose Vial
-Pneumococcal Conjugate Vaccine (PCV) 0.5mL single dose vaccine vial/prefilled syringe
-Pneumococcal Vaccine Single Dose Vial (PPSV-23)
-Rabies Vaccine (Human use) 0.5mL/1mL-Inactivated
-Snake Venom Antiserum 10mL Vial
-Tetanus Toxoid Adsorbed 0.5mL (Single dose)  Ampoule/Vial
+1. Anti D.(Rho) Immunoglobulin (Human) Injection 300microgram in 1.5mL  Ampoule/Vial
+2. Anti Rabies
+   1.  serum Injection 1,000 IU in 5mL  Ampoule
+   2.  human Immunoglobulin 300 I.U. Vial
+3. Anti-tetanus Human Immunoglobulin 250IU Ampoule/Vial/Prefilled syringe
+4. Hepatitis B vaccine single dose Vial
+5. Human immunoglobulin for intravenous use
+   1.  1g Vial
+   2.  2.5g - 3.0g in Vial
+   3.  5g - 6g vial
+6. Meningococcal Conjugate Quadrivalent  Vaccine Single Dose Vial
+7. Pneumococcal Conjugate Vaccine (PCV) 0.5mL single dose vaccine vial/prefilled syringe
+8. Pneumococcal Vaccine Single Dose Vial (PPSV-23)
+9. Rabies Vaccine (Human use) 0.5mL/1mL-Inactivated
+10. Snake Venom Antiserum 10mL Vial
+11. Tetanus Toxoid Adsorbed 0.5mL (Single dose)  Ampoule/Vial
+
+
 
 
 Drugs used in the treatment of endocrine disorders
-Alendronate Sodium Tablet 70mg
-Biphasic Isophane Insulin Injection (Human) 30% Soluble/70% Isophane
-Cabergoline Tablet 500mcicrogram
-Carbimazole 
-Tablet 10mg
- Tablet 5mg
-Desmopressin acetate Nasal spray 10 microgram/metered spray (50 metered spray)
-Dexamethasone 
-Tablet 4 mg
-Tablet 8mg
-Sodium Phosphate Injection 8mg/2mL Ampoule/Vial
-Tablet 500microgram
-Finasteride Tablet  5mg
-Gliclazide 
-Tablet 40mg
-Tablet 80mg
-Hydrocortisone 
-Sodium succinate for Injection 100mg Vial
-Tablet 10mg
-Tablet 5mg
-Hydroxyprogesterone Injection 250mg/mL Ampoule
-Insulin 
-Injection (Soluble Insulin) 1000 IU in 10ml derived from human
-Insulin Isophane Injection (NPH Insulin) derived from human 1000IU in 10mL (mixtard insulin ?)
-Medroxyprogesterone Acetate Injection 150mg/1mL Vial
-Metformin 
-Modified release Tablet 500mg
-Metformin Tablet 500mg
-Methylprednisolone 
-Acetate  Injection 40mg/mL Vial
- Sodium succinate for Injection 1g Vial
-Sodium Succinate for Injection 500mg Vial
-Tablet 4mg
-Norethisterone Tablet 5mg
-Prednisolone 
-Tablet 20mg
-Tablet 5mg
-Sitagliptin 
-Tablet  50mg
-Tablet 100mg
-Testosterone 
-Enanthate Injection 250mg/1mL Ampoule
-Undecanoate Injection 250mg /mL in 4mL Vial
-Thyroxine 
-Tablet  25microgram
-Tablet 100microgram
-Tablet 50microgram
-Vasopressin Injection 20 IU in 1mL  Ampoule
-Zoledronic Acid concentrate for Intravenous Infusion 4mg  in 5mL Vial
+1. Alendronate Sodium Tablet 70mg
+2. Biphasic Isophane Insulin Injection (Human) 30% Soluble/70% Isophane
+3. Cabergoline Tablet 500mcicrogram
+4. Carbimazole 
+   1. Tablet 10mg
+   2.  Tablet 5mg
+5. Desmopressin acetate Nasal spray 10 microgram/metered spray (50 metered spray)
+6. Dexamethasone 
+   1. Tablet 4 mg
+   2. Tablet 8mg
+   3. Sodium Phosphate Injection 8mg/2mL Ampoule/Vial
+   4. Tablet 500microgram
+7. Finasteride Tablet  5mg
+8. Gliclazide 
+   1. Tablet 40mg
+   2. Tablet 80mg
+9. Hydrocortisone 
+   1. Sodium succinate for Injection 100mg Vial
+   2. Tablet 10mg
+   3. Tablet 5mg
+10. Hydroxyprogesterone Injection 250mg/mL Ampoule
+11. Insulin 
+   1. Injection (Soluble Insulin) 1000 IU in 10ml derived from human
+   2. Insulin Isophane Injection (NPH Insulin) derived from human 1000IU in 10mL (mixtard insulin ?)
+12. Medroxyprogesterone Acetate Injection 150mg/1mL Vial
+13. Metformin 
+   1. Modified release Tablet 500mg
+   2. Metformin Tablet 500mg
+14. Methylprednisolone 
+   1. Acetate  Injection 40mg/mL Vial
+   2.  Sodium succinate for Injection 1g Vial
+   3. Sodium Succinate for Injection 500mg Vial
+   4. Tablet 4mg
+15. Norethisterone Tablet 5mg
+16. Prednisolone 
+   1. Tablet 20mg
+   2. Tablet 5mg
+17. Sitagliptin 
+   1. Tablet  50mg
+   2. Tablet 100mg
+18. Testosterone 
+   1. Enanthate Injection 250mg/1mL Ampoule
+   2. Undecanoate Injection 250mg /mL in 4mL Vial
+19. Thyroxine 
+   1. Tablet  25microgram
+   2. Tablet 100microgram
+   3. Tablet 50microgram
+20. Vasopressin Injection 20 IU in 1mL  Ampoule
+21. Zoledronic Acid concentrate for Intravenous Infusion 4mg  in 5mL Vial
+
+
 
 
 Drugs acting on the gastrointestinal system
-Bisacodyl 
-Suppository 10mg (Adult)
-Suppository 5mg
-Tablet 10mg
-Tablet 5mg
-Domperidone 
-Suppository 10mg
-Suppository 30mg
-Syrup 5mg/5mL in 60mL Bottle
-Tablet 10mg
-Famotidine Tablet 20mg
-Hyoscine Butyl bromide 
-Injection 20mg in 1mL Ampoule
-Tablet 10mg
-Iso-osmotic bowel cleansing preparation (Polyethylene glycol 58g-60g)
-Lactulose 
-Oral solution  (3.0g-3.7g)/5mL, 500mL Bottle
-Syrup 3.0-3.7g in 5mL, 120mL Bottle
-Loperamide Tablet/Capsule 2mg
-Mebeverine Hydrochloride Tablet 135mg
-Metoclopramide 
-Injection 10mg/2mL Ampoule
-Tablet 10mg
-Omeprazole
-Capsule/Tablet 10mg
-Capsule/Tablet 20mg
-Sodium Injection 40mg Vial
-Ranitidine Injection 50mg/2mL Ampoule
-Rifaximin Tablet 550mg
-Sodium Bicarbonate Powder
-Sodium Biphosphate 1.6gand Sodium phosphate 0.6g enema in 10mL,120mL  Bottle
-Sulphasalazine Tablet 500mg
-Terlipressin Acetate (Solution for) Injection 1mg Vial/Ampoule
-Ursodeoxycholic Acid (Ursodiol) 
-Tablet 150mg
- Tablet 300mg
+1. Bisacodyl 
+   1. Suppository 10mg (Adult)
+   2. Suppository 5mg
+   3. Tablet 10mg
+   4. Tablet 5mg
+2. Domperidone 
+   1. Suppository 10mg
+   2. Suppository 30mg
+   3. Syrup 5mg/5mL in 60mL Bottle
+   4. Tablet 10mg
+3. Famotidine Tablet 20mg
+4. Hyoscine Butyl bromide 
+   1. Injection 20mg in 1mL Ampoule
+   2. Tablet 10mg
+5. Iso-osmotic bowel cleansing preparation (Polyethylene glycol 58g-60g)
+6. Lactulose 
+   1. Oral solution  (3.0g-3.7g)/5mL, 500mL Bottle
+   2. Syrup 3.0-3.7g in 5mL, 120mL Bottle
+7. Loperamide Tablet/Capsule 2mg
+8. Mebeverine Hydrochloride Tablet 135mg
+9. Metoclopramide 
+   1. Injection 10mg/2mL Ampoule
+   2. Tablet 10mg
+10. Omeprazole
+   1. Capsule/Tablet 10mg
+   2. Capsule/Tablet 20mg
+   3. Sodium Injection 40mg Vial
+11. Ranitidine Injection 50mg/2mL Ampoule
+12. Rifaximin Tablet 550mg
+13. Sodium Bicarbonate Powder
+14. Sodium Biphosphate 1.6gand Sodium phosphate 0.6g enema in 10mL,120mL  Bottle
+15. Sulphasalazine Tablet 500mg
+16. Terlipressin Acetate (Solution for) Injection 1mg Vial/Ampoule
+17. Ursodeoxycholic Acid (Ursodiol) 
+   1. Tablet 150mg
+   2.  Tablet 300mg
+
+
 
 
 Drugs acting on the eye
-Acetazolamide Tablet 250mg
-Acyclovir Eye Ointment 3% w/w, 4.5g-5g Tube
-Atropine Sulphate Eye Drops 1%, 5mL-10mL Dropper bottle
-Balanced salt solution 500ml plastic bottle
-Bimatoprost ophthalmic suspension 300mcg/mL, 3mL Vial
-Brilliant blue G 0.05% in 1mL Vial
-Brimonidine Tartrate Eye drops 0.15%, 5mL Vial
-Brinzolamide Eye drops
- 10mg/1mL with  Timolol Maleate 5mg /1mL in 5mL Dropper bottle
- 1%, in 5mL Dropper bottle
-Chloramphenicol Eye Ointment 1%, 3.5g Tube
-Ciprofloxacin Eye drop 0.3%, 5mL Dropper bottle
-Dexamethasone Intravitreal Implant 0.7mg
-Fusidic acid Eye Drops 1% w/w (Sustain released) Dropper bottle
-Gentamicin Eye/Ear Drops 0.3% w/v 5mL-10mL, Dropper bottle
-Lidocaine (Lignocaine) 
-Injection 2%, 5mL for Ophthalmic  use (preservative free)  Vial/Ampoule
-  Ophthalmic gel 2%  in 30g Tube
-Moxifloxacin hydrochloride 
-Ophthalmic solution 0.5% w/v , 5mL Dropper bottle
- Ophthalmic solution 0.5% w/v, 5mL Dropper bottle (Preservative free)
-Pilocarpine Nitrate Eye Drops 4% in 10mL -15mL  Dropper Bottle
-Prednisolone Acetate Ophthalmic Suspension 1% w/v, 5mL Dropper bottle
-Sodium Chloride Eye Drops 5 % ,  10mL-15mL Vial/Bottle
-Sodium Hyaluronate 1.5%-3% + Sodium Chondrotin Sulfate 4% 0.5mL -0.75mL Pre-filled syringe
-Sodium Hyaluronate 1.8% 1mL-1.5mL, Pre-filled syringe
-Tetracycline Hydrochloride Ophthalmic Ointment 1% w/w, 3.5g-5g Tube
-Timolol maleate Eye Drops 0.5%, 5mL Vial
-Tobramycin 
-0.3% Ophthalmic Solution, 5mL Vial, sterile
-T 0.3% Sterile Ophthalmic Solution, 5mL
-0.3% with Dexamethasone 0.1% Eye drops,5mL-10mL  Dropper Bottle
-Tropicamide 
-0.8% with Phenylephrine Hydrochloride 5% Eye drops 5mL - 15mL Dropper Bottle
- Eye Drops 1% , 5mL-15mL Dropper bottle
+1. Acetazolamide Tablet 250mg
+2. Acyclovir Eye Ointment 3% w/w, 4.5g-5g Tube
+3. Atropine Sulphate Eye Drops 1%, 5mL-10mL Dropper bottle
+4. Balanced salt solution 500ml plastic bottle
+5. Bimatoprost ophthalmic suspension 300mcg/mL, 3mL Vial
+6. Brilliant blue G 0.05% in 1mL Vial
+7. Brimonidine Tartrate Eye drops 0.15%, 5mL Vial
+8. Brinzolamide Eye drops
+   1.  10mg/1mL with  Timolol Maleate 5mg /1mL in 5mL Dropper bottle
+   2.  1%, in 5mL Dropper bottle
+9. Chloramphenicol Eye Ointment 1%, 3.5g Tube
+10. Ciprofloxacin Eye drop 0.3%, 5mL Dropper bottle
+11. Dexamethasone Intravitreal Implant 0.7mg
+12. Fusidic acid Eye Drops 1% w/w (Sustain released) Dropper bottle
+13. Gentamicin Eye/Ear Drops 0.3% w/v 5mL-10mL, Dropper bottle
+14. Lidocaine (Lignocaine) 
+   1. Injection 2%, 5mL for Ophthalmic  use (preservative free)  Vial/Ampoule
+   2.   Ophthalmic gel 2%  in 30g Tube
+15. Moxifloxacin hydrochloride 
+   1. Ophthalmic solution 0.5% w/v , 5mL Dropper bottle
+   2.  Ophthalmic solution 0.5% w/v, 5mL Dropper bottle (Preservative free)
+16. Pilocarpine Nitrate Eye Drops 4% in 10mL -15mL  Dropper Bottle
+17. Prednisolone Acetate Ophthalmic Suspension 1% w/v, 5mL Dropper bottle
+18. Sodium Chloride Eye Drops 5 % ,  10mL-15mL Vial/Bottle
+19. Sodium Hyaluronate 1.5%-3% + Sodium Chondrotin Sulfate 4% 0.5mL -0.75mL Pre-filled syringe
+20. Sodium Hyaluronate 1.8% 1mL-1.5mL, Pre-filled syringe
+21. Tetracycline Hydrochloride Ophthalmic Ointment 1% w/w, 3.5g-5g Tube
+22. Timolol maleate Eye Drops 0.5%, 5mL Vial
+23. Tobramycin 
+   1. 0.3% Ophthalmic Solution, 5mL Vial, sterile
+   2. T 0.3% Sterile Ophthalmic Solution, 5mL
+   3. 0.3% with Dexamethasone 0.1% Eye drops,5mL-10mL  Dropper Bottle
+24. Tropicamide 
+   1. 0.8% with Phenylephrine Hydrochloride 5% Eye drops 5mL - 15mL Dropper Bottle
+   2.  Eye Drops 1% , 5mL-15mL Dropper bottle
 
-Drugs used in the treatment of diseases of the ear, nose and oropharynx	
-Beclomethasone 
-Nasal Spray 100microgram/metered dose, 200 dose unit
-Sodium Phosphate 0.1% with Neomycin Sulphate 0.5% for Eye,Ear or Nasal drops 5mL-7.5mL Dropper Bottle
-Betamethasone Sodium phosphate for Eye, Ear or Nasal drops 0.1% in 5mL-7.5mL Dropper bottle
-Chlorhexidine 0.2% Mouth Wash 60mL-100mL Bottle
-Ciprofloxacin Ear drop 0.3% w/v, 5mL Dropper bottle
-Clotrimazole 
-1% with Lidocaine 2% w/v Ear drops 10mL-20mL Dropper bottle
-Mouth paint 1%, 15mL Bottle
-Docusate Sodium Ear drops 0.5%, 10mL Dropper bottle
-Fluticasone Nasal Spray 50microgram/metered dose, 120 dose unit
-Miconazole Oro mucosal gel 40g Tube/Container
-Oxytetracycline 3% and Hydrocortisone acetate 1% Ointment 15g Tube
-Tobramycin Ear drops 
-0.3%, 5mL Dropper bottle 
-0.3% w/v  with Dexamethasone 0.1% w/v Ear drops, 5mL-10mL Dropper bottle
-Xylometazoline Hydrochloride Nasal drops 
-0.1% in 10mL Dropper bottle
-0.05% w/v in 10mL Dropper Bottle
 
-Drugs acting on the skin		
-Acitretin Capsule 10mg
-Adapalene Gel 0.1%w/w,10g-15g Tube
-Alcohol based Hand Rub (75%-85%)  500mL Bottle
-Benzoyl Peroxide 
-Gel 2.5%, 20g Tube
- Gel 5%, 20g Tube
-Benzyl benzoate application, 25% w/v, 500mL Bottle
-Betamethasone Valerate 
-Cream 0.1%w/w 15g Tube
- Ointment 0.1%,w/w in 15g Tube
-Cetrimide powder 500g Tin
-Clindamycin Gel 1% w/w ,10g Tube
-Clobetasol Ointment 0.05% w/w 15g Tube
-Clotrimazole Cream 1%,15g Tube
-Ethyl alcohol 70%-75% OR   Isopropyl alcohol 70%-75%
-Fluocinolone Cream 0.025%, w/w in 15g Tube
-Framycetin Sulphate Cream 1% w/w 20g Tube
-Fusidic acid 
-2%+Betamethasone 0.1% cream 10g-15g Tube
- Cream 2%  w/w 5g Tube
-Hydrocortisone Cream
- 0.5% with Clioquinol 3%,15g Tube
- 1%  w/v in 15g Tube
- 1% , 5g Tube
-Hydrocortisone Ointment 
-1%, (w/w) in 5g Tube
-1%, w/w in 15g Collapsible Tube
-Hydrogen Peroxide Solution 6% w/v 400mL-500mL Bottle
-Isopropyl alcohol/Ethanol 75% - 85% (v/v), 5L Container
-Metronidazole Gel 0.75%-1% w/w, 30g Tube
-Miconazole Cream 2% w/w, 15g Tube
-Mometasone Furoate 
-Cream 0.1%, 5g Tube
- Cream/Ointment 0.1%,15g Tube
-Mupirocin 
-2% Cream 5g Tube
- 2% Ointment 5g Tube
-Permethrin 
-cream 5%, 15g tube
-Lotion 5%w/v, 60mL  Bottle
-Potassium Permanganate Crystal
-Povidone Iodine 
-Aqueous Solution 7.5% w/v for Surgical Scrub 500mL Bottle
-Ointment 5% w/w, 15g Tube (available iodine 0.5% w/w)
-Solution 10% w/v, 500mL Bottle
-Precipitated Sulphur Powder
-Silver Nitrate Crystals
-Silver Sulphadiazine Cream 1%, w/w 500g Jar
-Sodium Chloride Crystals
-Terbinafine Cream 1%w/w, 15g Tube
-Tretinoin Cream 0.025%,15g Tube
-Zinc Oxide Powder
+Drugs used in the treatment of diseases of the ear, nose and oropharynx        
+1. Beclomethasone 
+   1. Nasal Spray 100microgram/metered dose, 200 dose unit
+   2. Sodium Phosphate 0.1% with Neomycin Sulphate 0.5% for Eye,Ear or Nasal drops 5mL-7.5mL Dropper Bottle
+2. Betamethasone Sodium phosphate for Eye, Ear or Nasal drops 0.1% in 5mL-7.5mL Dropper bottle
+3. Chlorhexidine 0.2% Mouth Wash 60mL-100mL Bottle
+4. Ciprofloxacin Ear drop 0.3% w/v, 5mL Dropper bottle
+5. Clotrimazole 
+   1. 1% with Lidocaine 2% w/v Ear drops 10mL-20mL Dropper bottle
+   2. Mouth paint 1%, 15mL Bottle
+6. Docusate Sodium Ear drops 0.5%, 10mL Dropper bottle
+7. Fluticasone Nasal Spray 50microgram/metered dose, 120 dose unit
+8. Miconazole Oro mucosal gel 40g Tube/Container
+9. Oxytetracycline 3% and Hydrocortisone acetate 1% Ointment 15g Tube
+10. Tobramycin Ear drops 
+   1. 0.3%, 5mL Dropper bottle 
+   2. 0.3% w/v  with Dexamethasone 0.1% w/v Ear drops, 5mL-10mL Dropper bottle
+11. Xylometazoline Hydrochloride Nasal drops 
+   1. 0.1% in 10mL Dropper bottle
+   2. 0.05% w/v in 10mL Dropper Bottle
 
-Drugs used in the treatment of malignant diseases & for immunosuppression	
-Abiraterone Acetate Tablet 250mg
-Anastrozole Tablet 1mg
-Azathioprine Tablet 50mg
-Basiliximab Injection 20mg for IV use 5mL (with solvent)
-Bevacizumab 
-Injection 100mg/4mL Vial
-Injection 400mg/16mL Vial
-Bicalutamide Tablet 50mg
-Bortezomib 
-Injection 1mg Vial
-Injection 2mg Vial
-Capecitabine Tablet 500mg
-Carboplatin 
-Injection 150mg in 15mL Vial (with suitable diluent)
- Injection 450mg in 45mL Vial
-Cisplatin 
-Injection 10mg/10mL Vial
-Injection 50mg/50mL Vial
-Cyclophosphamide 
-for Injection 1g Vial
-for Injection 200mg Vial
- Tablet 50mg
-Cyclosporin 
-Capsule 100mg
-Capsule 25mg
- Capsule 50mg
-Dacarbazine for injection 200mg Vial
-Dactinomycin for Injection (Actinomycin D), 500microgram Vial
-Daunorubicin Hydrochloride for Injection 20mg Vial
-Docetaxel
- Injection 20mg in 0.5mL-2mL Vial
-Docetaxel Injection, 80mg/2mL Vial
-Doxorubicin Hydrochloride
- Injection 10mg Vial
- Injection 2mg/mL 25mL Vial
-Enzalutamide Capsule 40mg
-Erlotinib Hydrochloride Tablet 150mg
-Etoposide Injection 100mg Vial
-Everolimus Tablet 0.25mg
-Filgrastim Injection 300microgram in 0.5mL/1mL Prefilled syringe/Vial
-Fluorouracil 
-Injection 1g/20mL Vial
- Injection 250mg/10mL Vial
-Flutamide Tablet 250mg
-Fulvestrant  Solution for Injection 50mg/mL, 5mL Pre-filled syringe
-Gefitinib Tablet 250mg
-Gemcitabine Hydrochloride 
-Injection 200mg Vial
-Injection 1g Vial
-Goserelin Acetate 
-3.6mg Implant in Syringe Applicator
- Implant 10.8mg (in syringe applicator)
-Hydroxyurea /Hydroxycarbamide Capsule 500mg
-Imatinib Mesylate Capsule/Tablet 
-400mg
-100mg
-Irinotecan Hydrochloride Trihydrate Injection 1
-00mg in 5mL Vial
-40mg in 2mL Vial
-Lapatinib Tablet 250mg
-Lecucovorin Calcium (Folinic acid ) 
-Tablet 15mg
- Injection 10mg/mL in 5mL Vial/Ampoule
- Injection 15mg in 2mL Ampoule/Vial
-Lenalidomide 
-Capsule 10mg
-Capsule 5mg
-Letrozole Tablet 2.5mg
-Mercaptopurine Tablet 50mg
-Mesna Injection 200mg in 2mL Vial/Ampoule
-Methotrexate 
-Injection 1g/10mL Vial
- Injection 50mg/2mL Vial
-Injection 50mg/2mL Vial (without preservatives)
-Tablet 2.5mg
-Mycophenolate Mofetil 
-Capsule/Tablet 250mg
- Capsule/Tablet 500mg
-Mycophenolic Acid 
-Tablet 180mg
- Tablet 360mg
-Octreotide Injection 50microgram in 1mL Ampoule
-Olaparib Capsule 50mg
-Oxaliplatin Injection 
-100mg in 20mL Vial (as lyophilized powder)
- 50mg in 10mL Vial (as lyophilized powder)
-Paclitaxel 
-Injection 260mg
-Injection 30mg in 5mL Vial
-Palbociclib Capsule 125mg
-Pazopanib Tablet 200mg
-Pemetrexed 
-Injection 100mg Vial
-Injection 500mg Vial
-Rituximab 
-Injection 100mg in 10mL Vial
-Injection 500mg in 50mL Vial
-Sorafenib Tablet 200mg
-Tacrolimus 
-Capsule 0.5mg
-Capsule 1mg
-Tamoxifen Tablet 20mg
-Temozolomide 
-Capsule 100mg
- Capsule 250mg
-Thalidomide 
-Capsule 50mg
-T Capsule 50mg
-Tocilizumab  
-concentrate solution for Infusion 80mg/4mL Vial
-concentrate solution for infusion 200mg in 10mL Vial
-Infusion 400mg/20mL Vial
-Trastuzumab Injection 440mg in 20mL Vial (with solvent)
-Vinblastine Sulphate Injection 10mg/10mL Vial
-Vincristine Injection 1mg/mL Vial
 
-Drugs used in obstetrics, gynecology & urinary tract disorders	
-Carboprost Tromethamine Intramuscular Injection 250microgram in 1mL Vial	
-Citric Acid Crystals
-Clotrimazole Pessaries 100mg
-Dinoprostone 
-Vaginal Gel 400microgram/mL, 2.5mL (1mg/2.5mL) Tube
- Vaginal Tablet 3mg
-Ergometrine (Ergonovine) Injection 500microgram/mL Ampoule
-Estrogen Vaginal Cream 0.01%, 15g Tube
-Etonogestrel 68mg (Single rod Subdermal implant in a pre-loaded, sterile and disposable)
-Levonorgestrel 0.15 mg + Ethinylestradiol 0.03mg Tablet
-Levonorgestrel 75mg (Two rod subdermal implant)
-Levonorgestrel impregnated Intra uterine device releasing 20microgram/24h
-Misoprostol Tablet 200micrograms
-Oxytocin Injection 
-2IU in 2mL Ampoule
- 5IU in 1mL  Ampoule
-Potassium citrate 
-Oral Solution 200mL Bottle
- Extended Release Tablet 1080mg
- (in powder form)
-Sodium Citrate Oral Solution 500mg/334mg per 5mL in 100mL Bottle
-Tamsulosin Capsule 0.4mg
+Drugs acting on the skin                
+1. Acitretin Capsule 10mg
+2. Adapalene Gel 0.1%w/w,10g-15g Tube
+3. Alcohol based Hand Rub (75%-85%)  500mL Bottle
+4. Benzoyl Peroxide 
+   1. Gel 2.5%, 20g Tube
+   2.  Gel 5%, 20g Tube
+5. Benzyl benzoate application, 25% w/v, 500mL Bottle
+6. Betamethasone Valerate 
+   1. Cream 0.1%w/w 15g Tube
+   2.  Ointment 0.1%,w/w in 15g Tube
+7. Cetrimide powder 500g Tin
+8. Clindamycin Gel 1% w/w ,10g Tube
+9. Clobetasol Ointment 0.05% w/w 15g Tube
+10. Clotrimazole Cream 1%,15g Tube
+11. Ethyl alcohol 70%-75% OR   Isopropyl alcohol 70%-75%
+12. Fluocinolone Cream 0.025%, w/w in 15g Tube
+13. Framycetin Sulphate Cream 1% w/w 20g Tube
+14. Fusidic acid 
+   1. 2%+Betamethasone 0.1% cream 10g-15g Tube
+   2.  Cream 2%  w/w 5g Tube
+15. Hydrocortisone Cream
+   1.  0.5% with Clioquinol 3%,15g Tube
+   2.  1%  w/v in 15g Tube
+   3.  1% , 5g Tube
+16. Hydrocortisone Ointment 
+   1. 1%, (w/w) in 5g Tube
+   2. 1%, w/w in 15g Collapsible Tube
+17. Hydrogen Peroxide Solution 6% w/v 400mL-500mL Bottle
+18. Isopropyl alcohol/Ethanol 75% - 85% (v/v), 5L Container
+19. Metronidazole Gel 0.75%-1% w/w, 30g Tube
+20. Miconazole Cream 2% w/w, 15g Tube
+21. Mometasone Furoate 
+   1. Cream 0.1%, 5g Tube
+   2.  Cream/Ointment 0.1%,15g Tube
+22. Mupirocin 
+   1. 2% Cream 5g Tube
+   2.  2% Ointment 5g Tube
+23. Permethrin 
+   1. cream 5%, 15g tube
+   2. Lotion 5%w/v, 60mL  Bottle
+24. Potassium Permanganate Crystal
+25. Povidone Iodine 
+   1. Aqueous Solution 7.5% w/v for Surgical Scrub 500mL Bottle
+   2. Ointment 5% w/w, 15g Tube (available iodine 0.5% w/w)
+   3. Solution 10% w/v, 500mL Bottle
+26. Precipitated Sulphur Powder
+27. Silver Nitrate Crystals
+28. Silver Sulphadiazine Cream 1%, w/w 500g Jar
+29. Sodium Chloride Crystals
+30. Terbinafine Cream 1%w/w, 15g Tube
+31. Tretinoin Cream 0.025%,15g Tube
+32. Zinc Oxide Powder
 
-Drugs used in the treatment of musculoskeletal &  joint diseases		
-Allopurinol Tablet 100mg
-Celecoxib Capsule 100mg
-Celecoxib Capsule 200mg
-Diclofenac Sodium 
-Suppository 100mg
- Suppository 12.5mg
- Suppository 25mg
- Suppository 50mg
- Tablet 25 mg
-Tablet 50mg
-Hydroxychloroquine Sulphate Tablet 200mg
-Ibuprofen Tablet 200mg
-Indomethacin Capsule 25mg
-Leflunomide 
-Tablet 10 mg
-Tablet 20 mg
-Mefenamic Acid Tablet 500mg
-Meloxicam Tablet 7.5mg
-Naproxen Tablet 250mg
 
-Drugs used in anaesthesia	
-Atracurium Besylate Injection 25mg /2.5mL Ampoule
-Atropine Sulphate Injection  600microgram in 1mL Ampoule
-Bupivacaine Hydrochloride
- Injection 0.5% with Glucose 8% in 4mL Ampoule
-Injection  0.5%, 10mL Ampoule with sterile wrap
-Desflurane 240mL Bottle
-Dexmedetomidine Hydrochloride Injection 200microgram/2mL Vial
-Etomidate Injection 20mg in 10mL Vial/Ampoule
-Flumazenil Injection 500microgram in 5mL Vial/Ampoule
-Glycopyrrolate Injection 200microgram in 1mL Vial
-Isoflurane for Inhalational Anaesthesia in 250mL Bottle
-Ketamine Hydrocloride Injection 
-200mg in 20mL Vial
- 500mg in 10mL Vial
-Lidocaine (Lignocaine )
- 2% and Adrenalin 1:80,000 Injection 30mL  Vial
- Hydrochloride Injection  2% w/v, 20mL Vial
- Hydrochloride Injection 2% w/v, 5mL Single dose Vial
- Hydrochloride Gel 2% w/v (Sterile), 30g Tube
-Topical Aerosol 10%, 50mL Bottle
-Midazolam 
-Injection 5mg in 1mL Ampoule
-Maleate Tablet 7.5mg
-Naloxone Injection 400microgram/1mL Ampoule
-Neostigmine 
-Injection 0.5mg in 1mL Ampoule
- Injection 2.5mg in 1mL Ampoule
-Propofol 
-1% Injection for Intravenous Infusion 50mL Ampoule/Vial
- IV infusion 20mL Ampoule/Vial
-Rocuronium Bromide Injection 50mg in 5mL Vial
-Sevoflurane for Anaesthetic Inhalation 200mL-300mL Bottle
-Suxamethonium (Succinylcholine) Chloride Injection 100mg in 2mL Ampoule
-Thiopentone sodium Injection 500mg Vial
-Vecuronium Bromide Injection 10mg Vial
+Drugs used in the treatment of malignant diseases & for immunosuppression        
+1. Abiraterone Acetate Tablet 250mg
+2. Anastrozole Tablet 1mg
+3. Azathioprine Tablet 50mg
+4. Basiliximab Injection 20mg for IV use 5mL (with solvent)
+5. Bevacizumab 
+   1. Injection 100mg/4mL Vial
+   2. Injection 400mg/16mL Vial
+6. Bicalutamide Tablet 50mg
+7. Bortezomib 
+   1. Injection 1mg Vial
+   2. Injection 2mg Vial
+8. Capecitabine Tablet 500mg
+9. Carboplatin 
+   1. Injection 150mg in 15mL Vial (with suitable diluent)
+   2.  Injection 450mg in 45mL Vial
+10. Cisplatin 
+   1. Injection 10mg/10mL Vial
+   2. Injection 50mg/50mL Vial
+11. Cyclophosphamide 
+   1. for Injection 1g Vial
+   2. for Injection 200mg Vial
+   3.  Tablet 50mg
+12. Cyclosporin 
+   1. Capsule 100mg
+   2. Capsule 25mg
+   3.  Capsule 50mg
+13. Dacarbazine for injection 200mg Vial
+14. Dactinomycin for Injection (Actinomycin D), 500microgram Vial
+15. Daunorubicin Hydrochloride for Injection 20mg Vial
+16. Docetaxel
+   1.  Injection 20mg in 0.5mL-2mL Vial
+   2. Docetaxel Injection, 80mg/2mL Vial
+17. Doxorubicin Hydrochloride
+   1.  Injection 10mg Vial
+   2.  Injection 2mg/mL 25mL Vial
+18. Enzalutamide Capsule 40mg
+19. Erlotinib Hydrochloride Tablet 150mg
+20. Etoposide Injection 100mg Vial
+21. Everolimus Tablet 0.25mg
+22. Filgrastim Injection 300microgram in 0.5mL/1mL Prefilled syringe/Vial
+23. Fluorouracil 
+   1. Injection 1g/20mL Vial
+   2.  Injection 250mg/10mL Vial
+24. Flutamide Tablet 250mg
+25. Fulvestrant  Solution for Injection 50mg/mL, 5mL Pre-filled syringe
+26. Gefitinib Tablet 250mg
+27. Gemcitabine Hydrochloride 
+   1. Injection 200mg Vial
+   2. Injection 1g Vial
+28. Goserelin Acetate 
+   1. 3.6mg Implant in Syringe Applicator
+   2.  Implant 10.8mg (in syringe applicator)
+29. Hydroxyurea /Hydroxycarbamide Capsule 500mg
+30. Imatinib Mesylate Capsule/Tablet 
+   1. 400mg
+   2. 100mg
+31. Irinotecan Hydrochloride Trihydrate Injection 1
+   1. 00mg in 5mL Vial
+   2. 40mg in 2mL Vial
+32. Lapatinib Tablet 250mg
+33. Lecucovorin Calcium (Folinic acid ) 
+   1. Tablet 15mg
+   2.  Injection 10mg/mL in 5mL Vial/Ampoule
+   3.  Injection 15mg in 2mL Ampoule/Vial
+34. Lenalidomide 
+   1. Capsule 10mg
+   2. Capsule 5mg
+35. Letrozole Tablet 2.5mg
+36. Mercaptopurine Tablet 50mg
+37. Mesna Injection 200mg in 2mL Vial/Ampoule
+38. Methotrexate 
+   1. Injection 1g/10mL Vial
+   2.  Injection 50mg/2mL Vial
+   3. Injection 50mg/2mL Vial (without preservatives)
+   4. Tablet 2.5mg
+39. Mycophenolate Mofetil 
+   1. Capsule/Tablet 250mg
+   2.  Capsule/Tablet 500mg
+40. Mycophenolic Acid 
+   1. Tablet 180mg
+   2.  Tablet 360mg
+41. Octreotide Injection 50microgram in 1mL Ampoule
+42. Olaparib Capsule 50mg
+43. Oxaliplatin Injection 
+   1. 100mg in 20mL Vial (as lyophilized powder)
+   2.  50mg in 10mL Vial (as lyophilized powder)
+44. Paclitaxel 
+   1. Injection 260mg
+   2. Injection 30mg in 5mL Vial
+45. Palbociclib Capsule 125mg
+46. Pazopanib Tablet 200mg
+47. Pemetrexed 
+   1. Injection 100mg Vial
+   2. Injection 500mg Vial
+48. Rituximab 
+   1. Injection 100mg in 10mL Vial
+   2. Injection 500mg in 50mL Vial
+49. Sorafenib Tablet 200mg
+50. Tacrolimus 
+   1. Capsule 0.5mg
+   2. Capsule 1mg
+51. Tamoxifen Tablet 20mg
+52. Temozolomide 
+   1. Capsule 100mg
+   2.  Capsule 250mg
+53. Thalidomide 
+   1. Capsule 50mg
+   2. T Capsule 50mg
+54. Tocilizumab  
+   1. concentrate solution for Infusion 80mg/4mL Vial
+   2. concentrate solution for infusion 200mg in 10mL Vial
+   3. Infusion 400mg/20mL Vial
+55. Trastuzumab Injection 440mg in 20mL Vial (with solvent)
+56. Vinblastine Sulphate Injection 10mg/10mL Vial
+57. Vincristine Injection 1mg/mL Vial
 
-Antidotes														
-Acetylcysteine 2g in 10mL Ampoule
-Atropine Sulphate Injection 15mg in 25mL Vial
-Charcoal activated 50g  Bottle
-Fuller's earth 60g bottle
-Hydroxocobalamine Injection (Intravenous Infusion) 5g Bottle
-Methylene Blue 1% w/v Injection 10mL Ampoule
-N-Acetyl Cystine Capsule 600mg
 
-Narcotics	
-Fentanyl Citrate 
-Injection 100microgram in 2mL Ampoule
- Transdermal Self Adhesive Patches 12microgram/h - 12.5microgram/h
- Transdermal self-adhesive patches 25microgram/h
- Transdermal self-adhesive patches 50microgram/h, 20cm x 20cm
-Morphine Sulfate 
-Injection 15mg in 1mL Ampoule
- Controlled Release Tablet 10mg
- Controlled Release Tablet 15mg
- Controlled Release Tablet 30mg
-Tablet 10mg
-Tablet 15mg
-Tablet 30mg
-Pethidine Hydrochloride (Meperidine)
- Injection 50mg Ampoule
- Injection 75mg Ampoule
-Remifentanil Injection 1mg Vial/Ampoule/Bottle
+Drugs used in obstetrics, gynecology & urinary tract disorders        
+1. Carboprost Tromethamine Intramuscular Injection 250microgram in 1mL Vial        
+2. Citric Acid Crystals
+3. Clotrimazole Pessaries 100mg
+4. Dinoprostone 
+   1. Vaginal Gel 400microgram/mL, 2.5mL (1mg/2.5mL) Tube
+   2.  Vaginal Tablet 3mg
+5. Ergometrine (Ergonovine) Injection 500microgram/mL Ampoule
+6. Estrogen Vaginal Cream 0.01%, 15g Tube
+7. Etonogestrel 68mg (Single rod Subdermal implant in a pre-loaded, sterile and disposable)
+8. Levonorgestrel 0.15 mg + Ethinylestradiol 0.03mg Tablet
+9. Levonorgestrel 75mg (Two rod subdermal implant)
+10. Levonorgestrel impregnated Intra uterine device releasing 20microgram/24h
+11. Misoprostol Tablet 200micrograms
+12. Oxytocin Injection 
+   1. 2IU in 2mL Ampoule
+   2.  5IU in 1mL  Ampoule
+13. Potassium citrate 
+   1. Oral Solution 200mL Bottle
+   2.  Extended Release Tablet 1080mg
+   3.  (in powder form)
+14. Sodium Citrate Oral Solution 500mg/334mg per 5mL in 100mL Bottle
+15. Tamsulosin Capsule 0.4mg
 
+
+Drugs used in the treatment of musculoskeletal &  joint diseases                
+1. Allopurinol Tablet 100mg
+2. Celecoxib Capsule 100mg
+3. Celecoxib Capsule 200mg
+4. Diclofenac Sodium 
+   1. Suppository 100mg
+   2.  Suppository 12.5mg
+   3.  Suppository 25mg
+   4.  Suppository 50mg
+   5.  Tablet 25 mg
+   6. Tablet 50mg
+5. Hydroxychloroquine Sulphate Tablet 200mg
+6. Ibuprofen Tablet 200mg
+7. Indomethacin Capsule 25mg
+8. Leflunomide 
+   1. Tablet 10 mg
+   2. Tablet 20 mg
+9. Mefenamic Acid Tablet 500mg
+10. Meloxicam Tablet 7.5mg
+11. Naproxen Tablet 250mg
+
+
+Drugs used in anaesthesia        
+1. Atracurium Besylate Injection 25mg /2.5mL Ampoule
+2. Atropine Sulphate Injection  600microgram in 1mL Ampoule
+3. Bupivacaine Hydrochloride
+   1.  Injection 0.5% with Glucose 8% in 4mL Ampoule
+   2. Injection  0.5%, 10mL Ampoule with sterile wrap
+4. Desflurane 240mL Bottle
+5. Dexmedetomidine Hydrochloride Injection 200microgram/2mL Vial
+6. Etomidate Injection 20mg in 10mL Vial/Ampoule
+7. Flumazenil Injection 500microgram in 5mL Vial/Ampoule
+8. Glycopyrrolate Injection 200microgram in 1mL Vial
+9. Isoflurane for Inhalational Anaesthesia in 250mL Bottle
+10. Ketamine Hydrocloride Injection 
+   1. 200mg in 20mL Vial
+   2.  500mg in 10mL Vial
+11. Lidocaine (Lignocaine )
+   1.  2% and Adrenalin 1:80,000 Injection 30mL  Vial
+   2.  Hydrochloride Injection  2% w/v, 20mL Vial
+   3.  Hydrochloride Injection 2% w/v, 5mL Single dose Vial
+   4.  Hydrochloride Gel 2% w/v (Sterile), 30g Tube
+   5. Topical Aerosol 10%, 50mL Bottle
+12. Midazolam 
+   1. Injection 5mg in 1mL Ampoule
+   2. Maleate Tablet 7.5mg
+13. Naloxone Injection 400microgram/1mL Ampoule
+14. Neostigmine 
+   1. Injection 0.5mg in 1mL Ampoule
+   2.  Injection 2.5mg in 1mL Ampoule
+15. Propofol 
+   1. 1% Injection for Intravenous Infusion 50mL Ampoule/Vial
+   2.  IV infusion 20mL Ampoule/Vial
+16. Rocuronium Bromide Injection 50mg in 5mL Vial
+17. Sevoflurane for Anaesthetic Inhalation 200mL-300mL Bottle
+18. Suxamethonium (Succinylcholine) Chloride Injection 100mg in 2mL Ampoule
+19. Thiopentone sodium Injection 500mg Vial
+20. Vecuronium Bromide Injection 10mg Vial
+
+
+Antidotes                                                                                                                
+1. Acetylcysteine 2g in 10mL Ampoule
+2. Atropine Sulphate Injection 15mg in 25mL Vial
+3. Charcoal activated 50g  Bottle
+4. Fuller's earth 60g bottle
+5. Hydroxocobalamine Injection (Intravenous Infusion) 5g Bottle
+6. Methylene Blue 1% w/v Injection 10mL Ampoule
+7. N-Acetyl Cystine Capsule 600mg
+
+
+Narcotics        
+1. Fentanyl Citrate 
+   1. Injection 100microgram in 2mL Ampoule
+   2.  Transdermal Self Adhesive Patches 12microgram/h - 12.5microgram/h
+   3.  Transdermal self-adhesive patches 25microgram/h
+   4.  Transdermal self-adhesive patches 50microgram/h, 20cm x 20cm
+2. Morphine Sulfate 
+   1. Injection 15mg in 1mL Ampoule
+   2.  Controlled Release Tablet 10mg
+   3.  Controlled Release Tablet 15mg
+   4.  Controlled Release Tablet 30mg
+   5. Tablet 10mg
+   6. Tablet 15mg
+   7. Tablet 30mg
+3. Pethidine Hydrochloride (Meperidine)
+   1.  Injection 50mg Ampoule
+   2.  Injection 75mg Ampoule
+4. Remifentanil Injection 1mg Vial/Ampoule/Bottle

@@ -527,8 +527,13 @@ const Appointments: React.FC = () => {
   const handleCellClick = (date: Date, time: string) => {
     const appointment = getAppointmentAt(date, time);
     if (appointment) {
-      // Show appointment details or navigate
-      navigate(`/doctor/patient-profile/${appointment.patientId}`);
+      // For confirmed or accepted appointments, navigate to new encounter
+      if (appointment.status === AppointmentStatus.CONFIRMED || appointment.status === AppointmentStatus.ACCEPTED) {
+        navigate(`/doctor/new-encounter?appointmentId=${appointment.appointmentId}`);
+      } else {
+        // For other statuses, navigate to patient profile
+        navigate(`/doctor/patient-profile/${appointment.patientId}`);
+      }
     } else if (isWorkingDay(date) && !isDayBlocked(date)) {
       // Open scheduling modal (can be used to schedule or free busy slots)
       setSelectedCell({ date, time });
@@ -827,14 +832,20 @@ const Appointments: React.FC = () => {
                               <div className="grid grid-cols-2 gap-2">
                                 {(appointment.status === AppointmentStatus.ACCEPTED || appointment.status === AppointmentStatus.CONFIRMED) && (
                                   <button
-                                    onClick={() => navigate(`/doctor/new-encounter?appointmentId=${appointment.appointmentId}`)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/doctor/new-encounter?appointmentId=${appointment.appointmentId}`);
+                                    }}
                                     className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded hover:bg-blue-600 transition-colors"
                                   >
                                     Start Encounter
                                   </button>
                                 )}
                                 <button
-                                  onClick={() => navigate(`/doctor/patient-profile/${appointment.patientId}`)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/doctor/patient-profile/${appointment.patientId}`);
+                                  }}
                                   className="px-3 py-1.5 border border-slate-200 text-slate-600 text-xs font-bold rounded hover:bg-slate-50 transition-colors"
                                 >
                                   View Profile

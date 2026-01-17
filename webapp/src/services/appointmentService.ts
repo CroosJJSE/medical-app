@@ -1,10 +1,12 @@
 // src/services/appointmentService.ts
 
 import type { Appointment } from '@/models/Appointment';
-import { ID_PREFIXES, AppointmentStatus, DEFAULTS } from '@/enums';
+import { ID_PREFIXES, AppointmentStatus, DEFAULTS, NotificationType } from '@/enums';
 import { create, getById, update, getByPatientId, getByDoctorId } from '@/repositories/appointmentRepository';
 import { generateId } from '@/utils/idGenerator';
 import { getDoctor } from './doctorService';
+import { getPatient } from './patientService';
+import { createAppointmentNotification } from './notificationService';
 
 /**
  * Create a new appointment request (by patient)
@@ -37,6 +39,39 @@ export const createAppointment = async (
 
   await create(appointmentId, newAppointment);
   console.log('[APPOINTMENT_SERVICE] Appointment created successfully');
+
+  // Create notification for doctor (not patient - patient created it)
+  try {
+    // Get patient info for notification
+    const patient = await getPatient(appointmentData.patientId);
+    const patientName = patient?.personalInfo 
+      ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`.trim()
+      : patient?.displayName || 'A patient';
+
+    console.log('[APPOINTMENT_SERVICE] Creating notification for doctor', {
+      doctorId: appointmentData.doctorId,
+      patientName,
+      appointmentId,
+    });
+
+    await createAppointmentNotification(
+      appointmentData.doctorId, // Notify doctor, not patient
+      NotificationType.APPOINTMENT_REQUEST_CREATED,
+      appointmentId,
+      {
+        patientName,
+        appointmentDate: appointmentData.dateTime,
+        appointmentStatus: AppointmentStatus.PENDING,
+        reason: appointmentData.reason,
+      }
+    );
+
+    console.log('[APPOINTMENT_SERVICE] Notification created successfully');
+  } catch (notificationError) {
+    // Log error but don't fail appointment creation
+    console.error('[APPOINTMENT_SERVICE] Failed to create notification:', notificationError);
+  }
+
   return newAppointment;
 };
 
@@ -60,8 +95,51 @@ export const updateAppointment = async (
   updates: Partial<Appointment>
 ): Promise<void> => {
   console.log('[APPOINTMENT_SERVICE] updateAppointment called', { appointmentId, updates });
+  
+  const appointment = await getAppointment(appointmentId);
+  if (!appointment) {
+    throw new Error('Appointment not found');
+  }
+
+  const oldStatus = appointment.status;
+  const newStatus = updates.status;
+
   await update(appointmentId, { ...updates, updatedAt: new Date() });
   console.log('[APPOINTMENT_SERVICE] Appointment updated successfully');
+
+  // Create notification if status changed to COMPLETED or NO_SHOW
+  if (newStatus && newStatus !== oldStatus) {
+    try {
+      const patient = await getPatient(appointment.patientId);
+      const doctor = await getDoctor(appointment.doctorId);
+      
+      const patientName = patient?.personalInfo 
+        ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`.trim()
+        : patient?.displayName || 'A patient';
+      
+      const doctorName = doctor?.professionalInfo
+        ? `${doctor.professionalInfo.title || ''} ${doctor.professionalInfo.firstName} ${doctor.professionalInfo.lastName}`.trim()
+        : doctor?.displayName || 'The doctor';
+
+      if (newStatus === AppointmentStatus.COMPLETED) {
+        // Notify patient when appointment is completed
+        await createAppointmentNotification(
+          appointment.patientId,
+          NotificationType.APPOINTMENT_COMPLETED,
+          appointmentId,
+          {
+            doctorName,
+            appointmentDate: appointment.dateTime,
+            appointmentStatus: AppointmentStatus.COMPLETED,
+          }
+        );
+        console.log('[APPOINTMENT_SERVICE] Notification sent to patient: appointment completed');
+      }
+      // Note: NO_SHOW typically doesn't need notification to patient (they didn't show up)
+    } catch (notificationError) {
+      console.error('[APPOINTMENT_SERVICE] Failed to create notification:', notificationError);
+    }
+  }
 };
 
 /**
@@ -77,6 +155,11 @@ export const cancelAppointment = async (
 ): Promise<void> => {
   console.log('[APPOINTMENT_SERVICE] cancelAppointment called', { appointmentId, userId, reason });
   
+  const appointment = await getAppointment(appointmentId);
+  if (!appointment) {
+    throw new Error('Appointment not found');
+  }
+
   await update(appointmentId, {
     status: AppointmentStatus.CANCELLED,
     cancellationReason: reason,
@@ -86,6 +169,53 @@ export const cancelAppointment = async (
   });
   
   console.log('[APPOINTMENT_SERVICE] Appointment cancelled successfully');
+
+  // Create notification for the other party
+  try {
+    const patient = await getPatient(appointment.patientId);
+    const doctor = await getDoctor(appointment.doctorId);
+    
+    const patientName = patient?.personalInfo 
+      ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`.trim()
+      : patient?.displayName || 'A patient';
+    
+    const doctorName = doctor?.professionalInfo
+      ? `${doctor.professionalInfo.title || ''} ${doctor.professionalInfo.firstName} ${doctor.professionalInfo.lastName}`.trim()
+      : doctor?.displayName || 'The doctor';
+
+    // Notify the other party
+    if (userId === appointment.doctorId) {
+      // Doctor cancelled - notify patient
+      await createAppointmentNotification(
+        appointment.patientId,
+        NotificationType.APPOINTMENT_CANCELLED,
+        appointmentId,
+        {
+          doctorName,
+          appointmentDate: appointment.dateTime,
+          appointmentStatus: AppointmentStatus.CANCELLED,
+          cancellationReason: reason,
+        }
+      );
+      console.log('[APPOINTMENT_SERVICE] Notification sent to patient: appointment cancelled');
+    } else if (userId === appointment.patientId) {
+      // Patient cancelled - notify doctor
+      await createAppointmentNotification(
+        appointment.doctorId,
+        NotificationType.APPOINTMENT_CANCELLED,
+        appointmentId,
+        {
+          patientName,
+          appointmentDate: appointment.dateTime,
+          appointmentStatus: AppointmentStatus.CANCELLED,
+          cancellationReason: reason,
+        }
+      );
+      console.log('[APPOINTMENT_SERVICE] Notification sent to doctor: appointment cancelled');
+    }
+  } catch (notificationError) {
+    console.error('[APPOINTMENT_SERVICE] Failed to create notification:', notificationError);
+  }
 };
 
 /**
@@ -232,6 +362,77 @@ export const acceptAppointment = async (
   console.log('[APPOINTMENT_SERVICE] Appointment accepted successfully');
   
   const updated = await getAppointment(appointmentId);
+  
+  // Create notification for the other party
+  try {
+    const patient = await getPatient(appointment.patientId);
+    const doctor = await getDoctor(appointment.doctorId);
+    
+    const patientName = patient?.personalInfo 
+      ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`.trim()
+      : patient?.displayName || 'A patient';
+    
+    const doctorName = doctor?.professionalInfo
+      ? `${doctor.professionalInfo.title || ''} ${doctor.professionalInfo.firstName} ${doctor.professionalInfo.lastName}`.trim()
+      : doctor?.displayName || 'The doctor';
+
+    // Determine who to notify and notification type
+    if (userId === appointment.doctorId) {
+      // Doctor accepted - notify patient
+      if (updates.status === AppointmentStatus.ACCEPTED) {
+        // Doctor accepts patient's request (PENDING -> ACCEPTED) OR doctor accepts patient's amendment (AMENDED -> ACCEPTED)
+        console.log('[APPOINTMENT_SERVICE] Creating notification for patient', {
+          patientId: appointment.patientId,
+          appointmentId,
+          type: NotificationType.APPOINTMENT_ACCEPTED,
+        });
+        await createAppointmentNotification(
+          appointment.patientId,
+          NotificationType.APPOINTMENT_ACCEPTED,
+          appointmentId,
+          {
+            doctorName,
+            appointmentDate: updated!.dateTime, // Use updated dateTime in case it was amended
+            appointmentStatus: AppointmentStatus.ACCEPTED,
+          }
+        );
+        console.log('[APPOINTMENT_SERVICE] Notification sent to patient: appointment accepted', {
+          patientId: appointment.patientId,
+        });
+      } else if (updates.status === AppointmentStatus.CONFIRMED) {
+        await createAppointmentNotification(
+          appointment.patientId,
+          NotificationType.APPOINTMENT_CONFIRMED,
+          appointmentId,
+          {
+            doctorName,
+            appointmentDate: updated!.dateTime,
+            appointmentStatus: AppointmentStatus.CONFIRMED,
+          }
+        );
+        console.log('[APPOINTMENT_SERVICE] Notification sent to patient: appointment confirmed');
+      }
+    } else if (userId === appointment.patientId) {
+      // Patient accepted - notify doctor
+      if (updates.status === AppointmentStatus.CONFIRMED) {
+        // Patient accepts after doctor accepted (ACCEPTED -> CONFIRMED) OR patient accepts doctor's amendment (AMENDED -> CONFIRMED)
+        await createAppointmentNotification(
+          appointment.doctorId,
+          NotificationType.APPOINTMENT_CONFIRMED,
+          appointmentId,
+          {
+            patientName,
+            appointmentDate: updated!.dateTime, // Use updated dateTime in case it was amended
+            appointmentStatus: AppointmentStatus.CONFIRMED,
+          }
+        );
+        console.log('[APPOINTMENT_SERVICE] Notification sent to doctor: appointment confirmed');
+      }
+    }
+  } catch (notificationError) {
+    console.error('[APPOINTMENT_SERVICE] Failed to create notification:', notificationError);
+  }
+  
   return updated!;
 };
 
@@ -267,6 +468,53 @@ export const rejectAppointment = async (
   });
 
   console.log('[APPOINTMENT_SERVICE] Appointment rejected successfully');
+
+  // Create notification for the other party
+  try {
+    const patient = await getPatient(appointment.patientId);
+    const doctor = await getDoctor(appointment.doctorId);
+    
+    const patientName = patient?.personalInfo 
+      ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`.trim()
+      : patient?.displayName || 'A patient';
+    
+    const doctorName = doctor?.professionalInfo
+      ? `${doctor.professionalInfo.title || ''} ${doctor.professionalInfo.firstName} ${doctor.professionalInfo.lastName}`.trim()
+      : doctor?.displayName || 'The doctor';
+
+    // Notify the other party
+    if (userId === appointment.doctorId) {
+      // Doctor rejected - notify patient
+      await createAppointmentNotification(
+        appointment.patientId,
+        NotificationType.APPOINTMENT_REJECTED,
+        appointmentId,
+        {
+          doctorName,
+          appointmentDate: appointment.dateTime,
+          appointmentStatus: AppointmentStatus.CANCELLED,
+          cancellationReason: reason,
+        }
+      );
+      console.log('[APPOINTMENT_SERVICE] Notification sent to patient: appointment rejected');
+    } else if (userId === appointment.patientId) {
+      // Patient rejected - notify doctor
+      await createAppointmentNotification(
+        appointment.doctorId,
+        NotificationType.APPOINTMENT_REJECTED,
+        appointmentId,
+        {
+          patientName,
+          appointmentDate: appointment.dateTime,
+          appointmentStatus: AppointmentStatus.CANCELLED,
+          cancellationReason: reason,
+        }
+      );
+      console.log('[APPOINTMENT_SERVICE] Notification sent to doctor: appointment rejected');
+    }
+  } catch (notificationError) {
+    console.error('[APPOINTMENT_SERVICE] Failed to create notification:', notificationError);
+  }
 };
 
 /**
@@ -331,6 +579,58 @@ export const amendAppointment = async (
   });
   
   const updated = await getAppointment(appointmentId);
+
+  // Create notification for the other party
+  try {
+    const patient = await getPatient(appointment.patientId);
+    const doctor = await getDoctor(appointment.doctorId);
+    
+    const patientName = patient?.personalInfo 
+      ? `${patient.personalInfo.firstName} ${patient.personalInfo.lastName}`.trim()
+      : patient?.displayName || 'A patient';
+    
+    const doctorName = doctor?.professionalInfo
+      ? `${doctor.professionalInfo.title || ''} ${doctor.professionalInfo.firstName} ${doctor.professionalInfo.lastName}`.trim()
+      : doctor?.displayName || 'The doctor';
+
+    // Notify the other party
+    if (userId === appointment.doctorId) {
+      // Doctor amended - notify patient
+      await createAppointmentNotification(
+        appointment.patientId,
+        NotificationType.APPOINTMENT_AMENDED,
+        appointmentId,
+        {
+          doctorName,
+          appointmentDate: appointment.dateTime,
+          newDate: newDateTime,
+          newTime: newDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          appointmentStatus: AppointmentStatus.AMENDED,
+          reason: reason,
+        }
+      );
+      console.log('[APPOINTMENT_SERVICE] Notification sent to patient: appointment amended');
+    } else if (userId === appointment.patientId) {
+      // Patient amended - notify doctor
+      await createAppointmentNotification(
+        appointment.doctorId,
+        NotificationType.APPOINTMENT_AMENDED,
+        appointmentId,
+        {
+          patientName,
+          appointmentDate: appointment.dateTime,
+          newDate: newDateTime,
+          newTime: newDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          appointmentStatus: AppointmentStatus.AMENDED,
+          reason: reason,
+        }
+      );
+      console.log('[APPOINTMENT_SERVICE] Notification sent to doctor: appointment amended');
+    }
+  } catch (notificationError) {
+    console.error('[APPOINTMENT_SERVICE] Failed to create notification:', notificationError);
+  }
+  
   return updated!;
 };
 
