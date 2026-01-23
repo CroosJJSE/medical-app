@@ -1,0 +1,13 @@
+{
+  "name": "pdf-test-extractor",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Standalone PDF test extractor for medical reports",
+  "main": "testExtractor.js",
+  "scripts": {
+    "test": "node testExtractor.js format1.pdf"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  }
+}

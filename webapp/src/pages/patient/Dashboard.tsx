@@ -11,6 +11,7 @@ import * as testResultService from '@/services/testResultService';
 import type { Appointment } from '@/models/Appointment';
 import type { TestResult } from '@/models/TestResult';
 import { AppointmentStatus } from '@/enums';
+import { convertToDate } from '@/utils/formatters';
 import logo from '@/assets/logo.png';
 
 const Dashboard: React.FC = () => {
@@ -36,7 +37,11 @@ const Dashboard: React.FC = () => {
             apt.status === AppointmentStatus.AMENDED ||
             apt.status === AppointmentStatus.CONFIRMED
           )
-          .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
+          .sort((a, b) => {
+            const dateA = convertToDate(a.dateTime);
+            const dateB = convertToDate(b.dateTime);
+            return dateA.getTime() - dateB.getTime();
+          })
           .slice(0, 5);
         setUpcomingAppointments(upcoming);
 
@@ -292,7 +297,7 @@ const Dashboard: React.FC = () => {
                   <span className="text-xs font-medium text-[#4b5563]">
                     {(() => {
                       const now = new Date();
-                      const aptDate = apt.dateTime;
+                      const aptDate = convertToDate(apt.dateTime);
                       const diffMs = aptDate.getTime() - now.getTime();
                       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                       if (diffDays === 0) return 'Today';
@@ -332,7 +337,9 @@ const Dashboard: React.FC = () => {
                   <span className="text-xs font-medium text-[#4b5563]">
                     {(() => {
                       const now = new Date();
-                      const uploadDate = result.fileInfo?.uploadDate || new Date();
+                      const uploadDate = result.fileInfo?.uploadDate 
+                        ? convertToDate(result.fileInfo.uploadDate) 
+                        : new Date();
                       const diffMs = now.getTime() - uploadDate.getTime();
                       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
                       if (diffHours < 1) return 'Just now';

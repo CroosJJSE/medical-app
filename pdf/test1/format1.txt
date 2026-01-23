@@ -1,0 +1,18 @@
+Complete Blood Count (CBC)
+Test Name	Result	Unit	Flag	Reference Range
+Total White Cell Count	2.1	10⁹/L	L	5.0 – 15.0
+Haemoglobin	12.7	g/dL	—	11.0 – 14.0
+Red Blood Cells	4.63	10¹²/L	—	4.0 – 5.2
+Mean Cell Volume (MCV)	78.2	fL	—	75.0 – 87.0
+Haematocrit	36.2	%	—	34.0 – 40.0
+Mean Cell Haemoglobin (MCH)	27.5	pg	—	24.0 – 30.0
+MCH Concentration (MCHC)	35.1	g/dL	—	31.0 – 37.0
+Red Cell Distribution Width (RDW)	12.7	%	—	—
+Platelet Count	187	10⁹/L	L	200 – 490
+Differential Count
+Test Name	Result (%)	Absolute Count	Flag	Reference Range
+Neutrophils	49.6 %	1.1	—	9–77% (1.0–8.5)
+Lymphocytes	37.9 %	0.8	—	14–86% (1.5–9.5)
+Monocytes	11.3 %	0.2	H	4–10% (0.2–1.0)
+Eosinophils	0.6 %	0.0	L	1–7% (<0.81)
+Basophils	0.6 %	0.0	—	—

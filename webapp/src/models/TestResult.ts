@@ -18,6 +18,13 @@ export interface TestResult {
     folderPath?: string;
   };
 
+  testInfo?: {
+    testName: string;
+    testDate?: Date;
+    orderedBy?: string;  // doctor name
+    labName?: string;
+  };
+
   extractedData?: {
     isExtracted: boolean;
     extractionDate?: Date;
@@ -29,6 +36,10 @@ export interface TestResult {
   };
 
   labValues?: LabValue[];
+
+  uploadedBy?: string;    // userId
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface LabValue {
@@ -47,8 +58,8 @@ export interface LabValue {
     labName?: string;
   };
 
-  uploadedBy: string;    // userId
-  createdAt: Date;
-  updatedAt: Date;
+  uploadedBy?: string;    // userId (optional for backwards compatibility)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 

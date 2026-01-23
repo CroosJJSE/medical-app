@@ -1,0 +1,85 @@
+
+📄 Extracting text from: format1.pdf
+
+============================================================
+Warning: Please use the `legacy` build in Node.js environments.
+
+📝 Extracted Text (first 500 chars):
+------------------------------------------------------------
+REFERENCE   No.   :  REFERRED   BY PATIENT DR   MITHIKSHA   KOORAGAMAGE  **   OPD/AHH/ASH   **  REPORT   DATE   &   TIME   :  :   Miss.   RYLEIGH  :  AHH2009120 / ASH2106101 AGE : 6 Y/F 01   0555   18/12/25 SAMPLE   DATE   &   TIME **AUTOMATED   COUNT**  :  /  18/12/2025   17:52  : UHID   120453705 04/10/2019  Page   1   of   4  18/12/2025   19:24  TEST/PROFILE   COMPLETE BLOOD COUNT :  TEST   RESULT   REFERENCE VALUE FLAG TOTAL   WHITE   CELL   COUNT   5.0 - 15.0 L 2.1   10^9/L DIFFERENTIAL   C...
+
+🔍 Searching for known tests...
+
+============================================================
+📊 EXTRACTION RESULTS
+
+
+COMPLETE BLOOD COUNT:
+------------------------------------------------------------
+
+1. NEUTROPHILS
+   Result: 37.9 LYMPHOCYTES
+   Reference: %   1.1 14%-86% (1.5-9.5)
+
+2. LYMPHOCYTES
+   Result: 11.3 MONOCYTES
+   Reference: %   0.8 4%-10% (0.2-1.0)
+   Flag: H
+
+3. MONOCYTES
+   Result: 0.2 1%
+   Reference: %
+
+4. EOSINOPHILS
+   Result: 0.0 BASOPHILS
+   Reference: %
+
+5. BASOPHILS
+   Result: 0.6 %
+   Reference: 0.0
+
+URINE ANALYSIS:
+------------------------------------------------------------
+
+1. APPEARANCE
+   Result: 1.022 S
+   Reference: .
+
+2. S.G. (REFRACTOMETER)
+   Result: 6.0 pH
+
+3. PROTEIN
+   Result: Nil
+
+4. GLUCOSE
+   Result: +
+
+5. KETONE BODIES
+   Result: Nil
+
+6. BILIRUBIN
+   Result: Nil
+
+7. NITRITE
+   Result: Normal
+
+8. PUS CELLS
+   Result: 6 /H
+   Reference: 4   -
+
+9. RED CELLS
+   Result: +
+
+10. EPITHELIAL CELLS
+   Result: Nil
+
+11. CASTS
+   Result: +
+
+============================================================
+
+✅ Total tests found: 16
+📝 Total text length: 3190 characters
+
+💾 Results saved to: /home/subi/work/medical-app/pdf/test1/extraction_results.json
+

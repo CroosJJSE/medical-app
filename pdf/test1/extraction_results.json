@@ -1,0 +1,334 @@
+{
+  "complete_blood_count": [
+    {
+      "testName": "TOTAL WHITE CELL COUNT",
+      "result": "2.1",
+      "unit": "10^9/L",
+      "referenceRange": "5.0 - 15.0",
+      "flag": "L",
+      "foundAt": 427,
+      "confidence": 0.9999999999999999
+    },
+    {
+      "testName": "WHITE CELL COUNT",
+      "result": "2.1",
+      "unit": "10^9/L",
+      "referenceRange": "5.0 - 15.0",
+      "flag": "L",
+      "foundAt": 435,
+      "confidence": 0.9999999999999999
+    },
+    {
+      "testName": "NEUTROPHILS",
+      "result": "49.6",
+      "unit": "%",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 527,
+      "confidence": 0.7
+    },
+    {
+      "testName": "LYMPHOCYTES",
+      "result": "37.9",
+      "unit": "%",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 572,
+      "confidence": 0.7
+    },
+    {
+      "testName": "MONOCYTES",
+      "result": "11.3",
+      "unit": "%",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 618,
+      "confidence": 0.7
+    },
+    {
+      "testName": "EOSINOPHILS",
+      "result": "0.6",
+      "unit": "%",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 658,
+      "confidence": 0.7
+    },
+    {
+      "testName": "BASOPHILS",
+      "result": "0.6",
+      "unit": "%",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 680,
+      "confidence": 0.7
+    },
+    {
+      "testName": "HAEMOGLOBIN",
+      "result": "12.7",
+      "unit": "g/dL",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 706,
+      "confidence": 0.7
+    },
+    {
+      "testName": "RED BLOOD CELLS",
+      "result": "4.63",
+      "unit": "10^12/L",
+      "referenceRange": "75.0 - 87.0",
+      "flag": null,
+      "foundAt": 794,
+      "confidence": 0.8999999999999999
+    },
+    {
+      "testName": "MEAN CELL VOLUME",
+      "result": "78.2",
+      "unit": "fl",
+      "referenceRange": "34.0 - 40.0",
+      "flag": null,
+      "foundAt": 841,
+      "confidence": 0.8999999999999999
+    },
+    {
+      "testName": "HAEMATOCRIT",
+      "result": "36.2",
+      "unit": "L/L(",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 884,
+      "confidence": 0.7
+    },
+    {
+      "testName": "MEAN CELL HAEMOGLOBIN",
+      "result": "27.5",
+      "unit": "pg",
+      "referenceRange": "31.0 - 37.0",
+      "flag": null,
+      "foundAt": 922,
+      "confidence": 0.8999999999999999
+    },
+    {
+      "testName": "M.C.H. CONCENTRATION",
+      "result": "35.1",
+      "unit": "g/dL",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 970,
+      "confidence": 0.7
+    },
+    {
+      "testName": "RED CELLS DISTRIBUTION WIDTH",
+      "result": "12.7",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 1000,
+      "confidence": 0.4
+    },
+    {
+      "testName": "PLATELET COUNT",
+      "result": "187",
+      "unit": "10^9/L",
+      "referenceRange": "200 - 490",
+      "flag": "L",
+      "foundAt": 1046,
+      "confidence": 0.9999999999999999
+    }
+  ],
+  "serology": [
+    {
+      "testName": "DENGUE NS1",
+      "result": "POSITIVE",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 1330,
+      "confidence": 0.4
+    },
+    {
+      "testName": "DENGUE NS1 ANTIGEN",
+      "result": "POSITIVE",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 1340,
+      "confidence": 0.4
+    },
+    {
+      "testName": "DENGUE ANTIGEN",
+      "result": "POSITIVE",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 1340,
+      "confidence": 0.4
+    },
+    {
+      "testName": "DENGUE VIRUS NS1 ANTIGEN",
+      "result": "POSITIVE",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 1464,
+      "confidence": 0.4
+    }
+  ],
+  "urine_analysis": [
+    {
+      "testName": "PH",
+      "result": "6.0",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 533,
+      "confidence": 0.4
+    },
+    {
+      "testName": "RED CELLS",
+      "result": "4 - 6 /H.P.F",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 1000,
+      "confidence": 0.4
+    },
+    {
+      "testName": "COLOUR",
+      "result": "Pale yellow",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2264,
+      "confidence": 0.4
+    },
+    {
+      "testName": "APPEARANCE",
+      "result": "Slightly Turbid",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2289,
+      "confidence": 0.4
+    },
+    {
+      "testName": "S.G.",
+      "result": "1.022",
+      "unit": "(REFRACTOMETER)",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2306,
+      "confidence": 0.7
+    },
+    {
+      "testName": "S.G. (REFRACTOMETER)",
+      "result": "1.022",
+      "unit": "6",
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2306,
+      "confidence": 0.7
+    },
+    {
+      "testName": "PROTEIN",
+      "result": "Nil",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2338,
+      "confidence": 0.4
+    },
+    {
+      "testName": "GLUCOSE",
+      "result": "Nil",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2350,
+      "confidence": 0.4
+    },
+    {
+      "testName": "KETONE BODIES",
+      "result": "+ (Positive)",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2373,
+      "confidence": 0.4
+    },
+    {
+      "testName": "BILIRUBIN",
+      "result": "Nil",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2391,
+      "confidence": 0.4
+    },
+    {
+      "testName": "NITRITE",
+      "result": "Nil",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2405,
+      "confidence": 0.4
+    },
+    {
+      "testName": "UROBILINOGEN",
+      "result": "Normal Amounts",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2430,
+      "confidence": 0.4
+    },
+    {
+      "testName": "PUS CELLS",
+      "result": "2 - 4 /H.P.F",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2518,
+      "confidence": 0.4
+    },
+    {
+      "testName": "EPITHELIAL CELLS",
+      "result": "+",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2559,
+      "confidence": 0.4
+    },
+    {
+      "testName": "CASTS",
+      "result": "Nil",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2580,
+      "confidence": 0.4
+    },
+    {
+      "testName": "CRYSTALS",
+      "result": "+ Few ammonium urate",
+      "unit": null,
+      "referenceRange": null,
+      "flag": null,
+      "foundAt": 2613,
+      "confidence": 0.4
+    }
+  ],
+  "clinical_chemistry": [
+    {
+      "testName": "C.REACTIVE PROTEIN",
+      "result": "2.8",
+      "unit": "mg/L",
+      "referenceRange": "0.1 - 5.0",
+      "flag": null,
+      "foundAt": 3039,
+      "confidence": 0.8999999999999999
+    }
+  ]
+}

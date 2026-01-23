@@ -76,6 +76,17 @@ export class TestResultRepository {
       (doc: QueryDocumentSnapshot<DocumentData>) => doc.data() as TestResult
     );
   }
+
+  /**
+   * Get all test results
+   * @returns Array of all TestResults
+   */
+  async getAll(): Promise<TestResult[]> {
+    const snapshot = await getDocs(this.collectionRef);
+    return snapshot.docs.map(
+      (doc: QueryDocumentSnapshot<DocumentData>) => doc.data() as TestResult
+    );
+  }
 }
 
 // Export singleton instance
@@ -96,6 +107,10 @@ export const update = async (testResultId: string, data: Partial<TestResult>): P
 
 export const getByPatientId = async (patientId: string): Promise<TestResult[]> => {
   return await repo.findByPatient(patientId);
+};
+
+export const getAll = async (): Promise<TestResult[]> => {
+  return await repo.getAll();
 };
 
 export default repo;

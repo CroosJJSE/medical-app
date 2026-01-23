@@ -21,12 +21,18 @@ service firebase.storage {
                    && request.resource.contentType == 'application/pdf';
     }
     
-    // Test results (if using Firebase Storage for test results)
-    match /test-results/{userId}/{allPaths=**} {
-      allow read: if isAuthenticated() && 
-                     (request.auth.uid == userId);
-      allow write: if isAuthenticated() && request.auth.uid == userId
-                   && request.resource.size < 10 * 1024 * 1024;
+    // Test results - stored in Firebase Storage
+    // Path format: test-results/{patientId}/{timestamp}_{fileName}
+    match /test-results/{patientId}/{allPaths=**} {
+      // Allow authenticated users to read test results
+      // Access control (patient-doctor relationships) is handled at application level
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to upload test results
+      // Patients upload their own reports, validation happens in the app
+      allow write: if isAuthenticated()
+                   && request.resource.size < 10 * 1024 * 1024  // Max 10MB
+                   && request.resource.contentType == 'application/pdf';
     }
     
     // Default: deny all other access
