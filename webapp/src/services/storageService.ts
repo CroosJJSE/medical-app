@@ -1,7 +1,7 @@
 // src/services/storageService.ts
 // Service for uploading files to Firebase Storage
 
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, getBytes, getBlob } from 'firebase/storage';
 import { storage } from './firebase';
 
 /**
@@ -43,4 +43,48 @@ export async function uploadPrescriptionPdf(
   const finalFileName = fileName || `prescription_${encounterId}_${Date.now()}.pdf`;
   const path = `prescriptions/${encounterId}/${finalFileName}`;
   return await uploadFile(pdfBlob, path, 'application/pdf');
+}
+
+/**
+ * Download a file from Firebase Storage as bytes
+ * @param storagePath - Storage path (e.g., 'test-results/PAT001/file.pdf')
+ * @returns File as Uint8Array
+ */
+export async function downloadFileAsBytes(storagePath: string): Promise<Uint8Array> {
+  try {
+    const storageRef = ref(storage, storagePath);
+    const bytes = await getBytes(storageRef);
+    return bytes;
+  } catch (error) {
+    console.error('[STORAGE_SERVICE] Error downloading file:', error);
+    throw error;
+  }
+}
+
+/**
+ * Download a file from Firebase Storage as Blob
+ * @param storagePath - Storage path (e.g., 'test-results/PAT001/file.pdf')
+ * @returns File as Blob
+ */
+export async function downloadFileAsBlob(storagePath: string): Promise<Blob> {
+  try {
+    const storageRef = ref(storage, storagePath);
+    // Try getBlob first (newer API, handles CORS better with authentication)
+    try {
+      console.log('[STORAGE_SERVICE] Trying getBlob for:', storagePath);
+      const blob = await getBlob(storageRef);
+      console.log('[STORAGE_SERVICE] getBlob successful, size:', blob.size);
+      return blob;
+    } catch (blobError) {
+      console.warn('[STORAGE_SERVICE] getBlob failed, trying getBytes:', blobError);
+      // Fallback to getBytes
+      console.log('[STORAGE_SERVICE] Trying getBytes for:', storagePath);
+      const bytes = await getBytes(storageRef);
+      console.log('[STORAGE_SERVICE] getBytes successful, size:', bytes.length);
+      return new Blob([bytes], { type: 'application/pdf' });
+    }
+  } catch (error) {
+    console.error('[STORAGE_SERVICE] Error downloading file as blob:', error);
+    throw error;
+  }
 }

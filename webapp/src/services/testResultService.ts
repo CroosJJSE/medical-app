@@ -9,7 +9,9 @@ import { extractTextFromPDF } from '@/utils/pdfExtractor';
 import * as notificationService from './notificationService';
 import { NotificationType } from '@/enums';
 import patientService from './patientService';
-import { uploadFile } from './storageService';
+import { uploadFile, downloadFileAsBlob } from './storageService';
+import { engineRegistry } from './pdfEngines/engineRegistry';
+import type { EngineExtractionResult } from './pdfEngines/types';
 
 /**
  * Upload a new test result file
@@ -121,11 +123,11 @@ export const getTestResult = async (testResultId: string): Promise<TestResult | 
 };
 
 /**
- * Upload test result with PDF file and extract data
+ * Upload test result with PDF file (NO extraction - extraction happens on doctor side)
  * @param patientId - Patient ID
  * @param file - PDF File object
  * @param testName - Optional test name
- * @returns Created TestResult with extracted data
+ * @returns Created TestResult (without extracted data)
  */
 export const uploadTestResultWithFile = async (
   patientId: string,
@@ -140,9 +142,6 @@ export const uploadTestResultWithFile = async (
     testName,
   });
 
-  // Upload file to storage first (if using Firebase Storage)
-  // For now, we'll store file info and extract text
-  // Note: Firestore doesn't allow undefined values, so we omit optional fields
   const fileInfo: {
     fileName: string;
     fileType: string;
@@ -156,169 +155,202 @@ export const uploadTestResultWithFile = async (
     fileType: file.type,
     fileSize: file.size,
     uploadDate: new Date(),
-    // Only include optional fields if they have values
   };
 
   console.log('[TEST_RESULT_SERVICE] File info prepared:', fileInfo);
 
-  // Upload PDF to Firebase Storage first
+  // Upload PDF to Firebase Storage
   let pdfUrl: string | undefined = undefined;
+  let storagePath: string | undefined = undefined;
   try {
     console.log('[TEST_RESULT_SERVICE] Uploading PDF to Firebase Storage...');
-    const storagePath = `test-results/${patientId}/${Date.now()}_${file.name}`;
+    storagePath = `test-results/${patientId}/${Date.now()}_${file.name}`;
     pdfUrl = await uploadFile(file, storagePath, 'application/pdf');
     console.log('[TEST_RESULT_SERVICE] PDF uploaded to Firebase Storage successfully');
     console.log('[TEST_RESULT_SERVICE] Firebase Storage URL:', pdfUrl);
-    fileInfo.googleDriveUrl = pdfUrl; // Store the Firebase Storage URL (field name kept for compatibility)
+    fileInfo.googleDriveUrl = pdfUrl;
+    fileInfo.folderPath = storagePath; // Store the storage path for later downloads
   } catch (error) {
     console.error('[TEST_RESULT_SERVICE] Error uploading PDF to Firebase Storage:', error);
     throw new Error(`Failed to upload PDF to Firebase Storage: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  // Extract text from PDF
-  let rawText = '';
-  let parsedReport: ParsedMedicalReport | null = null;
-  let labValues: LabValue[] = [];
-
+  // Create test result WITHOUT extraction (extraction happens on doctor side)
   try {
-    console.log('[TEST_RESULT_SERVICE] Starting PDF text extraction...');
-    rawText = await extractTextFromPDF(file);
-    console.log('[TEST_RESULT_SERVICE] PDF text extracted, length:', rawText.length);
-    
-    console.log('[TEST_RESULT_SERVICE] Parsing extracted text...');
-    // Parse the extracted text
-    parsedReport = parseMedicalReportFromPDF(rawText);
-    console.log('[TEST_RESULT_SERVICE] Text parsed successfully', {
-      hasPatientDetails: !!parsedReport.patient_details.name,
-      cbcCount: parsedReport.reports.complete_blood_count.length,
-      serologyCount: parsedReport.reports.serology.length,
-      urineCount: parsedReport.reports.urine_analysis.length,
-    });
-    
-    console.log('[TEST_RESULT_SERVICE] Converting to LabValue format...');
-    // Convert to LabValue format
-    const convertedValues = convertParsedReportToLabValues(parsedReport);
-    // Cast to LabValue[] - the conversion function returns compatible structure
-    // Note: status is string but will be handled properly when saved
-    labValues = convertedValues as any as LabValue[];
-    console.log('[TEST_RESULT_SERVICE] Converted to LabValues:', labValues.length, 'values');
-    
-    // Use parsed test name if available, otherwise use provided or file name
-    const finalTestName = parsedReport.report_metadata.lab_name 
-      ? `${parsedReport.report_metadata.lab_name} - Laboratory Report`
-      : testName || file.name.replace('.pdf', '');
-    
+    const finalTestName = testName || file.name.replace('.pdf', '');
     console.log('[TEST_RESULT_SERVICE] Creating test result with name:', finalTestName);
-    // Create test result with PDF URL if uploaded
+    
     const testResult = await uploadTestResult(
       patientId,
       {
         ...fileInfo,
-        googleDriveUrl: pdfUrl, // Include the Firebase Storage URL
+        googleDriveUrl: pdfUrl,
       },
       {
         testName: finalTestName,
-        testDate: parsedReport.report_metadata.sample_date_time 
-          ? new Date(parsedReport.report_metadata.sample_date_time) 
-          : new Date(),
-        orderedBy: parsedReport.report_metadata.referred_by || 'Unknown',
-        labName: parsedReport.report_metadata.lab_name || 'Unknown Lab',
-      }
-    );
-    console.log('[TEST_RESULT_SERVICE] Test result created:', testResult.testResultId);
-
-    console.log('[TEST_RESULT_SERVICE] Updating with extracted data...');
-    // Update with extracted data - remove undefined values
-    const updateDataRaw: any = {
-      extractedData: {
-        isExtracted: true,
-        extractionDate: new Date(),
-        extractionMethod: 'pdf-parse',
-        rawText,
-        confirmed: false,
-      },
-      labValues: labValues, // Will be cleaned
-      updatedAt: new Date(),
-    };
-    
-    // Deep clean the entire update object for Firestore
-    const updateData = cleanForFirestore(updateDataRaw);
-    console.log('[TEST_RESULT_SERVICE] Update data cleaned, keys:', Object.keys(updateData));
-    await update(testResult.testResultId, updateData);
-    console.log('[TEST_RESULT_SERVICE] Test result updated with extracted data');
-
-    console.log('[TEST_RESULT_SERVICE] Getting patient info for notifications...');
-    // Get patient to find assigned doctor
-    const patient = await patientService.getPatient(patientId);
-    console.log('[TEST_RESULT_SERVICE] Patient retrieved:', {
-      patientId: patient?.userID,
-      assignedDoctorId: patient?.assignedDoctorId,
-    });
-    
-    if (patient?.assignedDoctorId) {
-      console.log('[TEST_RESULT_SERVICE] Sending notification to doctor:', patient.assignedDoctorId);
-      // Send notification to assigned doctor
-      const hasAbnormalValues = parsedReport.doctor_attention_summary.abnormal_values.length > 0 ||
-                                 parsedReport.doctor_attention_summary.positive_results.length > 0 ||
-                                 parsedReport.doctor_attention_summary.critical_findings.length > 0;
-
-      await notificationService.createTestResultNotification(
-        patient.assignedDoctorId,
-        hasAbnormalValues ? NotificationType.TEST_RESULT_ABNORMAL : NotificationType.TEST_RESULT_UPLOADED,
-        testResult.testResultId,
-        {
-          patientName: patient.displayName,
-          testName: finalTestName,
-          uploadDate: new Date(),
-          hasAbnormalValues,
-        }
-      );
-      console.log('[TEST_RESULT_SERVICE] Notification sent to doctor');
-    } else {
-      console.log('[TEST_RESULT_SERVICE] No assigned doctor, skipping notification');
-    }
-
-    console.log('[TEST_RESULT_SERVICE] Fetching final test result...');
-    // Return updated test result
-    const finalResult = await getTestResult(testResult.testResultId) || testResult;
-    console.log('[TEST_RESULT_SERVICE] Upload complete:', finalResult.testResultId);
-    return finalResult;
-  } catch (error) {
-    console.error('[TEST_RESULT_SERVICE] Error extracting PDF data:', error);
-    console.error('[TEST_RESULT_SERVICE] Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    
-    console.log('[TEST_RESULT_SERVICE] Creating test result without extracted data...');
-    // Still create test result even if extraction fails
-    const testResult = await uploadTestResult(
-      patientId,
-      fileInfo,
-      {
-        testName: testName || file.name.replace('.pdf', ''),
         testDate: new Date(),
         orderedBy: 'Unknown',
         labName: 'Unknown Lab',
       }
     );
+    console.log('[TEST_RESULT_SERVICE] Test result created:', testResult.testResultId);
 
-    // Update with extraction error info - remove undefined values
-    const errorUpdateDataRaw: any = {
-      extractedData: {
-        isExtracted: false,
-        extractionDate: new Date(),
-        extractionMethod: 'pdf-parse',
-        rawText: rawText || '',
-        confirmed: false,
-      },
-      updatedAt: new Date(),
-    };
-    const errorUpdateData = cleanForFirestore(errorUpdateDataRaw);
-    await update(testResult.testResultId, errorUpdateData);
+    // Notify assigned doctor
+    try {
+      console.log('[TEST_RESULT_SERVICE] Getting patient info for notifications...');
+      const patient = await patientService.getPatient(patientId);
+      console.log('[TEST_RESULT_SERVICE] Patient retrieved:', { 
+        patientId: patient?.patientId, 
+        assignedDoctorId: patient?.assignedDoctorId 
+      });
+      
+      if (patient?.assignedDoctorId) {
+        console.log('[TEST_RESULT_SERVICE] Sending notification to doctor:', patient.assignedDoctorId);
+        await notificationService.createTestResultNotification(
+          patient.assignedDoctorId,
+          NotificationType.TEST_RESULT_UPLOADED,
+          testResult.testResultId,
+          {
+            testName: finalTestName,
+            patientName: patient.displayName || 'Patient',
+            uploadDate: new Date(),
+            hasAbnormalValues: false
+          }
+        );
+        console.log('[TEST_RESULT_SERVICE] Notification sent to doctor');
+      } else {
+        console.warn('[TEST_RESULT_SERVICE] Patient has no assigned doctor, skipping notification');
+      }
+    } catch (error) {
+      console.error('[TEST_RESULT_SERVICE] Error sending notification:', error);
+      // Don't throw - notification failure shouldn't block upload
+    }
 
+    // Fetch final test result
+    const finalResult = await getTestResult(testResult.testResultId);
+    console.log('[TEST_RESULT_SERVICE] Upload complete:', finalResult?.testResultId);
+    return finalResult!;
+  } catch (error) {
+    console.error('[TEST_RESULT_SERVICE] Error in uploadTestResultWithFile:', error);
     throw error;
   }
+};
+
+/**
+ * Extract data from test result PDF using a specific engine
+ * @param testResultId - TestResult ID
+ * @param engineId - Engine ID to use for extraction
+ * @returns Extraction result with lab values
+ */
+export const extractDataWithEngine = async (
+  testResultId: string,
+  engineId: string
+): Promise<EngineExtractionResult> => {
+  console.log('[TEST_RESULT_SERVICE] extractDataWithEngine called', { testResultId, engineId });
+  
+  const testResult = await getTestResult(testResultId);
+  if (!testResult) {
+    throw new Error('TestResult not found');
+  }
+
+  // Get the engine
+  const engine = engineRegistry.getEngine(engineId);
+  if (!engine) {
+    throw new Error(`Engine not found: ${engineId}`);
+  }
+
+  // Get PDF text - need to download from Firebase Storage
+  let pdfText = '';
+  const storagePath = testResult.fileInfo.folderPath;
+  
+  if (storagePath) {
+    try {
+      console.log('[TEST_RESULT_SERVICE] Downloading PDF from Firebase Storage using path:', storagePath);
+      const blob = await downloadFileAsBlob(storagePath);
+      const file = new File([blob], testResult.fileInfo.fileName, { type: 'application/pdf' });
+      pdfText = await extractTextFromPDF(file);
+      console.log('[TEST_RESULT_SERVICE] PDF text extracted, length:', pdfText.length);
+    } catch (error) {
+      console.error('[TEST_RESULT_SERVICE] Error extracting PDF text:', error);
+      throw new Error(`Failed to extract PDF text: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  } else if (testResult.fileInfo.googleDriveUrl) {
+    // Fallback: try to extract path from URL if storagePath not available
+    try {
+      console.log('[TEST_RESULT_SERVICE] Storage path not available, extracting from URL...');
+      const url = testResult.fileInfo.googleDriveUrl;
+      console.log('[TEST_RESULT_SERVICE] URL:', url);
+      
+      // Firebase Storage URL format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media&token=...
+      // Or: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media
+      const urlObj = new URL(url);
+      console.log('[TEST_RESULT_SERVICE] URL pathname:', urlObj.pathname);
+      
+      // Match /o/ followed by the encoded path (until end of pathname)
+      // Firebase Storage URL: /v0/b/{bucket}/o/{encodedPath}
+      const pathMatch = urlObj.pathname.match(/\/o\/(.+)$/);
+      if (pathMatch && pathMatch[1]) {
+        const encodedPath = pathMatch[1];
+        console.log('[TEST_RESULT_SERVICE] Encoded path:', encodedPath);
+        try {
+          const storagePath = decodeURIComponent(encodedPath);
+          console.log('[TEST_RESULT_SERVICE] Extracted storage path:', storagePath);
+          const blob = await downloadFileAsBlob(storagePath);
+          const file = new File([blob], testResult.fileInfo.fileName, { type: 'application/pdf' });
+          pdfText = await extractTextFromPDF(file);
+          console.log('[TEST_RESULT_SERVICE] PDF text extracted, length:', pdfText.length);
+        } catch (decodeError) {
+          console.error('[TEST_RESULT_SERVICE] Error decoding or downloading:', decodeError);
+          throw decodeError;
+        }
+      } else {
+        console.error('[TEST_RESULT_SERVICE] Could not match path pattern');
+        console.error('[TEST_RESULT_SERVICE] Pathname:', urlObj.pathname);
+        console.error('[TEST_RESULT_SERVICE] Full URL:', url);
+        // Try alternative pattern: maybe the path is in a different format
+        const altMatch = url.match(/\/o\/([^?]+)/);
+        if (altMatch && altMatch[1]) {
+          console.log('[TEST_RESULT_SERVICE] Trying alternative pattern, found:', altMatch[1]);
+          const storagePath = decodeURIComponent(altMatch[1]);
+          const blob = await downloadFileAsBlob(storagePath);
+          const file = new File([blob], testResult.fileInfo.fileName, { type: 'application/pdf' });
+          pdfText = await extractTextFromPDF(file);
+          console.log('[TEST_RESULT_SERVICE] PDF text extracted using alternative pattern, length:', pdfText.length);
+        } else {
+          throw new Error('Could not extract storage path from URL');
+        }
+      }
+    } catch (error) {
+      console.error('[TEST_RESULT_SERVICE] Error extracting PDF text from URL:', error);
+      throw new Error(`Failed to extract PDF text: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  } else {
+    throw new Error('PDF storage path or URL not available');
+  }
+
+  // Extract using engine
+  console.log('[TEST_RESULT_SERVICE] Running extraction with engine:', engineId);
+  const extractionResult = await engine.extract(pdfText);
+  console.log('[TEST_RESULT_SERVICE] Extraction complete, lab values:', extractionResult.labValues.length);
+
+  // Store extraction result (but don't mark as confirmed)
+  const updateDataRaw: any = {
+    extractedData: {
+      isExtracted: true,
+      extractionDate: new Date(),
+      extractionMethod: `engine-${engineId}`,
+      rawText: pdfText,
+      confirmed: false,
+    },
+    labValues: extractionResult.labValues,
+    updatedAt: new Date(),
+  };
+  
+  const updateData = cleanForFirestore(updateDataRaw);
+  await update(testResultId, updateData);
+  console.log('[TEST_RESULT_SERVICE] Test result updated with extracted data');
+
+  return extractionResult;
 };
 
 /**
@@ -533,9 +565,9 @@ export const getUnconfirmedTestResultsByDoctor = async (doctorId: string): Promi
     new Map(allResults.map(result => [result.testResultId, result])).values()
   );
   
-  // Filter unconfirmed results that have been extracted
+  // Filter unconfirmed results (including those without extraction - doctor needs to extract)
   const unconfirmed = uniqueResults.filter(
-    (result) => result.extractedData?.isExtracted && !result.extractedData?.confirmed
+    (result) => !result.extractedData?.confirmed
   );
   
   console.log('[TEST_RESULT_SERVICE] Unconfirmed test results:', unconfirmed.length);
@@ -577,6 +609,7 @@ const testResultService = {
   uploadTestResultWithFile,
   getTestResult,
   extractData,
+  extractDataWithEngine,
   confirmExtractedData,
   updateExtractedData,
   getTestResultsByPatient,

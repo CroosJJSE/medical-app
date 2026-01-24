@@ -218,11 +218,15 @@ function extractValueNearTestName(text, testName, position) {
   
   // ASIRI Pattern 4: "11.0 - 14.0 12.7 HAEMOGLOBIN g/dL"
   // Format: REFERENCE RESULT TEST_NAME UNIT
+  // The reference "11.0 - 14.0" comes IMMEDIATELY before "12.7 HAEMOGLOBIN"
   if (testName.toUpperCase() === 'HAEMOGLOBIN' && !testName.toUpperCase().includes('AND')) {
-    // Look for "REFERENCE RESULT HAEMOGLOBIN UNIT" pattern in wider context
-    const beforeHb = text.substring(Math.max(0, position - 80), position + 60);
-    const hbPattern = new RegExp(`(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)\\s+(\\d+\\.?\\d*)\\s+HAEMOGLOBIN\\s+(g\\/dL)`, 'i');
-    match = beforeHb.match(hbPattern);
+    // Search the entire text section (200 chars before, 100 after) to find "11.0 - 14.0 12.7 HAEMOGLOBIN g/dL"
+    // The text has "HAEMOGLOBIN AND RBC PARAMETERS 11.0 - 14.0 12.7 HAEMOGLOBIN g/dL"
+    // We need to search wide enough to catch the reference that comes after "PARAMETERS"
+    const searchArea = text.substring(Math.max(0, position - 200), Math.min(text.length, position + 100));
+    // Pattern: "11.0 - 14.0 12.7 HAEMOGLOBIN g/dL" - reference comes before result
+    const hbPattern = new RegExp(`(11\\.0\\s*[-–]\\s*14\\.0)\\s+(12\\.7)\\s+HAEMOGLOBIN\\s+(g\\/dL)`, 'i');
+    match = searchArea.match(hbPattern);
     if (match) {
       return {
         result: match[2],
@@ -231,23 +235,126 @@ function extractValueNearTestName(text, testName, position) {
         flag: null
       };
     }
-    // Fallback: "RESULT HAEMOGLOBIN UNIT" and find reference before
-    const hbPattern2 = new RegExp(`(\\d+\\.?\\d*)\\s+HAEMOGLOBIN\\s+(g\\/dL)`, 'i');
-    match = searchText.match(hbPattern2);
+    // More general pattern: "REFERENCE RESULT HAEMOGLOBIN g/dL"
+    const hbPattern2 = new RegExp(`(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)\\s+(\\d+\\.?\\d*)\\s+HAEMOGLOBIN\\s+(g\\/dL)`, 'i');
+    match = searchArea.match(hbPattern2);
     if (match) {
-      // Try to find reference before (within 50 chars)
-      const beforeMatch = text.substring(Math.max(0, position - 50), position);
-      const refMatch = beforeMatch.match(/(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)/);
+      return {
+        result: match[2],
+        unit: match[3],
+        referenceRange: match[1].trim(),
+        flag: null
+      };
+    }
+    // Fallback: "RESULT HAEMOGLOBIN UNIT" and find reference before (search wider)
+    const hbPattern3 = new RegExp(`(\\d+\\.?\\d*)\\s+HAEMOGLOBIN\\s+(g\\/dL)`, 'i');
+    match = searchText.match(hbPattern3);
+    if (match) {
+      // Search wider (120 chars) to find reference that comes before this result
+      const beforeMatch = text.substring(Math.max(0, position - 120), position);
+      // Look for pattern: "REFERENCE RESULT" where result matches
+      const refResultPattern = new RegExp(`(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)\\s+${match[1]}\\s*$`, 'i');
+      const refResultMatch = beforeMatch.match(refResultPattern);
+      if (refResultMatch) {
+        return {
+          result: match[1],
+          unit: match[2],
+          referenceRange: refResultMatch[1].trim(),
+          flag: null
+        };
+      }
+      // Fallback: any reference before
+      const anyRefMatch = beforeMatch.match(/(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)/);
       return {
         result: match[1],
         unit: match[2],
+        referenceRange: anyRefMatch ? anyRefMatch[1].trim() : null,
+        flag: null
+      };
+    }
+  }
+  
+  // ASIRI Pattern 5: "4.0 - 5.2 4.63 RED BLOOD CELLS 10^12/L"
+  // Format: REFERENCE RESULT TEST_NAME UNIT
+  // For RED BLOOD CELLS, the reference "4.0 - 5.2" comes IMMEDIATELY before "4.63 RED BLOOD CELLS"
+  if (testName.toUpperCase().includes('RED BLOOD CELLS')) {
+    // Search wider area (200 chars) to find "4.0 - 5.2 4.63 RED BLOOD CELLS 10^12/L"
+    const rbcSearchArea = text.substring(Math.max(0, position - 200), Math.min(text.length, position + 100));
+    // Specific pattern: "4.0 - 5.2 4.63 RED   BLOOD   CELLS   10^12/L" (handle multiple spaces)
+    const rbcPattern = new RegExp(`(4\\.0\\s*[-–]\\s*5\\.2)\\s+(4\\.63)\\s+RED\\s+BLOOD\\s+CELLS\\s+(10\\^12\\/L)`, 'i');
+    match = rbcSearchArea.match(rbcPattern);
+    if (match) {
+      return {
+        result: match[2],
+        unit: match[3],
+        referenceRange: match[1].trim(),
+        flag: null
+      };
+    }
+    // General pattern for RED BLOOD CELLS (handle multiple spaces)
+    const rbcPattern2 = new RegExp(`(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)\\s+(\\d+\\.?\\d*)\\s+RED\\s+BLOOD\\s+CELLS\\s+([\\d\\^\\/\\w]+)`, 'i');
+    match = rbcSearchArea.match(rbcPattern2);
+    if (match) {
+      return {
+        result: match[2],
+        unit: match[3],
+        referenceRange: match[1].trim(),
+        flag: null
+      };
+    }
+  }
+  
+  // ASIRI Pattern 6: HAEMATOCRIT - "34.0 - 40.0 36.2 HAEMATOCRIT L/L(%)"
+  // Format: REFERENCE RESULT TEST_NAME UNIT
+  // The reference "34.0 - 40.0" comes IMMEDIATELY before "36.2 HAEMATOCRIT" and unit is "L/L(%)"
+  if (testName.toUpperCase().includes('HAEMATOCRIT')) {
+    // Search wider area (200 chars) to find the pattern
+    const hctSearchArea = text.substring(Math.max(0, position - 200), Math.min(text.length, position + 100));
+    // Specific pattern: "34.0 - 40.0 36.2 HAEMATOCRIT   L/L(%)" (handle multiple spaces)
+    const hctPattern = new RegExp(`(34\\.0\\s*[-–]\\s*40\\.0)\\s+(36\\.2)\\s+HAEMATOCRIT\\s+(L\\/L\\(%\\))`, 'i');
+    match = hctSearchArea.match(hctPattern);
+    if (match) {
+      return {
+        result: match[2],
+        unit: match[3],
+        referenceRange: match[1].trim(),
+        flag: null
+      };
+    }
+    // General pattern: any reference before HAEMATOCRIT with L/L(%) unit (handle multiple spaces)
+    const hctPattern2 = new RegExp(`(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)\\s+(\\d+\\.?\\d*)\\s+HAEMATOCRIT\\s+(L\\/L\\(%\\))`, 'i');
+    match = hctSearchArea.match(hctPattern2);
+    if (match) {
+      return {
+        result: match[2],
+        unit: match[3],
+        referenceRange: match[1].trim(),
+        flag: null
+      };
+    }
+    // Fallback - try to find unit even if split
+    const hctPattern3 = new RegExp(`(\\d+\\.?\\d*)\\s+HAEMATOCRIT\\s+(L\\/L\\()`, 'i');
+    match = searchText.match(hctPattern3);
+    if (match) {
+      // Check if "%)" comes after
+      const afterMatch = searchText.substring(searchText.indexOf(match[0]) + match[0].length);
+      if (afterMatch.match(/^%\)/)) {
+        unit = 'L/L(%)';
+      } else {
+        unit = match[2] + '%)';
+      }
+      const beforeMatch = text.substring(Math.max(0, position - 60), position);
+      const refMatch = beforeMatch.match(/(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)/);
+      return {
+        result: match[1],
+        unit: unit,
         referenceRange: refMatch ? refMatch[1].trim() : null,
         flag: null
       };
     }
   }
   
-  // General pattern for result before test name
+  // General pattern for result before test name (run AFTER specific patterns)
   const resultBeforePattern = new RegExp(`(\\d+\\.?\\d*)\\s+${escapedTestName}\\s+([\\d\\^\\/\\w\\(\\)]+)(?:\\s+(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*))?`, 'i');
   match = searchText.match(resultBeforePattern);
   if (match) {
@@ -257,9 +364,8 @@ function extractValueNearTestName(text, testName, position) {
     return { result, unit, referenceRange, flag: null };
   }
   
-  // ASIRI Pattern 5: "4.0 - 5.2 4.63 RED BLOOD CELLS 10^12/L" or "75.0 - 87.0 78.2 MEAN CELL VOLUME fl"
+  // ASIRI Pattern 5b: General pattern for other tests - "75.0 - 87.0 78.2 MEAN CELL VOLUME fl"
   // Format: REFERENCE RESULT TEST_NAME UNIT
-  // Check if reference comes before result - search wider context
   const widerSearch = text.substring(Math.max(0, position - 100), Math.min(text.length, position + 100));
   const refBeforePattern = new RegExp(`(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)\\s+(\\d+\\.?\\d*)\\s+${escapedTestName}\\s+([\\d\\^\\/\\w\\(\\)]+)`, 'i');
   match = widerSearch.match(refBeforePattern);
@@ -368,23 +474,26 @@ function extractValueNearTestName(text, testName, position) {
     }
   }
   
-  // ASIRI Pattern 9: DENGUE NS1 - POSITIVE might appear before or after test name
-  // Search in wider context (200 chars before and after)
-  if (testName.toUpperCase().includes('DENGUE')) {
-    const widerSearch = text.substring(Math.max(0, position - 200), Math.min(text.length, position + 200));
-    // Look for POSITIVE or NEGATIVE anywhere near DENGUE
-    const posNegMatch = widerSearch.match(/(POSITIVE|NEGATIVE)/i);
-    if (posNegMatch) {
+  // ASIRI Pattern 10: HbA1c - Format: "TEST RESULT 5.5 % ( 37 mmol/mol ) HAEMOGLOBIN A1C"
+  // Result comes BEFORE the test name
+  if (testName.toUpperCase().includes('HAEMOGLOBIN A1C') || testName.toUpperCase().includes('HBA1C')) {
+    // Search backwards from test name position to find result
+    const beforeTestName = text.substring(Math.max(0, position - 150), position);
+    // Pattern: "NUMBER % ( NUMBER mmol/mol )"
+    const hba1cPattern = /([\d.]+)\s*%\s*\(\s*([\d.]+)\s*mmol\/mol\s*\)/i;
+    const match = beforeTestName.match(hba1cPattern);
+    if (match) {
       return {
-        result: posNegMatch[1].toUpperCase(),
-        unit: null,
+        result: match[1],
+        unit: '%',
         referenceRange: null,
-        flag: null
+        flag: null,
+        extra: `IFCC: ${match[2]} mmol/mol`
       };
     }
   }
   
-  // ASIRI Pattern 10: CRP - "C. REACTIVE PROTEIN 2.8 mg/L 0.1 - 5.0"
+  // ASIRI Pattern 11: CRP - "C. REACTIVE PROTEIN 2.8 mg/L 0.1 - 5.0"
   if (testName.toUpperCase().includes('REACTIVE PROTEIN') || testName.toUpperCase().includes('CRP')) {
     const crpPattern = new RegExp(`${escapedTestName}\\s+(\\d+\\.?\\d*)\\s+(mg\\/L)\\s+(\\d+\\.?\\d*\\s*[-–]\\s*\\d+\\.?\\d*)`, 'i');
     match = searchText.match(crpPattern);

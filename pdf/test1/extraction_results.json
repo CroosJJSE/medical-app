@@ -67,16 +67,16 @@
       "testName": "HAEMOGLOBIN",
       "result": "12.7",
       "unit": "g/dL",
-      "referenceRange": null,
+      "referenceRange": "11.0 - 14.0",
       "flag": null,
       "foundAt": 706,
-      "confidence": 0.7
+      "confidence": 0.8999999999999999
     },
     {
       "testName": "RED BLOOD CELLS",
       "result": "4.63",
       "unit": "10^12/L",
-      "referenceRange": "75.0 - 87.0",
+      "referenceRange": "4.0 - 5.2",
       "flag": null,
       "foundAt": 794,
       "confidence": 0.8999999999999999
@@ -93,11 +93,11 @@
     {
       "testName": "HAEMATOCRIT",
       "result": "36.2",
-      "unit": "L/L(",
-      "referenceRange": null,
+      "unit": "L/L(%)",
+      "referenceRange": "34.0 - 40.0",
       "flag": null,
       "foundAt": 884,
-      "confidence": 0.7
+      "confidence": 0.8999999999999999
     },
     {
       "testName": "MEAN CELL HAEMOGLOBIN",
@@ -136,44 +136,7 @@
       "confidence": 0.9999999999999999
     }
   ],
-  "serology": [
-    {
-      "testName": "DENGUE NS1",
-      "result": "POSITIVE",
-      "unit": null,
-      "referenceRange": null,
-      "flag": null,
-      "foundAt": 1330,
-      "confidence": 0.4
-    },
-    {
-      "testName": "DENGUE NS1 ANTIGEN",
-      "result": "POSITIVE",
-      "unit": null,
-      "referenceRange": null,
-      "flag": null,
-      "foundAt": 1340,
-      "confidence": 0.4
-    },
-    {
-      "testName": "DENGUE ANTIGEN",
-      "result": "POSITIVE",
-      "unit": null,
-      "referenceRange": null,
-      "flag": null,
-      "foundAt": 1340,
-      "confidence": 0.4
-    },
-    {
-      "testName": "DENGUE VIRUS NS1 ANTIGEN",
-      "result": "POSITIVE",
-      "unit": null,
-      "referenceRange": null,
-      "flag": null,
-      "foundAt": 1464,
-      "confidence": 0.4
-    }
-  ],
+  "serology": [],
   "urine_analysis": [
     {
       "testName": "PH",
